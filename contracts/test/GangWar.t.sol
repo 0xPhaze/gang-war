@@ -19,12 +19,18 @@ contract TestGangWar is Test {
     address tester = address(this);
 
     GangWar game;
+    MockERC721 gmc;
 
     function setUp() public {
         game = new GangWar();
+        gmc = new MockERC721("GMC", "GMC");
     }
 
     /* ------------- Disabled() ------------- */
 
-    function test_s() public {}
+    function test_s() public {
+        gmc.mint(alice, 1);
+
+        game.joinGangAttack(1, 2, [1].toMemory());
+    }
 }
