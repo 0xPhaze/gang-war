@@ -10,3 +10,6 @@
 [submodule "lib/UDS"]
 	path = lib/UDS
 	url = https://github.com/0xphaze/UDS
+[submodule "lib/chainlink"]
+	path = lib/chainlink
+	url = https://github.com/smartcontractkit/chainlink
