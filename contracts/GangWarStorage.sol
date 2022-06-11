@@ -6,8 +6,8 @@ import "./GangWarBase.sol";
 
 /* ============= Constants ============= */
 // uint256 constant STATUS_IDLE = 0;
-// uint256 constant STATUS_ATTACKING = 1;
-// uint256 constant STATUS_DEFENDING = 2;
+// uint256 constant STATUS_ATTACK = 1;
+// uint256 constant STATUS_DEFEND = 2;
 // uint256 constant STATUS_RECOVERY = 3;
 // uint256 constant STATUS_LOCKUP = 4;
 
@@ -28,21 +28,18 @@ enum GANG {
     CYBERP
 }
 
-enum MOVE_STATE {
-    ATTACKING,
-    DEFENDING
-}
-
 enum DISTRICT_STATUS {
     IDLE,
-    ATTACKING,
+    ATTACK,
     POST_ATTACK
 }
 
 enum PLAYER_STATE {
     IDLE,
-    ATTACKING,
-    DEFENDING,
+    ATTACK,
+    ATTACK_LOCKED,
+    DEFEND,
+    DEFEND_LOCKED,
     INJURED,
     LOCKUP
 }
@@ -50,41 +47,53 @@ enum PLAYER_STATE {
 /* ============= Struct ============= */
 
 struct Gangster {
+    uint256 roundId;
+    uint256 location;
+}
+
+struct GangsterView {
     GANG gang;
+    PLAYER_STATE state;
+    int256 stateCountdown;
     uint256 roundId;
     uint256 location;
 }
 
 struct District {
-    uint256 roundId;
     GANG occupants;
     GANG attackers;
-    /*      roundId => rand  */
-    mapping(uint256 => uint256) outcomes;
+    uint256 roundId;
     uint256 attackDeclarationTime;
     uint256 baronAttackId;
     uint256 baronDefenseId;
     uint256 lastUpkeepTime;
     uint256 lockupTime;
-    /*      roundId =>         GANG => numForces */
-    mapping(uint256 => mapping(GANG => uint256)) attackForces;
-    mapping(uint256 => mapping(GANG => uint256)) defenseForces;
 }
 
 struct GangWarDS {
     ERC721UDS gmc;
     mapping(uint256 => District) districts;
     mapping(uint256 => Gangster) gangsters;
-    mapping(uint256 => mapping(uint256 => bool)) connections;
+    /*   districtId => yield */
+    mapping(uint256 => uint256) districtYield;
+    /*   districtId =>     roundId     => outcome  */
+    mapping(uint256 => mapping(uint256 => uint256)) gangWarOutcomes;
+    /*   districtId =>     roundId     =>         GANG => numForces */
+    mapping(uint256 => mapping(uint256 => mapping(GANG => uint256))) districtAttackForces;
+    mapping(uint256 => mapping(uint256 => mapping(GANG => uint256))) districtDefenseForces;
+    mapping(uint256 => mapping(uint256 => bool)) districtConnections;
     mapping(GANG => uint256) gangYield;
 }
 
-struct SettingsDS {
-    uint256 TIME_MOVE;
+struct ConstantsDS {
     uint256 TIME_LOCKUP;
+    uint256 TIME_GANG_WAR;
     uint256 TIME_RECOVERY;
     uint256 TIME_REINFORCEMENTS;
-    mapping(uint256 => uint256) districtYield;
+    uint256 DEFENSE_FAVOR_LIM;
+    uint256 BARON_DEFENSE_FORCE;
+    uint256 ATTACK_FAVOR;
+    uint256 DEFENSE_FAVOR;
 }
 
 function ds() pure returns (GangWarDS storage diamondStorage) {
@@ -93,8 +102,48 @@ function ds() pure returns (GangWarDS storage diamondStorage) {
     }
 }
 
-function settings() pure returns (SettingsDS storage diamondStorage) {
+function constants() pure returns (ConstantsDS storage diamondStorage) {
     assembly {
         diamondStorage.slot := DIAMOND_STORAGE_GANG_WAR_SETTINGS
+    }
+}
+
+abstract contract GangWarStorage {
+    /* ------------- View ------------- */
+
+    // function getDistrict(uint256 districtId) external view returns (District memory) {
+    //     return ds().districts[districtId];
+    // }
+
+    function getDistrict(uint256 districtId) external view returns (District memory) {
+        return ds().districts[districtId];
+    }
+
+    function getDistrictConnections(uint256 districtA, uint256 districtB) external view returns (bool) {
+        return ds().districtConnections[districtA][districtB];
+    }
+
+    function getDistrictAttackForces(
+        uint256 districtId,
+        uint256 roundId,
+        GANG gang
+    ) external view returns (uint256) {
+        return ds().districtAttackForces[districtId][roundId][gang];
+    }
+
+    function getDistrictDefenseForces(
+        uint256 districtId,
+        uint256 roundId,
+        GANG gang
+    ) external view returns (uint256) {
+        return ds().districtDefenseForces[districtId][roundId][gang];
+    }
+
+    function getGangWarOutcome(uint256 districtId, uint256 roundId) external view returns (uint256) {
+        return ds().gangWarOutcomes[districtId][roundId];
+    }
+
+    function getConstants() external pure returns (ConstantsDS memory) {
+        return constants();
     }
 }

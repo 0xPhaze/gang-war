@@ -9,80 +9,177 @@ import {ERC721UDS} from "UDS/ERC721UDS.sol";
 import {GMCMarket} from "./GMCMarket.sol";
 // import {ds, settings, District, Gangster} from
 import "./GangWarStorage.sol";
+import "./GangWarRewards.sol";
 // import "./GangWarBase.sol";
+
+import "forge-std/console.sol";
 
 import "./lib/ArrayUtils.sol";
 
 /* ============= Error ============= */
 
-error NotAuthorized();
-
 error BaronMustDeclareInitialAttack();
 error IdsMustBeOfSameGang();
+error ConnectingDistrictNotOwnedByGang();
 error InvalidConnectingDistrict();
-error GangsterMustBeIdle();
+error GangsterInactionable();
+error BaronInactionable();
+error CallerNotOwner();
 
 error MoveOnCooldown();
+error TokenMustBeGangster();
+error TokenMustBeBaron();
+error BaronAttackAlreadyDeclared();
+error CannotAttackDistrictOwnedByGang();
 
-contract GangWar is UUPSUpgradeV(1), OwnableUDS, GangWarBase, GMCMarket {
-    // GMCMarket,
-    // ERC721UDS gmc;
+contract GangWar is UUPSUpgradeV(1), OwnableUDS, GangWarStorage, GangWarBase, GangWarRewards, GMCMarket {
+    ERC721UDS gmc;
 
-    // function init(ERC721UDS gmc_) external initializer {
-    //     __Ownable_init();
-    //     gmc = gmc_;
-    // }
+    function init(ERC721UDS gmc_) external initializer {
+        __Ownable_init();
+
+        gmc = gmc_;
+
+        constants().TIME_GANG_WAR = 100;
+        constants().TIME_LOCKUP = 100;
+        constants().TIME_RECOVERY = 100;
+        constants().TIME_REINFORCEMENTS = 100;
+
+        constants().DEFENSE_FAVOR_LIM = 150;
+        constants().BARON_DEFENSE_FORCE = 50;
+        constants().ATTACK_FAVOR = 65;
+        constants().DEFENSE_FAVOR = 200;
+
+        for (uint256 id; id < 21; ++id) {
+            ds().districts[id].roundId = 1;
+            ds().districts[id].occupants = GANG((id % 3) + 1);
+            ds().districtYield[id] = 100 + (id / 3);
+        }
+
+        initializeGangRewards();
+    }
 
     /* ------------- Public ------------- */
 
-    function joinGangAttack(
-        uint256 districtId,
+    function baronDeclareAttack(
         uint256 connectingId,
+        uint256 districtId,
+        uint256 tokenId
+    ) public {
+        GANG gang = gangOf(tokenId);
+        District storage district = ds().districts[districtId];
+
+        // console.log('occupants', ds().districts[connecting])
+
+        if (!isBaron(tokenId)) revert TokenMustBeBaron();
+        if (gmc.ownerOf(tokenId) != msg.sender) revert CallerNotOwner();
+        if (district.baronAttackId != 0) revert BaronAttackAlreadyDeclared();
+        if (ds().districts[districtId].occupants == gang) revert CannotAttackDistrictOwnedByGang();
+        if (ds().districts[connectingId].occupants != gang) revert ConnectingDistrictNotOwnedByGang();
+        if (districtId == connectingId || !isConnecting(connectingId, districtId)) revert InvalidConnectingDistrict();
+
+        (PLAYER_STATE state, ) = _gangsterStateAndCountdown(tokenId);
+
+        if (state != PLAYER_STATE.IDLE) revert BaronInactionable();
+
+        Gangster storage baron = ds().gangsters[1001];
+
+        baron.location = districtId;
+        baron.roundId = ds().districts[districtId].roundId;
+
+        district.attackers = gang;
+        district.baronAttackId = tokenId;
+        district.attackDeclarationTime = block.timestamp;
+    }
+
+    function joinGangAttack(
+        uint256 connectingId,
+        uint256 districtId,
         uint256[] calldata tokenIds
     ) public {
-        bool attack = true;
+        GANG gang = gangOf(tokenIds[0]);
+        District storage district = ds().districts[districtId];
+
+        // validate baron attack declaration / (+special items)
+        if (ds().districts[connectingId].occupants != gang) revert InvalidConnectingDistrict();
+        if (gangOf(district.baronAttackId) != gang) revert BaronMustDeclareInitialAttack();
+        if (districtId == connectingId || !ds().districtConnections[connectingId][districtId])
+            revert InvalidConnectingDistrict();
+
+        _joinGangWar(districtId, tokenIds);
+    }
+
+    function joinGangDefense(uint256 districtId, uint256[] calldata tokenIds) public {
+        GANG gang = gangOf(tokenIds[0]);
+
+        if (ds().districts[districtId].occupants != gang) revert InvalidConnectingDistrict();
+
+        _joinGangWar(districtId, tokenIds);
+    }
+
+    function _joinGangWar(uint256 districtId, uint256[] calldata tokenIds) internal {
+        uint256 tokenId;
+        Gangster storage gangster;
+        District storage district = ds().districts[districtId];
 
         GANG gang = gangOf(tokenIds[0]);
 
-        // validates physical connectedness
-        // either districts are the same or there is a connection owned by gang
-        if (
-            !(districtId == connectingId || ds().connections[districtId][connectingId]) &&
-            ds().districts[connectingId].occupants != gang
-        ) revert InvalidConnectingDistrict();
-
-        // validate baron attack declaration / (+special items)
-        District storage district = ds().districts[districtId];
-
-        if (attack && gangOf(district.baronAttackId) != gang) revert BaronMustDeclareInitialAttack();
-
-        uint256 tokenId;
-        Gangster storage gangster;
+        uint256 districtRoundId = district.roundId;
 
         for (uint256 i; i < tokenIds.length; ++i) {
             tokenId = tokenIds[i];
 
+            if (isBaron(tokenId)) revert TokenMustBeGangster();
             if (gang != gangOf(tokenId)) revert IdsMustBeOfSameGang();
+            if (gmc.ownerOf(tokenId) != msg.sender) revert CallerNotOwner();
 
             gangster = ds().gangsters[tokenId];
 
-            gangster.location = districtId;
+            (PLAYER_STATE state, ) = _gangsterStateAndCountdown(tokenId);
 
-            (PLAYER_STATE gangsterState, ) = _gangsterStatus(gangster);
-            if (gangsterState != PLAYER_STATE.IDLE) revert GangsterMustBeIdle();
+            if (
+                state == PLAYER_STATE.ATTACK_LOCKED ||
+                state == PLAYER_STATE.DEFEND_LOCKED ||
+                state == PLAYER_STATE.INJURED ||
+                state == PLAYER_STATE.LOCKUP
+            ) revert GangsterInactionable();
+
+            gangster.location = districtId;
+            gangster.roundId = districtRoundId;
 
             // _validateGangMemberIsActionable(gangster);
 
             // remove from old district
         }
 
-        district.attackForces[district.roundId][gang] += tokenIds.length;
+        ds().districtAttackForces[districtId][districtRoundId][gang] += tokenIds.length;
     }
 
-    function _gangsterStatus(Gangster storage gangster) internal view returns (PLAYER_STATE, int256) {
-        District storage district = ds().districts[gangster.location];
+    /* ------------- Internal ------------- */
 
-        GANG gang = gangster.gang;
+    function isConnecting(uint256 districtA, uint256 districtB) internal view returns (bool) {
+        return
+            districtA < districtB
+                ? ds().districtConnections[districtA][districtB]
+                : ds().districtConnections[districtB][districtA]; // prettier-ignore
+    }
+
+    function _validateConnectingDistrict(uint256 districtId, uint256 connectingId) internal view {
+        if (!(districtId == connectingId || ds().districtConnections[districtId][connectingId]))
+            revert InvalidConnectingDistrict();
+    }
+
+    function isBaron(uint256 tokenId) internal pure returns (bool) {
+        return tokenId >= 1000;
+    }
+
+    function _gangsterStateAndCountdown(uint256 gangsterId) internal view returns (PLAYER_STATE, int256) {
+        Gangster storage gangster = ds().gangsters[gangsterId];
+
+        uint256 districtId = gangster.location;
+        District storage district = ds().districts[districtId];
+
+        GANG gang = gangOf(gangsterId);
 
         uint256 roundId = district.roundId;
 
@@ -91,31 +188,40 @@ contract GangWar is UUPSUpgradeV(1), OwnableUDS, GangWarBase, GMCMarket {
 
         bool attacking;
 
-        if (gangOf(district.baronAttackId) == gang) attacking = true;
+        if (district.attackers == gang) attacking = true;
         else assert(district.occupants == gang);
         // else if (district.occupants == gang) {
         //     attacking = false;
         // }
 
-        int256 timeLeft;
+        int256 stateCountdown;
 
         // -------- check lockup
-        timeLeft = int256(settings().TIME_LOCKUP) - int256(block.timestamp - district.lockupTime);
-        if (timeLeft > 0) return (PLAYER_STATE.LOCKUP, timeLeft);
+        stateCountdown = int256(constants().TIME_LOCKUP) - int256(block.timestamp - district.lockupTime);
+        if (stateCountdown > 0) return (PLAYER_STATE.LOCKUP, stateCountdown);
 
         // -------- check gang war outcome
-        timeLeft = int256(settings().TIME_REINFORCEMENTS) - int256(block.timestamp - district.attackDeclarationTime);
-        uint256 outcome = district.outcomes[roundId];
+        stateCountdown =
+            int256(constants().TIME_REINFORCEMENTS) -
+            int256(block.timestamp - district.attackDeclarationTime);
+        uint256 outcome = ds().gangWarOutcomes[districtId][roundId];
 
-        if (outcome == 0) return (attacking ? PLAYER_STATE.ATTACKING : PLAYER_STATE.DEFENDING, timeLeft);
+        // player in attack/defense mode; not committed yet
+        if (stateCountdown > 0) return (attacking ? PLAYER_STATE.ATTACK : PLAYER_STATE.DEFEND, stateCountdown);
+
+        stateCountdown += int256(constants().TIME_GANG_WAR);
+
+        // outcome can only be triggered by upkeep after additional TIME_GANG_WAR has passed
+        // this will release players from lock after injury has been checked
+        if (outcome == 0) return (attacking ? PLAYER_STATE.ATTACK_LOCKED : PLAYER_STATE.DEFEND_LOCKED, stateCountdown);
 
         // -------- check injury
         bool injured = outcome & 1 == 0;
 
         if (!injured) return (PLAYER_STATE.IDLE, 0);
 
-        timeLeft = int256(settings().TIME_RECOVERY) + timeLeft;
-        if (timeLeft > 0) return (PLAYER_STATE.INJURED, timeLeft);
+        stateCountdown = int256(constants().TIME_RECOVERY) + stateCountdown;
+        if (stateCountdown > 0) return (PLAYER_STATE.INJURED, stateCountdown);
 
         return (PLAYER_STATE.IDLE, 0);
     }
@@ -126,11 +232,13 @@ contract GangWar is UUPSUpgradeV(1), OwnableUDS, GangWarBase, GMCMarket {
         if (attackDeclarationTime == 0 || attackDeclarationTime < district.lastUpkeepTime) {
             return DISTRICT_STATUS.IDLE;
         }
-        if (block.timestamp - attackDeclarationTime < settings().TIME_REINFORCEMENTS) {
-            return DISTRICT_STATUS.ATTACKING;
+        if (block.timestamp - attackDeclarationTime < constants().TIME_REINFORCEMENTS + constants().TIME_GANG_WAR) {
+            return DISTRICT_STATUS.ATTACK;
         }
         return DISTRICT_STATUS.POST_ATTACK;
     }
+
+    /* ------------- Upkeep ------------- */
 
     uint256 public immutable UPKEEP_INTERVAL = 15;
 
@@ -160,8 +268,11 @@ contract GangWar is UUPSUpgradeV(1), OwnableUDS, GangWarBase, GMCMarket {
         uint256[] memory districtIds = abi.decode(performData, (uint256[]));
 
         uint256 length = districtIds.length;
+        // sole.log("len", length);
 
         for (uint256 i; i < length; ++i) {
+            // nsole.log("i", districtIds[i]);
+
             uint256 districtId = districtIds[i];
             District storage district = ds().districts[districtId];
 
@@ -176,13 +287,10 @@ contract GangWar is UUPSUpgradeV(1), OwnableUDS, GangWarBase, GMCMarket {
 
                 uint256 rand = uint256(blockhash(block.number - 1));
 
-                district.outcomes[roundId] = rand;
+                ds().gangWarOutcomes[districtId][roundId] = rand;
 
-                if (gangWarWon(rand)) {
-                    uint256 yield = settings().districtYield[districtId];
-
-                    ds().gangYield[occupants] -= yield;
-                    ds().gangYield[attackers] += yield;
+                if (gangWarWon(districtId, roundId, rand)) {
+                    updateGangRewards(attackers, occupants, districtId);
 
                     district.occupants = attackers;
                     district.attackers = GANG.NONE;
@@ -196,42 +304,87 @@ contract GangWar is UUPSUpgradeV(1), OwnableUDS, GangWarBase, GMCMarket {
         }
     }
 
-    function gangWarWon(uint256 rand) internal pure returns (bool) {
-        return (rand & 1) != 0;
+    function gangWarWon(
+        uint256 districtId,
+        uint256 roundId,
+        uint256 rand
+    ) public view returns (bool) {
+        District storage district = ds().districts[districtId];
+
+        uint256 attackForce = ds().districtAttackForces[districtId][roundId][district.attackers];
+        uint256 defenseForce = ds().districtDefenseForces[districtId][roundId][district.occupants];
+
+        bool baronDefense = district.baronDefenseId != 0;
+
+        return rand % 10_000 < gangWarWonProb(attackForce, defenseForce, baronDefense);
     }
 
-    // // function _timeUntilAttack(District storage district) internal view returns (bool, uint256) {
-    // //     if (district.lastUpkeepTime < district.attackDeclarationTime)
-    // //         if (block.timestamp - district.attackDeclarationTime > settings().TIME_REINFORCEMENTS) {
-    // //             return (true, timeDelta);
-    // //         }
-    // // }
+    function gangWarWonProb(
+        uint256 attackForce,
+        uint256 defenseForce,
+        bool baronDefense
+    ) public view returns (uint256) {
+        attackForce += 1;
+        defenseForce += 1;
 
-    // // function _gangWarOutCome
+        // if (attackForce == 0) return 0;
 
-    // function _validateGangMemberIsActionable(Gangster storage gangster) internal view {
-    //     (PLAYER_STATE status, ) = _gangMemberStatus(gangster);
-    //     if (status != PLAYER_STATE.IDLE) revert MoveOnCooldown();
-    // }
+        // @note make more precise with shifts
+        uint256 defenseFavorLim = constants().DEFENSE_FAVOR_LIM;
+        uint256 s = attackForce > defenseFavorLim ? 10_000 : 10_000 - (100 - (100 * attackForce) / defenseFavorLim)**2;
 
-    // function _setGangMemberStatus(
-    //     uint256 districtId,
-    //     GANG gang,
-    //     uint256 tokenId
-    // ) internal view {}
+        defenseForce =
+            ((s * constants().ATTACK_FAVOR + (10_000 - s) * constants().DEFENSE_FAVOR) * defenseForce) /
+            10_000 /
+            100;
 
-    function _validateMove(
-        uint256 districtId,
-        uint256 connectingId,
-        MOVE_STATE moveState,
-        GANG gangId
-    ) internal view {}
+        // constants().BARON_DEFENSE_FORCE;
+        if (baronDefense) defenseForce += 10_000 * constants().BARON_DEFENSE_FORCE;
+
+        uint256 p = (10_000 * 10_000 * attackForce) / (10_000 * attackForce + defenseForce);
+
+        if (p > 10_000) p = 10_000**3 - 4 * (10_000 - p)**3;
+        else p = 4 * (p)**3;
+
+        return p / 10_000**2;
+    }
 
     function gangOf(uint256 id) public pure returns (GANG) {
-        return GANG(id % 3);
+        return id == 0 ? GANG.NONE : GANG(((id < 1000 ? id - 1 : id - 1001) % 3) + 1);
+    }
+
+    function getGangster(uint256 tokenId) external view returns (GangsterView memory gangster) {
+        Gangster storage gangsterStore = ds().gangsters[tokenId];
+
+        (gangster.state, gangster.stateCountdown) = _gangsterStateAndCountdown(tokenId);
+        gangster.roundId = gangsterStore.roundId;
+        gangster.location = gangsterStore.location;
     }
 
     /* ------------- Owner ------------- */
+
+    function setDistrictsInitialOwnership(uint256[] calldata districtIds, GANG[] calldata gangs) external onlyOwner {
+        for (uint256 i; i < districtIds.length; ++i) {
+            ds().districts[districtIds[i]].occupants = gangs[i];
+        }
+    }
+
+    function addDistrictConnections(uint256[] calldata districtsA, uint256[] calldata districtsB) external onlyOwner {
+        for (uint256 i; i < districtsA.length; ++i) {
+            assert(districtsA[i] < districtsB[i]);
+            ds().districtConnections[districtsA[i]][districtsB[i]] = true;
+        }
+    }
+
+    function removeDistrictConnections(uint256[] calldata districtsA, uint256[] calldata districtsB)
+        external
+        onlyOwner
+    {
+        for (uint256 i; i < districtsA.length; ++i) {
+            assert(districtsA[i] < districtsB[i]);
+            ds().districtConnections[districtsA[i]][districtsB[i]] = false;
+        }
+    }
 
     /* ------------- Internal ------------- */
 

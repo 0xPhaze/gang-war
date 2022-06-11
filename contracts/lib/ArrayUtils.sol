@@ -6,7 +6,7 @@ library ArrayUtils {
         uint256 length = arr.length;
         uint256[] memory ret = new uint256[](length + 1);
         for (uint256 i; i < length; ++i) ret[i] = arr[i];
-        ret[length + 1] = value;
+        ret[length] = value;
         return ret;
     }
 
@@ -15,150 +15,6 @@ library ArrayUtils {
     function includes(address[] memory arr, address address_) internal pure returns (bool) {
         for (uint256 i; i < arr.length; ++i) if (arr[i] == address_) return true;
         return false;
-    }
-
-    /* ------------- uint8 ------------- */
-
-    function toMemory32(uint8[1] memory arr) internal pure returns (uint32[] memory out) {
-        unchecked {
-            out = new uint32[](1);
-            for (uint256 i; i < 1; ++i) out[i] = arr[i];
-        }
-    }
-
-    function toMemory32(uint8[2] memory arr) internal pure returns (uint32[] memory out) {
-        unchecked {
-            out = new uint32[](2);
-            for (uint256 i; i < 2; ++i) out[i] = arr[i];
-        }
-    }
-
-    function toMemory32(uint8[3] memory arr) internal pure returns (uint32[] memory out) {
-        unchecked {
-            out = new uint32[](3);
-            for (uint256 i; i < 3; ++i) out[i] = arr[i];
-        }
-    }
-
-    function toMemory32(uint8[4] memory arr) internal pure returns (uint32[] memory out) {
-        unchecked {
-            out = new uint32[](4);
-            for (uint256 i; i < 4; ++i) out[i] = arr[i];
-        }
-    }
-
-    function toMemory32(uint8[5] memory arr) internal pure returns (uint32[] memory out) {
-        unchecked {
-            out = new uint32[](5);
-            for (uint256 i; i < 5; ++i) out[i] = arr[i];
-        }
-    }
-
-    function toMemory32(uint8[6] memory arr) internal pure returns (uint32[] memory out) {
-        unchecked {
-            out = new uint32[](6);
-            for (uint256 i; i < 6; ++i) out[i] = arr[i];
-        }
-    }
-
-    function toMemory32(uint8[7] memory arr) internal pure returns (uint32[] memory out) {
-        unchecked {
-            out = new uint32[](7);
-            for (uint256 i; i < 7; ++i) out[i] = arr[i];
-        }
-    }
-
-    function toMemory32(uint8[8] memory arr) internal pure returns (uint32[] memory out) {
-        unchecked {
-            out = new uint32[](8);
-            for (uint256 i; i < 8; ++i) out[i] = arr[i];
-        }
-    }
-
-    function toMemory32(uint8[9] memory arr) internal pure returns (uint32[] memory out) {
-        unchecked {
-            out = new uint32[](9);
-            for (uint256 i; i < 9; ++i) out[i] = arr[i];
-        }
-    }
-
-    function toMemory32(uint8[10] memory arr) internal pure returns (uint32[] memory out) {
-        unchecked {
-            out = new uint32[](10);
-            for (uint256 i; i < 10; ++i) out[i] = arr[i];
-        }
-    }
-
-    /* ------------- uint16 ------------- */
-
-    function toMemory32(uint16[1] memory arr) internal pure returns (uint32[] memory out) {
-        unchecked {
-            out = new uint32[](1);
-            for (uint256 i; i < 1; ++i) out[i] = arr[i];
-        }
-    }
-
-    function toMemory32(uint16[2] memory arr) internal pure returns (uint32[] memory out) {
-        unchecked {
-            out = new uint32[](2);
-            for (uint256 i; i < 2; ++i) out[i] = arr[i];
-        }
-    }
-
-    function toMemory32(uint16[3] memory arr) internal pure returns (uint32[] memory out) {
-        unchecked {
-            out = new uint32[](3);
-            for (uint256 i; i < 3; ++i) out[i] = arr[i];
-        }
-    }
-
-    function toMemory32(uint16[4] memory arr) internal pure returns (uint32[] memory out) {
-        unchecked {
-            out = new uint32[](4);
-            for (uint256 i; i < 4; ++i) out[i] = arr[i];
-        }
-    }
-
-    function toMemory32(uint16[5] memory arr) internal pure returns (uint32[] memory out) {
-        unchecked {
-            out = new uint32[](5);
-            for (uint256 i; i < 5; ++i) out[i] = arr[i];
-        }
-    }
-
-    function toMemory32(uint16[6] memory arr) internal pure returns (uint32[] memory out) {
-        unchecked {
-            out = new uint32[](6);
-            for (uint256 i; i < 6; ++i) out[i] = arr[i];
-        }
-    }
-
-    function toMemory32(uint16[7] memory arr) internal pure returns (uint32[] memory out) {
-        unchecked {
-            out = new uint32[](7);
-            for (uint256 i; i < 7; ++i) out[i] = arr[i];
-        }
-    }
-
-    function toMemory32(uint16[8] memory arr) internal pure returns (uint32[] memory out) {
-        unchecked {
-            out = new uint32[](8);
-            for (uint256 i; i < 8; ++i) out[i] = arr[i];
-        }
-    }
-
-    function toMemory32(uint16[9] memory arr) internal pure returns (uint32[] memory out) {
-        unchecked {
-            out = new uint32[](9);
-            for (uint256 i; i < 9; ++i) out[i] = arr[i];
-        }
-    }
-
-    function toMemory32(uint16[10] memory arr) internal pure returns (uint32[] memory out) {
-        unchecked {
-            out = new uint32[](10);
-            for (uint256 i; i < 10; ++i) out[i] = arr[i];
-        }
     }
 
     /* ------------- uint8 ------------- */
@@ -227,6 +83,76 @@ library ArrayUtils {
     }
 
     function toMemory(uint8[10] memory arr) internal pure returns (uint256[] memory out) {
+        unchecked {
+            out = new uint256[](10);
+            for (uint256 i; i < 10; ++i) out[i] = arr[i];
+        }
+    }
+
+    function toMemory(uint8[11] memory arr) internal pure returns (uint256[] memory out) {
+        unchecked {
+            out = new uint256[](1);
+            for (uint256 i; i < 1; ++i) out[i] = arr[i];
+        }
+    }
+
+    function toMemory(uint8[12] memory arr) internal pure returns (uint256[] memory out) {
+        unchecked {
+            out = new uint256[](2);
+            for (uint256 i; i < 2; ++i) out[i] = arr[i];
+        }
+    }
+
+    function toMemory(uint8[13] memory arr) internal pure returns (uint256[] memory out) {
+        unchecked {
+            out = new uint256[](3);
+            for (uint256 i; i < 3; ++i) out[i] = arr[i];
+        }
+    }
+
+    function toMemory(uint8[14] memory arr) internal pure returns (uint256[] memory out) {
+        unchecked {
+            out = new uint256[](4);
+            for (uint256 i; i < 4; ++i) out[i] = arr[i];
+        }
+    }
+
+    function toMemory(uint8[15] memory arr) internal pure returns (uint256[] memory out) {
+        unchecked {
+            out = new uint256[](5);
+            for (uint256 i; i < 5; ++i) out[i] = arr[i];
+        }
+    }
+
+    function toMemory(uint8[16] memory arr) internal pure returns (uint256[] memory out) {
+        unchecked {
+            out = new uint256[](6);
+            for (uint256 i; i < 6; ++i) out[i] = arr[i];
+        }
+    }
+
+    function toMemory(uint8[17] memory arr) internal pure returns (uint256[] memory out) {
+        unchecked {
+            out = new uint256[](7);
+            for (uint256 i; i < 7; ++i) out[i] = arr[i];
+        }
+    }
+
+    function toMemory(uint8[18] memory arr) internal pure returns (uint256[] memory out) {
+        unchecked {
+            out = new uint256[](8);
+            for (uint256 i; i < 8; ++i) out[i] = arr[i];
+        }
+    }
+
+    function toMemory(uint8[19] memory arr) internal pure returns (uint256[] memory out) {
+        unchecked {
+            out = new uint256[](9);
+            for (uint256 i; i < 9; ++i) out[i] = arr[i];
+        }
+    }
+
+    function toMemory(uint8[20] memory arr) internal pure returns (uint256[] memory out) {
         unchecked {
             out = new uint256[](10);
             for (uint256 i; i < 10; ++i) out[i] = arr[i];
@@ -373,6 +299,150 @@ library ArrayUtils {
     function toMemory(uint256[10] memory arr) internal pure returns (uint256[] memory out) {
         unchecked {
             out = new uint256[](10);
+            for (uint256 i; i < 10; ++i) out[i] = arr[i];
+        }
+    }
+
+    /* ------------- uint8 ------------- */
+
+    function toMemory32(uint8[1] memory arr) internal pure returns (uint32[] memory out) {
+        unchecked {
+            out = new uint32[](1);
+            for (uint256 i; i < 1; ++i) out[i] = arr[i];
+        }
+    }
+
+    function toMemory32(uint8[2] memory arr) internal pure returns (uint32[] memory out) {
+        unchecked {
+            out = new uint32[](2);
+            for (uint256 i; i < 2; ++i) out[i] = arr[i];
+        }
+    }
+
+    function toMemory32(uint8[3] memory arr) internal pure returns (uint32[] memory out) {
+        unchecked {
+            out = new uint32[](3);
+            for (uint256 i; i < 3; ++i) out[i] = arr[i];
+        }
+    }
+
+    function toMemory32(uint8[4] memory arr) internal pure returns (uint32[] memory out) {
+        unchecked {
+            out = new uint32[](4);
+            for (uint256 i; i < 4; ++i) out[i] = arr[i];
+        }
+    }
+
+    function toMemory32(uint8[5] memory arr) internal pure returns (uint32[] memory out) {
+        unchecked {
+            out = new uint32[](5);
+            for (uint256 i; i < 5; ++i) out[i] = arr[i];
+        }
+    }
+
+    function toMemory32(uint8[6] memory arr) internal pure returns (uint32[] memory out) {
+        unchecked {
+            out = new uint32[](6);
+            for (uint256 i; i < 6; ++i) out[i] = arr[i];
+        }
+    }
+
+    function toMemory32(uint8[7] memory arr) internal pure returns (uint32[] memory out) {
+        unchecked {
+            out = new uint32[](7);
+            for (uint256 i; i < 7; ++i) out[i] = arr[i];
+        }
+    }
+
+    function toMemory32(uint8[8] memory arr) internal pure returns (uint32[] memory out) {
+        unchecked {
+            out = new uint32[](8);
+            for (uint256 i; i < 8; ++i) out[i] = arr[i];
+        }
+    }
+
+    function toMemory32(uint8[9] memory arr) internal pure returns (uint32[] memory out) {
+        unchecked {
+            out = new uint32[](9);
+            for (uint256 i; i < 9; ++i) out[i] = arr[i];
+        }
+    }
+
+    function toMemory32(uint8[10] memory arr) internal pure returns (uint32[] memory out) {
+        unchecked {
+            out = new uint32[](10);
+            for (uint256 i; i < 10; ++i) out[i] = arr[i];
+        }
+    }
+
+    /* ------------- uint16 ------------- */
+
+    function toMemory32(uint16[1] memory arr) internal pure returns (uint32[] memory out) {
+        unchecked {
+            out = new uint32[](1);
+            for (uint256 i; i < 1; ++i) out[i] = arr[i];
+        }
+    }
+
+    function toMemory32(uint16[2] memory arr) internal pure returns (uint32[] memory out) {
+        unchecked {
+            out = new uint32[](2);
+            for (uint256 i; i < 2; ++i) out[i] = arr[i];
+        }
+    }
+
+    function toMemory32(uint16[3] memory arr) internal pure returns (uint32[] memory out) {
+        unchecked {
+            out = new uint32[](3);
+            for (uint256 i; i < 3; ++i) out[i] = arr[i];
+        }
+    }
+
+    function toMemory32(uint16[4] memory arr) internal pure returns (uint32[] memory out) {
+        unchecked {
+            out = new uint32[](4);
+            for (uint256 i; i < 4; ++i) out[i] = arr[i];
+        }
+    }
+
+    function toMemory32(uint16[5] memory arr) internal pure returns (uint32[] memory out) {
+        unchecked {
+            out = new uint32[](5);
+            for (uint256 i; i < 5; ++i) out[i] = arr[i];
+        }
+    }
+
+    function toMemory32(uint16[6] memory arr) internal pure returns (uint32[] memory out) {
+        unchecked {
+            out = new uint32[](6);
+            for (uint256 i; i < 6; ++i) out[i] = arr[i];
+        }
+    }
+
+    function toMemory32(uint16[7] memory arr) internal pure returns (uint32[] memory out) {
+        unchecked {
+            out = new uint32[](7);
+            for (uint256 i; i < 7; ++i) out[i] = arr[i];
+        }
+    }
+
+    function toMemory32(uint16[8] memory arr) internal pure returns (uint32[] memory out) {
+        unchecked {
+            out = new uint32[](8);
+            for (uint256 i; i < 8; ++i) out[i] = arr[i];
+        }
+    }
+
+    function toMemory32(uint16[9] memory arr) internal pure returns (uint32[] memory out) {
+        unchecked {
+            out = new uint32[](9);
+            for (uint256 i; i < 9; ++i) out[i] = arr[i];
+        }
+    }
+
+    function toMemory32(uint16[10] memory arr) internal pure returns (uint32[] memory out) {
+        unchecked {
+            out = new uint32[](10);
             for (uint256 i; i < 10; ++i) out[i] = arr[i];
         }
     }

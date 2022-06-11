@@ -14,7 +14,7 @@
     "dotenv": "^16.0.0"
   },
   "scripts": {
-    "test": "forge test -vvv",
+    "test": "forge test -vvv --ffi",
     "deploy": "npx hardhat run scripts/deploy.js"
   }
 }
