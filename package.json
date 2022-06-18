@@ -14,7 +14,8 @@
     "dotenv": "^16.0.0"
   },
   "scripts": {
-    "test": "forge test -vvv --ffi",
+    "test": "forge test -vvv",
+    "testx": "forge test -vvvv --ffi --match-contract TestGangWarOutcome",
     "deploy": "npx hardhat run scripts/deploy.js"
   }
 }

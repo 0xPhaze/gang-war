@@ -9,6 +9,8 @@ import "../lib/ArrayUtils.sol";
 import {ERC721UDS} from "UDS/ERC721UDS.sol";
 import {ERC1967Proxy} from "UDS/proxy/ERC1967VersionedUDS.sol";
 
+import {MockVRFCoordinatorV2} from "./mocks/MockVRFCoordinator.sol";
+
 import "../GangWar.sol";
 
 contract TestGangWar is Test {
@@ -19,13 +21,13 @@ contract TestGangWar is Test {
     address chris = address(0xc215);
     address tester = address(this);
 
-    GangWar impl;
+    MockVRFCoordinatorV2 coordinator = new MockVRFCoordinatorV2();
+    GangWar impl = new GangWar(address(coordinator), 0, 0, 0, 0);
     GangWar game;
     MockERC721 gmc;
 
     function setUp() public {
         gmc = new MockERC721("GMC", "GMC");
-        impl = new GangWar();
 
         bytes memory initCall = abi.encodeWithSelector(game.init.selector, ERC721UDS(address(gmc)));
         game = GangWar(address(new ERC1967Proxy(address(impl), initCall)));
@@ -39,7 +41,7 @@ contract TestGangWar is Test {
         GANG[] memory gangs;
         assembly { gangs := gangsUint256 } // prettier-ignore
         game.setDistrictsInitialOwnership(gDistrictIds, gangs);
-
+        //
         gmc.mint(bob, 1001); // Yakuza Baron
         gmc.mint(bob, 1002); // Cartel Baron
         gmc.mint(bob, 1003); // Cyberp Baron
@@ -58,6 +60,10 @@ contract TestGangWar is Test {
     }
 
     function assertEq(PLAYER_STATE a, PLAYER_STATE b) internal {
+        assertEq(uint8(a), uint8(b));
+    }
+
+    function assertEq(DISTRICT_STATE a, DISTRICT_STATE b) internal {
         assertEq(uint8(a), uint8(b));
     }
 
@@ -91,6 +97,7 @@ contract TestGangWar is Test {
         assertEq(game.getGangster(1).state, PLAYER_STATE.IDLE);
         assertEq(game.getGangster(1001).state, PLAYER_STATE.IDLE);
 
+        assertEq(game.getConstants().TIME_TRUCE, 100);
         assertEq(game.getConstants().TIME_GANG_WAR, 100);
         assertEq(game.getConstants().TIME_LOCKUP, 100);
         assertEq(game.getConstants().TIME_RECOVERY, 100);
@@ -106,6 +113,58 @@ contract TestGangWar is Test {
         assertTrue(yieldYakuza > 0);
         assertEq(yieldYakuza, yieldCartel);
         assertEq(yieldYakuza, yieldCyberpunk);
+    }
+
+    /* ------------- districtState() ------------- */
+
+    function test_districtState() public {
+        DISTRICT_STATE state;
+        District memory district;
+
+        (district, state) = game.getDistrictAndState(2);
+        assertEq(state, DISTRICT_STATE.IDLE);
+
+        // REINFORCEMENT
+        vm.prank(bob);
+        game.baronDeclareAttack(1, 2, 1001);
+
+        (district, state) = game.getDistrictAndState(2);
+        assertEq(state, DISTRICT_STATE.REINFORCEMENT);
+
+        // GANG_WAR
+        skip(game.getConstants().TIME_REINFORCEMENTS);
+
+        (district, state) = game.getDistrictAndState(2);
+        assertEq(state, DISTRICT_STATE.GANG_WAR);
+
+        // POST_GANG_WAR
+        skip(game.getConstants().TIME_GANG_WAR);
+
+        (district, state) = game.getDistrictAndState(2);
+        assertEq(state, DISTRICT_STATE.POST_GANG_WAR);
+
+        // skipping time won't change phase
+        skip(10000000000);
+
+        (district, state) = game.getDistrictAndState(2);
+        assertEq(state, DISTRICT_STATE.POST_GANG_WAR);
+
+        // TRUCE - perform upkeep
+        (, bytes memory data) = game.checkUpkeep("");
+        game.performUpkeep(data);
+
+        uint256 requestId = coordinator.requestIdCounter();
+        vm.prank(address(coordinator));
+        game.rawFulfillRandomWords(requestId, [1234].toMemory());
+
+        (district, state) = game.getDistrictAndState(2);
+        assertEq(state, DISTRICT_STATE.TRUCE);
+
+        // IDLE
+        skip(game.getConstants().TIME_TRUCE);
+
+        (district, state) = game.getDistrictAndState(2);
+        assertEq(state, DISTRICT_STATE.IDLE);
     }
 
     /* ------------- baronDeclareAttack() ------------- */
@@ -135,6 +194,12 @@ contract TestGangWar is Test {
         assertEq(baron.state, PLAYER_STATE.ATTACK_LOCKED);
         assertEq(baron.stateCountdown, 100);
     }
+
+    /// verify baron state after attacking 2nd district
+
+    /// verify baron can attack 2nd district
+
+    /// attack the same district twice with different baron
 
     /// attack the same district twice
     function test_baronDeclareAttack_fail_BaronAttackAlreadyDeclared() public {
@@ -169,9 +234,48 @@ contract TestGangWar is Test {
 
         GangsterView memory gangster = game.getGangster(1);
 
+        assertEq(gangster.roundId, 1);
         assertEq(gangster.location, 2);
         assertEq(gangster.state, PLAYER_STATE.ATTACK);
-        assertEq(gangster.roundId, game.getDistrict(2).roundId);
+        assertEq(game.getDistrict(2).roundId, 1);
+        assertEq(uint256(gangster.stateCountdown), game.getConstants().TIME_REINFORCEMENTS);
+    }
+
+    /// Join in another attack in different district
+    function test_joinGangAttack2() public {
+        // -------- perform first attack
+        vm.prank(bob);
+        game.baronDeclareAttack(1, 2, 1001);
+
+        vm.prank(alice);
+        game.joinGangAttack(1, 2, [1].toMemory());
+
+        skip(5000000);
+
+        // -------- perform upkeep
+        (, bytes memory data) = game.checkUpkeep("");
+        game.performUpkeep(data);
+
+        // -------- request outcome
+        uint256 requestId = coordinator.requestIdCounter();
+        vm.prank(address(coordinator));
+        game.rawFulfillRandomWords(requestId, [1234].toMemory());
+
+        skip(5000000);
+
+        // -------- perform second attack
+        vm.prank(bob);
+        game.baronDeclareAttack(4, 5, 1001);
+
+        vm.prank(alice);
+        game.joinGangAttack(4, 5, [1].toMemory());
+
+        GangsterView memory gangster = game.getGangster(1);
+
+        assertEq(gangster.roundId, 1);
+        assertEq(gangster.location, 5);
+        assertEq(gangster.state, PLAYER_STATE.ATTACK);
+        assertEq(game.getDistrict(5).roundId, 1);
         assertEq(uint256(gangster.stateCountdown), game.getConstants().TIME_REINFORCEMENTS);
     }
 
@@ -205,7 +309,7 @@ contract TestGangWar is Test {
         game.joinGangAttack(4, 2, [1].toMemory());
     }
 
-    /// Invalid connecting district
+    /// Invalid connecting district (not owned by attacker)
     function test_joinGangAttack_fail_InvalidConnectingDistrict2() public {
         vm.prank(bob);
         game.baronDeclareAttack(1, 2, 1001);
@@ -273,10 +377,31 @@ contract TestGangWar is Test {
         game.joinGangDefense(5, [2].toMemory());
     }
 
+    /* ------------- joinGangDefense() ------------- */
+
+    function test_joinGangDefense() public {
+        // vm.prank(bob);
+        // game.baronDeclareAttack(1, 2, 1001);
+
+        vm.prank(alice);
+        game.joinGangDefense(1, [1].toMemory());
+
+        GangsterView memory gangster = game.getGangster(1);
+
+        assertEq(gangster.location, 1);
+        // assertEq(gangster.state, PLAYER_STATE.DEFEND);
+        // assertEq(gangster.roundId, game.getDistrict(1).roundId);
+        // assertEq(uint256(gangster.stateCountdown), game.getConstants().TIME_REINFORCEMENTS);
+    }
+
+    // @note repeat for defense
+
     /* ------------- checkUpkeep() ------------- */
 
     function test_checkUpkeep() public {
         bool upkeepNeeded;
+        bytes memory data;
+        uint256[] memory ids;
 
         (upkeepNeeded, ) = game.checkUpkeep("");
         assertFalse(upkeepNeeded);
@@ -293,10 +418,8 @@ contract TestGangWar is Test {
         (upkeepNeeded, ) = game.checkUpkeep("");
         assertFalse(upkeepNeeded);
 
+        // upkeep is needed after time passage
         skip(50000);
-
-        uint256[] memory ids;
-        bytes memory data;
 
         (upkeepNeeded, data) = game.checkUpkeep("");
         assertTrue(upkeepNeeded);
@@ -315,11 +438,37 @@ contract TestGangWar is Test {
 
         ids = abi.decode(data, (uint256[]));
         assertEq(ids, [2, 5].toMemory());
+
+        // perform upkeep
+        game.performUpkeep(data);
+
+        (upkeepNeeded, data) = game.checkUpkeep("");
+        assertFalse(upkeepNeeded);
+
+        ids = abi.decode(data, (uint256[]));
+        assertEq(ids.length, 0);
+
+        // performing upkeep twice does not do anything
+        vm.record();
+
+        game.performUpkeep(data);
+
+        (, bytes32[] memory writes) = vm.accesses(address(game));
+        assertEq(writes.length, 0);
+
+        // waiting for 1 minute without confirming VRF call should reset request status
+        skip(1 minutes + 1);
+
+        (upkeepNeeded, data) = game.checkUpkeep("");
+        assertTrue(upkeepNeeded);
+
+        ids = abi.decode(data, (uint256[]));
+        assertEq(ids, [2, 5].toMemory());
     }
 
-    /* ------------- performUpkeep() ------------- */
+    /* ------------- fullfillRandomWords() ------------- */
 
-    function test_performUpkeep() public {
+    function test_fullfillRandomWords() public {
         bool upkeepNeeded;
         bytes memory data;
 
@@ -335,16 +484,88 @@ contract TestGangWar is Test {
 
         game.performUpkeep(data);
 
-        assertEq(game.getDistrict(2).roundId, 2);
-        assertEq(game.getDistrict(5).roundId, 2);
-        assertEq(game.getDistrict(2).lastUpkeepTime, block.timestamp);
-        assertEq(game.getDistrict(5).lastUpkeepTime, block.timestamp);
+        // assertions
+        DISTRICT_STATE state2;
+        DISTRICT_STATE state5;
+        District memory district2;
+        District memory district5;
 
+        (district2, state2) = game.getDistrictAndState(2);
+        (district5, state5) = game.getDistrictAndState(5);
+
+        assertEq(state2, DISTRICT_STATE.POST_GANG_WAR);
+        assertEq(state5, DISTRICT_STATE.POST_GANG_WAR);
+        assertEq(district2.roundId, 1); // starts at 1
+        assertEq(district5.roundId, 1);
+        assertEq(district2.lastUpkeepTime, block.timestamp);
+        assertEq(district5.lastUpkeepTime, block.timestamp);
+        assertEq(district2.lastOutcomeTime, 0);
+        assertEq(district5.lastOutcomeTime, 0);
+        assertEq(game.getGangWarOutcome(2, 1), 0);
+        assertEq(game.getGangWarOutcome(5, 1), 0);
+
+        // upkeepNeeded should be false now
+        (upkeepNeeded, data) = game.checkUpkeep("");
+        // uint256[] memory ids = abi.decode(data, (uint256[]));
+
+        assertFalse(upkeepNeeded);
+        // assertEq(ids.length, 0);
+
+        uint256 requestId = coordinator.requestIdCounter();
+        vm.prank(address(coordinator));
+        game.rawFulfillRandomWords(requestId, [1234].toMemory());
+
+        (district2, state2) = game.getDistrictAndState(2);
+        (district5, state5) = game.getDistrictAndState(5);
+
+        assertEq(state2, DISTRICT_STATE.TRUCE);
+        assertEq(state5, DISTRICT_STATE.TRUCE);
+        assertEq(district2.roundId, 2);
+        assertEq(district5.roundId, 2);
+        assertEq(district2.lastOutcomeTime, block.timestamp);
+        assertEq(district5.lastOutcomeTime, block.timestamp);
         assertTrue(game.getGangWarOutcome(2, 1) > 0);
         assertTrue(game.getGangWarOutcome(5, 1) > 0);
+
+        // check district state
+
+        // upkeep should remain false, even after 1 additional minute
+        skip(1 minutes + 1);
+        (upkeepNeeded, data) = game.checkUpkeep("");
+        uint256[] memory ids = abi.decode(data, (uint256[]));
+
+        assertFalse(upkeepNeeded);
+        assertEq(ids.length, 0);
     }
 
-    function test_performUpkeep_fail_() public {
-        game.performUpkeep(abi.encode([1].toMemory()));
-    }
+    // function test_performUpkeep_twice() public {
+    //     vm.prank(bob);
+    //     game.baronDeclareAttack(1, 2, 1001);
+
+    //     vm.prank(bob);
+    //     game.baronDeclareAttack(4, 5, 1004);
+
+    //     skip(50000);
+
+    //     (, bytes memory data) = game.checkUpkeep("");
+
+    //     game.performUpkeep(data);
+
+    //     // performing upkeep twice shouldn't change any assertions
+    //     game.performUpkeep(data);
+
+    //     assertEq(game.getDistrict(2).roundId, 2);
+    //     assertEq(game.getDistrict(5).roundId, 2);
+    //     assertEq(game.getDistrict(2).lastUpkeepTime, block.timestamp);
+    //     assertEq(game.getDistrict(5).lastUpkeepTime, block.timestamp);
+
+    //     assertTrue(game.getGangWarOutcome(2, 1) > 0);
+    //     assertTrue(game.getGangWarOutcome(5, 1) > 0);
+    // }
+
+    // function test_performUpkeep_fail_() public {
+    //     game.performUpkeep(abi.encode([1].toMemory()));
+    // }
+
+    // @note validate absolute attack forces and gang yields
 }

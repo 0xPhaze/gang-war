@@ -5,10 +5,10 @@ import argparse
 
 
 def main(args):
-    prob = gang_war_won_prob(
+    prob = gang_war_won_prob2(
         args.attack_force, args.defense_force, args.baron_defense
     )
-    enc = encode_single('uint256', int(prob * 10**18))
+    enc = encode_single('uint256', int(prob))
     print("0x" + enc.hex())
 
 
@@ -29,13 +29,38 @@ def gang_war_won_prob(a, b, baronDefense):
     a += 1
     b += 1
 
-    s = (1 - (1 - a / C_LIM) ** 2) * (a < C_LIM) + (a >= C_LIM)
+    s = (a < C_LIM) * ((1 - a / C_LIM) ** 2)
 
-    b = ((1 - s) * C_D + s * C_A) * b + C_B * baronDefense
+    b = (s * C_D + (1 - s) * C_A) * b + C_B * baronDefense
 
     p = a / (a + b)
+    # p = 1 - 4 * (1 - p) ** 3 if p > 0.5 else 4 * (p ** 3)
     p = (p > 0.5) * (1 - 4 * (1 - p) ** 3) + (p <= 0.5) * 4 * (p ** 3)
     return p
+
+
+def gang_war_won_prob2(a, b, baronDefense):
+    C_D = 2
+    C_A = 0.65
+    C_B = 50
+    C_LIM = 150
+
+    a = int(a + 1)
+    b = int(b + 1)
+
+    s = ((1 << 32) - int((a << 32) / C_LIM)) ** 2 if a < C_LIM else 0
+
+    b = (s * C_D + ((1 << 64) - s) * C_A) * b
+
+    if baronDefense:
+        b += C_B << 64
+
+    p = (a << 128) / ((a << 64) + b)
+    if p > (1 << 63):
+        p = (1 << 192) - 4 * ((1 << 64) - p) ** 3
+    else:
+        p = 4 * (p ** 3)
+    return int(p) >> 64
 
 
 def plot():
@@ -45,7 +70,7 @@ def plot():
     x = np.arange(plot_x_lim)
 
     X, Y = np.meshgrid(x, x)
-    Z = gang_war_won_prob(X, Y)
+    Z = gang_war_won_prob2(X, Y)
 
     plt.style.use('default')
     plt.rcParams.update({'font.size': 22})
@@ -76,3 +101,23 @@ def plot():
 if __name__ == '__main__':
     args = parse_args()
     main(args)
+    # a = gang_war_won_prob(78, 56, 1)
+    # b = gang_war_won_prob2(78, 56, 1)
+    # print('true', int(a * 100))
+    # print('comp', int(b * 100) >> 128)
+
+    # a = gang_war_won_prob(150, 150, 1)
+    # b = gang_war_won_prob2(150, 150, 1)
+    # print('true', int(a * 100))
+    # print('comp', int(b * 100) >> 128)
+
+    # a = gang_war_won_prob(137, 1493, 0)
+    # b = gang_war_won_prob2(137, 1493, 0)
+    # print('true', int(a * 100))
+    # print('comp', int(b * 100) >> 128)
+
+    # a = gang_war_won_prob(340, 130, 0)
+    # b = gang_war_won_prob2(340, 130, 0)
+    # print('true', int(a * 100))
+    # print('comp', int(b * 100) >> 128)
+    # # assert(a == b)

@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import {ERC721UDS} from "UDS/ERC721UDS.sol";
-import "./GangWarBase.sol";
+// import "./GangWarBase.sol";
 
 /* ============= Constants ============= */
 // uint256 constant STATUS_IDLE = 0;
@@ -28,10 +28,12 @@ enum GANG {
     CYBERP
 }
 
-enum DISTRICT_STATUS {
+enum DISTRICT_STATE {
     IDLE,
-    ATTACK,
-    POST_ATTACK
+    REINFORCEMENT,
+    GANG_WAR,
+    POST_GANG_WAR,
+    TRUCE
 }
 
 enum PLAYER_STATE {
@@ -67,15 +69,17 @@ struct District {
     uint256 baronAttackId;
     uint256 baronDefenseId;
     uint256 lastUpkeepTime;
+    uint256 lastOutcomeTime;
     uint256 lockupTime;
+    uint256 yield;
 }
 
 struct GangWarDS {
     ERC721UDS gmc;
     mapping(uint256 => District) districts;
     mapping(uint256 => Gangster) gangsters;
-    /*   districtId => yield */
-    mapping(uint256 => uint256) districtYield;
+    /*   districtId => districtIds  */
+    mapping(uint256 => uint256[]) requestIdToDistrictIds;
     /*   districtId =>     roundId     => outcome  */
     mapping(uint256 => mapping(uint256 => uint256)) gangWarOutcomes;
     /*   districtId =>     roundId     =>         GANG => numForces */
@@ -86,6 +90,7 @@ struct GangWarDS {
 }
 
 struct ConstantsDS {
+    uint256 TIME_TRUCE;
     uint256 TIME_LOCKUP;
     uint256 TIME_GANG_WAR;
     uint256 TIME_RECOVERY;

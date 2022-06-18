@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "forge-std/Test.sol";
 import "forge-std/console.sol";
 import "solmate/test/utils/mocks/MockERC721.sol";
-import "solmate/test/utils/LibString.sol";
+import "solmate/utils/LibString.sol";
 
 import "../lib/ArrayUtils.sol";
 import {ERC721UDS} from "UDS/ERC721UDS.sol";
@@ -12,7 +12,7 @@ import {ERC1967Proxy} from "UDS/proxy/ERC1967VersionedUDS.sol";
 
 import "../GangWar.sol";
 
-contract TestGangWar is Test {
+contract TestGangWarOutcome is Test {
     using ArrayUtils for *;
     using LibString for uint256;
 
@@ -21,9 +21,13 @@ contract TestGangWar is Test {
     address chris = address(0xc215);
     address tester = address(this);
 
-    GangWar impl = new GangWar();
+    // GangWar impl = new GangWar();
+    // GangWar game;
 
-    function setUp() public {}
+    function setUp() public {
+        // bytes memory initCall = abi.encodeWithSelector(game.init.selector, ERC721UDS(address(0)));
+        // game = GangWar(address(new ERC1967Proxy(address(impl), initCall)));
+    }
 
     function assertEq(GANG a, GANG b) internal {
         assertEq(uint8(a), uint8(b));
@@ -40,27 +44,88 @@ contract TestGangWar is Test {
 
     /* ------------- gangWarWonProbFFI() ------------- */
 
-    function test_gangWarWonProbFFI() public {
-        // uint256 attackForce,
-        // uint256 defenseForce,
-        // bool baronDefense
-        // ) public {
+    function test_fuzz_gangWarWonProbFFI(
+        uint256 attackForce,
+        uint256 defenseForce,
+        bool baronDefense
+    ) internal {
+        vm.assume(attackForce < 10_000);
+        vm.assume(defenseForce < 10_000);
 
-        uint256 attackForce = 100;
-        uint256 defenseForce = 100;
-        bool baronDefense = true;
-
-        string[] memory inputs = new string[](2);
-        inputs[0] = "python";
+        string[] memory inputs = new string[](8);
+        inputs[0] = "python3";
         inputs[1] = "contracts/test/gang_war_outcome.py";
         inputs[2] = "--attack_force";
         inputs[3] = attackForce.toString();
         inputs[4] = "--defense_force";
         inputs[5] = defenseForce.toString();
-        bytes memory result = vm.ffi(inputs);
-        string memory res = abi.decode(result, (string));
-        console.log(res);
+        inputs[6] = "--baron_defense";
+        inputs[7] = baronDefense ? uint256(1).toString() : uint256(0).toString();
 
-        // impl.gangWarWonProb(attackForce, defenseForce, baronDefense);
+        bytes memory result = vm.ffi(inputs);
+        uint256 res = abi.decode(result, (uint256));
+
+        uint256 prob = gangWarWonProb(
+            attackForce,
+            defenseForce,
+            baronDefense,
+            65, // c_attackFavor
+            200, // c_defenseFavor
+            150, // c_defenseFavorLim
+            50 // c_baronDefenseForce
+        );
+        assertEq((prob * 1e12) >> 128, (res * 1e12) >> 128);
     }
+
+    function test_fuzz_gangWarWonProbProperties(
+        uint256 attackForce,
+        uint256 defenseForce,
+        bool baronDefense
+    ) public {
+        vm.assume(attackForce < 10_000);
+        vm.assume(defenseForce < 10_000);
+
+        uint256 prob = gangWarWonProb(
+            attackForce,
+            defenseForce,
+            baronDefense,
+            65, // c_attackFavor
+            200, // c_defenseFavor
+            150, // c_defenseFavorLim
+            50 // c_baronDefenseForce
+        );
+
+        // in valid range [0, 128]
+        assertTrue(prob < 1 << 128);
+
+        if (attackForce > 150) {
+            if (defenseForce < attackForce) {
+                // should be in favor of attackers (> 50%)
+                assertTrue(prob > 1 << 127);
+            }
+        } else {
+            if (attackForce < defenseForce) {
+                // should be in favor of defenders (< 50%)
+                assertTrue(prob < 1 << 127);
+            }
+        }
+    }
+
+    // function test_fuzz_gangWarWon(
+    //     uint256 attackForce,
+    //     uint256 defenseForce,
+    //     bool baronDefense
+    // ) public {
+    //     vm.assume(attackForce < 10_000);
+    //     vm.assume(defenseForce < 10_000);
+
+    //     uint256 prob1 = game.gangWarWonProb(attackForce, defenseForce, baronDefense);
+    //     uint256 prob2 = game.gangWarWonProb2(attackForce, defenseForce, baronDefense);
+
+    //     assertEq(prob1, prob2);
+    // }
+
+    // function test_gangWarWonProb() public {
+    //     test_fuzz_gangWarWonProbProperties(94, 95, false);
+    // }
 }

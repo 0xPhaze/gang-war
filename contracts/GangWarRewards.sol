@@ -6,7 +6,7 @@ import {OwnableUDS} from "UDS/OwnableUDS.sol";
 import {ERC721UDS} from "UDS/ERC721UDS.sol";
 
 // import {GangWarBase} from "./GangWarBase.sol";
-import {GMCMarket} from "./GMCMarket.sol";
+// import {GMCMarket} from "./GMCMarket.sol";
 // import {ds, settings, District, Gangster} from
 import "./GangWarStorage.sol";
 // import "./GangWarBase.sol";
@@ -17,14 +17,14 @@ import "forge-std/console.sol";
 
 // error BaronMustDeclareInitialAttack();
 
-abstract contract GangWarRewards {
+abstract contract GangWarLoot {
     /* ------------- Internal ------------- */
 
-    function initializeGangRewards() internal {
+    function __GangWarLoot_init() internal {
         uint256 yield;
         for (uint256 id; id < 21; ++id) {
             GANG occupants = ds().districts[id].occupants;
-            yield = ds().districtYield[id];
+            yield = ds().districts[id].yield;
             ds().gangYield[occupants] += yield;
 
             assert(occupants != GANG.NONE);
@@ -37,7 +37,7 @@ abstract contract GangWarRewards {
         GANG defenders,
         uint256 districtId
     ) internal {
-        uint256 yield = ds().districtYield[districtId];
+        uint256 yield = ds().districts[districtId].yield;
 
         ds().gangYield[attackers] += yield;
         ds().gangYield[defenders] -= yield;

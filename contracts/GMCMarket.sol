@@ -5,7 +5,7 @@ import {UUPSUpgradeV} from "UDS/proxy/UUPSUpgradeV.sol";
 import {OwnableUDS} from "UDS/OwnableUDS.sol";
 import {ERC721UDS} from "UDS/ERC721UDS.sol";
 
-import {GangWarBase} from "./GangWarBase.sol";
+// import {GangWarBase} from "./GangWarBase.sol";
 import {ds as gangWarDS} from "./GangWarStorage.sol";
 
 /* ============= Storage ============= */
@@ -27,9 +27,9 @@ function ds() pure returns (GangMarketDS storage diamondStorage) {
 
 error NotAuthorized();
 
-abstract contract GMCMarket is GangWarBase {
-    function ownerOrRenterOf(uint256 id) public view override returns (address) {
-        address user = ds().renter[id];
-        return user == address(0) ? gangWarDS().gmc.ownerOf(id) : user;
-    }
-}
+// abstract contract GMCMarket is GangWarBase {
+//     function ownerOrRenterOf(uint256 id) public view override returns (address) {
+//         address user = ds().renter[id];
+//         return user == address(0) ? gangWarDS().gmc.ownerOf(id) : user;
+//     }
+// }
