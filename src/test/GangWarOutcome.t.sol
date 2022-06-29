@@ -29,7 +29,7 @@ contract TestGangWarOutcome is Test {
         // game = GangWar(address(new ERC1967Proxy(address(impl), initCall)));
     }
 
-    function assertEq(GANG a, GANG b) internal {
+    function assertEq(Gang a, Gang b) internal {
         assertEq(uint8(a), uint8(b));
     }
 

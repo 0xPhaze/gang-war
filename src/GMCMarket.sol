@@ -11,7 +11,7 @@ import {ds as gangWarDS} from "./GangWarStorage.sol";
 /* ============= Storage ============= */
 
 // keccak256("diamond.storage.gang.market") == 0x9350130b46a3a95c1d15eccf95069b652f55a1610fded59bd348259d7c017faf;
-bytes32 constant DIAMOND_STORAGE_GANG_MARKET = 0x9350130b46a3a95c1d15eccf95069b652f55a1610fded59bd348259d7c017faf;
+bytes32 constant DIAMOND_STORAGE_Gang_MARKET = 0x9350130b46a3a95c1d15eccf95069b652f55a1610fded59bd348259d7c017faf;
 
 struct GangMarketDS {
     mapping(uint256 => address) renter;
@@ -19,7 +19,7 @@ struct GangMarketDS {
 
 function ds() pure returns (GangMarketDS storage diamondStorage) {
     assembly {
-        diamondStorage.slot := DIAMOND_STORAGE_GANG_MARKET
+        diamondStorage.slot := DIAMOND_STORAGE_Gang_MARKET
     }
 }
 

@@ -5,12 +5,11 @@ import "forge-std/Test.sol";
 import "forge-std/console.sol";
 import "solmate/test/utils/mocks/MockERC721.sol";
 
-import "../lib/ArrayUtils.sol";
-import {ERC721UDS} from "UDS/ERC721UDS.sol";
 import {ERC1967Proxy} from "UDS/proxy/ERC1967VersionedUDS.sol";
 
 import {MockVRFCoordinatorV2} from "./mocks/MockVRFCoordinator.sol";
 
+import "../lib/ArrayUtils.sol";
 import "../GangWar.sol";
 
 contract TestGangWar is Test {
@@ -18,7 +17,6 @@ contract TestGangWar is Test {
 
     address bob = address(0xb0b);
     address alice = address(0xbabe);
-    address chris = address(0xc215);
     address tester = address(this);
 
     MockVRFCoordinatorV2 coordinator = new MockVRFCoordinatorV2();
@@ -29,19 +27,23 @@ contract TestGangWar is Test {
     function setUp() public {
         gmc = new MockERC721("GMC", "GMC");
 
-        bytes memory initCall = abi.encodeWithSelector(game.init.selector, ERC721UDS(address(gmc)));
+        Gang[] memory gangs = new Gang[](21);
+        for (uint256 i; i < 21; i++) gangs[i] = Gang((i % 3) + 1);
+
+        uint256[] memory yields = new uint256[](21);
+        for (uint256 i; i < 21; i++) yields[i] = 100 + (i / 3);
+
+        bytes memory initCall = abi.encodeWithSelector(game.init.selector, address(gmc), gangs, yields);
         game = GangWar(address(new ERC1967Proxy(address(impl), initCall)));
 
         uint256[] memory districtsA = [1, 2, 3, 1, 4, 7].toMemory();
         uint256[] memory districtsB = [2, 3, 4, 4, 5, 8].toMemory();
         game.addDistrictConnections(districtsA, districtsB);
 
-        uint256[] memory gDistrictIds = [1, 2, 3, 4, 5, 6].toMemory();
-        uint256[] memory gangsUint256 = [1, 2, 3, 1, 2, 3].toMemory();
-        GANG[] memory gangs;
-        assembly { gangs := gangsUint256 } // prettier-ignore
-        game.setDistrictsInitialOwnership(gDistrictIds, gangs);
-        //
+        // uint256[] memory gDistrictIds = [1, 2, 3, 4, 5, 6].toMemory();
+        // uint256[] memory gangsUint256 = [1, 2, 3, 1, 2, 3].toMemory();
+        // game.setDistrictsInitialOwnership(gangs);
+
         gmc.mint(bob, 1001); // Yakuza Baron
         gmc.mint(bob, 1002); // Cartel Baron
         gmc.mint(bob, 1003); // Cyberp Baron
@@ -55,7 +57,7 @@ contract TestGangWar is Test {
         vm.warp(100000);
     }
 
-    function assertEq(GANG a, GANG b) internal {
+    function assertEq(Gang a, Gang b) internal {
         assertEq(uint8(a), uint8(b));
     }
 
@@ -79,10 +81,10 @@ contract TestGangWar is Test {
         assertTrue(game.getDistrictConnections(4, 5));
         assertTrue(game.getDistrictConnections(7, 8));
 
-        for (uint256 i; i < 6; i++) {
+        for (uint256 i; i < 7; i++) {
             District memory district = game.getDistrict(i + 1);
 
-            assertEq(district.occupants, GANG((i % 3) + 1));
+            assertEq(district.occupants, Gang((i % 3) + 1));
             assertEq(district.roundId, 1);
             assertEq(district.attackDeclarationTime, 0);
             assertEq(district.baronAttackId, 0);
@@ -91,8 +93,8 @@ contract TestGangWar is Test {
             assertEq(district.lockupTime, 0);
         }
 
-        assertEq(game.gangOf(1), GANG.YAKUZA);
-        assertEq(game.gangOf(1001), GANG.YAKUZA);
+        assertEq(game.gangOf(1), Gang.YAKUZA);
+        assertEq(game.gangOf(1001), Gang.YAKUZA);
 
         assertEq(game.getGangster(1).state, PLAYER_STATE.IDLE);
         assertEq(game.getGangster(1001).state, PLAYER_STATE.IDLE);
@@ -131,11 +133,11 @@ contract TestGangWar is Test {
         (district, state) = game.getDistrictAndState(2);
         assertEq(state, DISTRICT_STATE.REINFORCEMENT);
 
-        // GANG_WAR
+        // Gang_WAR
         skip(game.getConstants().TIME_REINFORCEMENTS);
 
         (district, state) = game.getDistrictAndState(2);
-        assertEq(state, DISTRICT_STATE.GANG_WAR);
+        assertEq(state, DISTRICT_STATE.Gang_WAR);
 
         // POST_GANG_WAR
         skip(game.getConstants().TIME_GANG_WAR);
@@ -175,7 +177,7 @@ contract TestGangWar is Test {
 
         District memory district = game.getDistrict(2);
 
-        assertEq(district.attackers, GANG.YAKUZA);
+        assertEq(district.attackers, Gang.YAKUZA);
         assertEq(district.attackDeclarationTime, block.timestamp);
         assertEq(district.baronAttackId, 1001);
 

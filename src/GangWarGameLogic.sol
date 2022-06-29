@@ -7,7 +7,6 @@ import {ERC721UDS} from "UDS/ERC721UDS.sol";
 
 // import {ds, settings, District, Gangster} from
 import "./GangWarStorage.sol";
-import "./GangWarBase.sol";
 
 // import "forge-std/console.sol";
 
@@ -58,32 +57,7 @@ function gangWarWonProb(
 }
 
 abstract contract GangWarGameLogic is GangWarBase, VRFConsumerV2 {
-    // constructor(
-    //     address coordinator,
-    //     bytes32 keyHash,
-    //     uint64 subscriptionId,
-    //     uint16 requestConfirmations,
-    //     uint32 callbackGasLimit
-    // ) VRFConsumerV2(coordinator, keyHash, subscriptionId, requestConfirmations, callbackGasLimit) {}
-
-    function __GangWarGameLogic_init() internal {
-        constants().TIME_GANG_WAR = 100;
-        constants().TIME_LOCKUP = 100;
-        constants().TIME_TRUCE = 100;
-        constants().TIME_RECOVERY = 100;
-        constants().TIME_REINFORCEMENTS = 100;
-
-        constants().DEFENSE_FAVOR_LIM = 150;
-        constants().BARON_DEFENSE_FORCE = 50;
-        constants().ATTACK_FAVOR = 65;
-        constants().DEFENSE_FAVOR = 200;
-
-        for (uint256 id; id < 21; ++id) {
-            ds().districts[id].roundId = 1;
-            ds().districts[id].occupants = GANG((id % 3) + 1);
-            ds().districts[id].yield = 100 + (id / 3);
-        }
-    }
+    function __GangWarGameLogic_init() internal {}
 
     /* ------------- Public ------------- */
 
@@ -92,7 +66,7 @@ abstract contract GangWarGameLogic is GangWarBase, VRFConsumerV2 {
         uint256 districtId,
         uint256 tokenId
     ) external {
-        GANG gang = gangOf(tokenId);
+        Gang gang = gangOf(tokenId);
         District storage district = ds().districts[districtId];
 
         // console.log('occupants', ds().districts[connecting])
@@ -124,7 +98,7 @@ abstract contract GangWarGameLogic is GangWarBase, VRFConsumerV2 {
         uint256 districtId,
         uint256[] calldata tokenIds
     ) public {
-        GANG gang = gangOf(tokenIds[0]);
+        Gang gang = gangOf(tokenIds[0]);
         District storage district = ds().districts[districtId];
 
         if (ds().districts[connectingId].occupants != gang) revert InvalidConnectingDistrict();
@@ -136,7 +110,7 @@ abstract contract GangWarGameLogic is GangWarBase, VRFConsumerV2 {
     }
 
     function joinGangDefense(uint256 districtId, uint256[] calldata tokenIds) public {
-        GANG gang = gangOf(tokenIds[0]);
+        Gang gang = gangOf(tokenIds[0]);
 
         if (ds().districts[districtId].occupants != gang) revert InvalidConnectingDistrict();
 
@@ -148,7 +122,7 @@ abstract contract GangWarGameLogic is GangWarBase, VRFConsumerV2 {
         Gangster storage gangster;
         District storage district = ds().districts[districtId];
 
-        GANG gang = gangOf(tokenIds[0]);
+        Gang gang = gangOf(tokenIds[0]);
 
         uint256 districtRoundId = district.roundId;
 
@@ -199,7 +173,7 @@ abstract contract GangWarGameLogic is GangWarBase, VRFConsumerV2 {
         uint256 districtId = gangster.location;
         District storage district = ds().districts[districtId];
 
-        GANG gang = gangOf(gangsterId);
+        Gang gang = gangOf(gangsterId);
 
         uint256 roundId = district.roundId;
 
@@ -263,14 +237,14 @@ abstract contract GangWarGameLogic is GangWarBase, VRFConsumerV2 {
         }
         timeDelta -= constants().TIME_REINFORCEMENTS;
         if (timeDelta < constants().TIME_GANG_WAR) {
-            return DISTRICT_STATE.GANG_WAR;
+            return DISTRICT_STATE.Gang_WAR;
         }
         return DISTRICT_STATE.POST_GANG_WAR;
     }
 
     /* ------------- Upkeep ------------- */
 
-    uint256 private constant UPKEEP_INTERVAL = 1 minutes;
+    uint256 private constant UPKEEP_INTERVAL = 5 minutes;
 
     function checkUpkeep(bytes calldata) external view returns (bool, bytes memory) {
         bool upkeepNeeded;
@@ -294,7 +268,6 @@ abstract contract GangWarGameLogic is GangWarBase, VRFConsumerV2 {
     }
 
     // @note could exceed gas limits
-    // optimize
     function performUpkeep(bytes calldata performData) external {
         uint256[] memory districtIds = abi.decode(performData, (uint256[]));
 
@@ -326,8 +299,8 @@ abstract contract GangWarGameLogic is GangWarBase, VRFConsumerV2 {
             District storage district = ds().districts[districtId];
 
             if (_districtStatus(district) == DISTRICT_STATE.POST_GANG_WAR) {
-                GANG occupants = district.occupants;
-                GANG attackers = district.attackers;
+                Gang occupants = district.occupants;
+                Gang attackers = district.attackers;
 
                 uint256 roundId = district.roundId++;
 
@@ -340,7 +313,7 @@ abstract contract GangWarGameLogic is GangWarBase, VRFConsumerV2 {
                     _afterDistrictTransfer(attackers, occupants, districtId);
 
                     district.occupants = attackers;
-                    district.attackers = GANG.NONE;
+                    district.attackers = Gang.NONE;
                 }
 
                 district.attackDeclarationTime = 0;

@@ -14,8 +14,9 @@
     "dotenv": "^16.0.0"
   },
   "scripts": {
-    "test": "forge test -vvv",
+    "test": "forge test -vvv --match-contract TestGangWarRewards",
+    "testa": "forge test -vvv",
     "testx": "forge test -vvvv --ffi --match-contract TestGangWarOutcome",
-    "deploy": "npx hardhat run scripts/deploy.js"
+    "deploy": "forge script script/GangWar.s.sol:Deploy --rpc-url $RINKEBY_RPC_URL  --private-key $PRIVATE_KEY --broadcast --verify --etherscan-api-key $ETHERSCAN_KEY -vvvv"
   }
 }

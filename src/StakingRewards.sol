@@ -10,6 +10,8 @@ interface IERC20 {
 
     function transfer(address to, uint256 amount) external;
 
+    function mint(address to, uint256 amount) external;
+
     function balanceOf(address owner) external view returns (uint256);
 }
 
@@ -28,7 +30,7 @@ contract Owned {
     }
 }
 
-import "forge-std/console.sol";
+// import "forge-std/console.sol";
 
 // adapted from https://github.com/Synthetixio/synthetix/blob/develop/contracts/StakingRewards.sol
 contract StakingRewards is Owned {
@@ -36,149 +38,68 @@ contract StakingRewards is Owned {
 
     IERC20 public rewardsToken;
     IERC20 public stakingToken;
-    uint256 public periodFinish = 0;
+
     uint256 public rewardRate = 0;
-    uint256 public rewardsDuration = 7 days;
     uint256 public lastUpdateTime;
-    uint256 public rewardPerTokenStored;
+    uint256 public totalRewardPerToken;
 
-    mapping(address => uint256) public userRewardPerTokenPaid;
-    mapping(address => uint256) public rewards;
+    mapping(address => uint256) public lastUserRewardPerToken;
 
-    uint256 private _totalSupply;
-    mapping(address => uint256) private _balances;
+    uint256 public totalSupply;
+    mapping(address => uint256) public balanceOf;
 
     /* ========== CONSTRUCTOR ========== */
 
-    constructor(address _rewardsToken, address _stakingToken) public {
+    constructor(address _rewardsToken, address _stakingToken) {
         rewardsToken = IERC20(_rewardsToken);
         stakingToken = IERC20(_stakingToken);
     }
 
-    /* ========== VIEWS ========== */
-
-    function totalSupply() external view returns (uint256) {
-        return _totalSupply;
-    }
-
-    function balanceOf(address account) external view returns (uint256) {
-        return _balances[account];
-    }
-
-    function lastTimeRewardApplicable() public view returns (uint256) {
-        return block.timestamp < periodFinish ? block.timestamp : periodFinish;
-    }
-
-    // @note
-    // rewardPerToken = (timestamp - lastUpdateTime) * rate * 1e18 / stakedSupply
-    function rewardPerToken() public view returns (uint256) {
-        if (_totalSupply == 0) {
-            return rewardPerTokenStored;
-        }
-        return
-            rewardPerTokenStored + ((lastTimeRewardApplicable() - lastUpdateTime) * rewardRate * 1e18) / _totalSupply;
-    }
-
-    // @note
-    // earned = staked[user] * (rewardPerToken - userRewardPerTokenPaid[user]) / 1e18  + rewards[user]
-    function earned(address account) public view returns (uint256) {
-        return (_balances[account] * (rewardPerToken() - userRewardPerTokenPaid[account])) / 1e18 + rewards[account];
-    }
-
-    function getRewardForDuration() external view returns (uint256) {
-        return rewardRate * rewardsDuration;
-    }
-
     /* ========== MUTATIVE FUNCTIONS ========== */
 
-    function stake(uint256 amount) external updateReward(msg.sender) {
-        require(amount > 0, "Cannot stake 0");
-        _totalSupply = _totalSupply + amount;
-        _balances[msg.sender] = _balances[msg.sender] + amount;
+    function stake(uint256 amount) external {
+        _updateReward(msg.sender);
+
+        totalSupply += amount;
+        balanceOf[msg.sender] += amount;
         stakingToken.transferFrom(msg.sender, address(this), amount);
-        emit Staked(msg.sender, amount);
     }
 
-    function withdraw(uint256 amount) public updateReward(msg.sender) {
-        require(amount > 0, "Cannot withdraw 0");
-        _totalSupply = _totalSupply - amount;
-        _balances[msg.sender] = _balances[msg.sender] - amount;
+    function withdraw(uint256 amount) public {
+        _updateReward(msg.sender);
+
+        totalSupply -= amount;
+        balanceOf[msg.sender] -= amount;
         stakingToken.transfer(msg.sender, amount);
-        emit Withdrawn(msg.sender, amount);
     }
 
-    function claimReward() public updateReward(msg.sender) {
-        uint256 reward = rewards[msg.sender];
-        if (reward > 0) {
-            rewards[msg.sender] = 0;
-            rewardsToken.transfer(msg.sender, reward);
-            emit RewardPaid(msg.sender, reward);
-        }
-    }
-
-    function exit() external {
-        withdraw(_balances[msg.sender]);
-        claimReward();
-    }
-
-    /* ========== RESTRICTED FUNCTIONS ========== */
-
-    // @note what is this?
-    function notifyRewardAmount(uint256 reward) external updateReward(address(0)) {
-        if (block.timestamp >= periodFinish) {
-            rewardRate = reward / rewardsDuration;
-        } else {
-            uint256 remaining = periodFinish - block.timestamp;
-            uint256 leftover = remaining * rewardRate;
-            rewardRate = reward + leftover / rewardsDuration;
-        }
-
-        // Ensure the provided reward amount is not more than the balance in the contract.
-        // This keeps the reward rate in the right range, preventing overflows due to
-        // very high values of rewardRate in the earned and rewardsPerToken functions;
-        // Reward + leftover must be less than 2^256 / 10^18 to avoid overflow.
-        uint256 balance = rewardsToken.balanceOf(address(this));
-        require(rewardRate <= balance / rewardsDuration, "Provided reward too high");
-
-        lastUpdateTime = block.timestamp;
-        periodFinish = block.timestamp + rewardsDuration;
-        emit RewardAdded(reward);
-    }
-
-    // Added to support recovering LP Rewards from other systems such as BAL to be distributed to holders
-    function recoverERC20(address tokenAddress, uint256 tokenAmount) external onlyOwner {
-        require(tokenAddress != address(stakingToken), "Cannot withdraw the staking token");
-        IERC20(tokenAddress).transfer(owner, tokenAmount);
-        emit Recovered(tokenAddress, tokenAmount);
-    }
-
-    function setRewardsDuration(uint256 _rewardsDuration) external onlyOwner {
-        require(
-            block.timestamp > periodFinish,
-            "Previous rewards period must be complete before changing the duration for the new period"
-        );
-        rewardsDuration = _rewardsDuration;
-        emit RewardsDurationUpdated(rewardsDuration);
+    function claimReward() public {
+        _updateReward(msg.sender);
     }
 
     /* ========== MODIFIERS ========== */
 
-    modifier updateReward(address account) {
-        rewardPerTokenStored = rewardPerToken();
-        lastUpdateTime = lastTimeRewardApplicable();
+    function _updateReward(address account) internal {
+        uint256 rpt;
+
+        if (totalSupply != 0)
+            rpt = totalRewardPerToken + ((block.timestamp - lastUpdateTime) * rewardRate * 1e18) / totalSupply;
+
+        totalRewardPerToken = rpt;
+        lastUpdateTime = block.timestamp;
+
         if (account != address(0)) {
-            rewards[account] = earned(account);
-            userRewardPerTokenPaid[account] = rewardPerTokenStored;
+            uint256 reward = (balanceOf[account] * (rpt - lastUserRewardPerToken[account])) / 1e18;
+            lastUserRewardPerToken[account] = rpt;
+            rewardsToken.mint(account, reward);
         }
-        _;
     }
 
-    /* ========== EVENTS ========== */
+    /* ========== RESTRICTED FUNCTIONS ========== */
 
-    event RewardAdded(uint256 reward);
-    event Staked(address indexed user, uint256 amount);
-    event Withdrawn(address indexed user, uint256 amount);
-    event RewardPaid(address indexed user, uint256 reward);
-    event RewardsDurationUpdated(uint256 newDuration);
-    event Recovered(address token, uint256 amount);
+    function setRewardRate(uint256 rate) external {
+        _updateReward(address(0));
+
+        rewardRate = rate;
+    }
 }
