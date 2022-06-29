@@ -37,124 +37,120 @@ contract TestGangWarRewards is Test {
     // MockERC721 gmc;
 
     StakingRewards staking;
-    MockERC20 token;
-    MockERC20 rewards;
+    mapping(uint256 => MockERC20) rewards;
 
     function setUp() public {
-        token = new MockERC20("Token", "", 18);
-        rewards = new MockERC20("Token", "", 18);
-        staking = new StakingRewards(address(rewards), address(token));
+        rewards[0] = new MockERC20("Token", "", 18);
+        rewards[1] = new MockERC20("Token", "", 18);
+        rewards[2] = new MockERC20("Token", "", 18);
+
+        address[] memory rewardsAddress = new address[](3);
+        rewardsAddress[0] = address(rewards[0]);
+        rewardsAddress[1] = address(rewards[1]);
+        rewardsAddress[2] = address(rewards[2]);
+        staking = new StakingRewards(rewardsAddress);
     }
 
-    function assertEq(Gang a, Gang b) internal {
-        assertEq(uint8(a), uint8(b));
-    }
+    /// single user adds stake twice, claims multiple times
+    function test_stake1() public {
+        staking.setRewardRate([
+            uint256(1 ether) / 1 days, 
+            uint256(1 ether) / 1 days, 
+            uint256(1 ether) / 1 days].toMemory()
+        ); //prettier-ignore
 
-    function assertEq(PLAYER_STATE a, PLAYER_STATE b) internal {
-        assertEq(uint8(a), uint8(b));
-    }
+        staking.enter(10_000);
 
-    function assertEq(DISTRICT_STATE a, DISTRICT_STATE b) internal {
-        assertEq(uint8(a), uint8(b));
-    }
+        skip(25 days);
 
-    function assertEq(uint256[] memory a, uint256[] memory b) internal {
-        assertEq(a.length, b.length);
-        for (uint256 i; i < a.length; ++i) assertEq(a[i], b[i]);
-    }
+        staking.enter(10_000);
 
-    /// single user gets full stake
-    function test_stake() public {
-        staking.setRewardRate(uint256(1 ether) / 1 days);
+        skip(25 days);
 
-        token.mint(tester, 1 ether);
+        staking.claim();
 
-        token.approve(address(staking), type(uint256).max);
-        staking.stake(1 ether);
+        skip(25 days);
 
-        skip(66 days);
+        staking.claim();
 
-        staking.claimReward();
+        skip(25 days);
 
-        assertApproxEqAbs(rewards.balanceOf(tester), 66 ether, 1e10);
-    }
+        staking.claim();
 
-    /// single user adds stake twice
-    function test_stake2() public {
-        staking.setRewardRate(1 ether);
-
-        token.mint(tester, 2 ether);
-
-        token.approve(address(staking), type(uint256).max);
-        staking.stake(1 ether);
-
-        skip(25);
-
-        staking.stake(1 ether);
-
-        skip(25);
-
-        staking.claimReward();
-
-        assertEq(rewards.balanceOf(tester), 50 ether);
+        assertApproxEqAbs(rewards[0].balanceOf(tester), 100 ether, 1e8);
+        assertApproxEqAbs(rewards[1].balanceOf(tester), 100 ether, 1e8);
+        assertApproxEqAbs(rewards[2].balanceOf(tester), 100 ether, 1e8);
     }
 
     /// two users stake with different shares
-    function test_stake3() public {
-        staking.setRewardRate(1 ether);
+    function test_stake2() public {
+        staking.setRewardRate([
+            uint256(1 ether) / 1 days, 
+            uint256(1 ether) / 1 days, 
+            uint256(1 ether) / 1 days].toMemory()
+        ); //prettier-ignore
 
-        token.mint(tester, 3 ether);
-        token.approve(address(staking), type(uint256).max);
+        staking.enter(10_000);
 
-        staking.stake(1 ether);
+        skip(50 days);
 
-        skip(50);
-
-        staking.stake(2 ether);
+        staking.enter(20_000);
 
         vm.startPrank(alice);
 
-        token.mint(alice, 1 ether);
-        token.approve(address(staking), type(uint256).max);
-        staking.stake(1 ether);
+        staking.enter(10_000);
 
-        skip(50);
+        skip(50 days);
 
-        staking.claimReward();
+        staking.claim();
 
         vm.stopPrank();
 
-        staking.claimReward();
+        staking.claim();
 
-        assertEq(rewards.balanceOf(tester), (100 ether * 7) / 8);
-        assertEq(rewards.balanceOf(alice), (100 ether * 1) / 8);
+        assertApproxEqAbs(rewards[0].balanceOf(tester), (100 ether * 7) / 8, 1e8);
+        assertApproxEqAbs(rewards[1].balanceOf(tester), (100 ether * 7) / 8, 1e8);
+        assertApproxEqAbs(rewards[2].balanceOf(tester), (100 ether * 7) / 8, 1e8);
+
+        assertApproxEqAbs(rewards[0].balanceOf(alice), (100 ether * 1) / 8, 1e8);
+        assertApproxEqAbs(rewards[1].balanceOf(alice), (100 ether * 1) / 8, 1e8);
+        assertApproxEqAbs(rewards[2].balanceOf(alice), (100 ether * 1) / 8, 1e8);
     }
 
-    /// stake is turned on/off
-    function test_stake4() public {
-        staking.setRewardRate(0 ether);
+    /// non-equal rate is changed during stake
+    function test_stake3() public {
+        staking.setRewardRate([0, 0, 0].toMemory());
 
-        token.mint(tester, 10 ether);
-        token.approve(address(staking), type(uint256).max);
+        skip(50 days);
 
-        staking.stake(1 ether);
+        staking.enter(10_000);
 
-        skip(50);
+        skip(50 days);
 
-        staking.claimReward();
+        staking.setRewardRate([
+            uint256(1 ether) / 1 days, 
+            uint256(2 ether) / 1 days, 
+            uint256(3 ether) / 1 days].toMemory()
+        ); //prettier-ignore
 
-        assertEq(rewards.balanceOf(tester), 0);
+        skip(100 days);
 
-        staking.setRewardRate(1 ether);
+        staking.setRewardRate([
+            uint256(2 ether) / 1 days, 
+            uint256(4 ether) / 1 days, 
+            uint256(6 ether) / 1 days].toMemory()
+        ); //prettier-ignore
 
-        skip(100);
+        skip(100 days);
 
-        staking.setRewardRate(0 ether);
+        staking.setRewardRate([0, 0, 0].toMemory());
 
-        skip(50);
+        skip(50 days);
 
-        staking.claimReward();
+        staking.claim();
 
-        assertEq(rewards.balanceOf(tester), 100 ether);
+        assertApproxEqAbs(rewards[0].balanceOf(tester), 300 ether, 1e8);
+        assertApproxEqAbs(rewards[1].balanceOf(tester), 600 ether, 1e8);
+        assertApproxEqAbs(rewards[2].balanceOf(tester), 900 ether, 1e8);
     }
 }
