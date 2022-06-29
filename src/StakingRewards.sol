@@ -30,21 +30,20 @@ contract Owned {
     }
 }
 
-// import "forge-std/console.sol";
+import "forge-std/console.sol";
 
 // adapted from https://github.com/Synthetixio/synthetix/blob/develop/contracts/StakingRewards.sol
 contract StakingRewards is Owned {
-    uint256 public totalShares;
-    uint256 public lastUpdateTime;
+    IERC20[3] public rewardsToken;
 
-    /*      token   => rpt      */
-    mapping(uint256 => uint256) public totalRewardPerToken;
-    mapping(uint256 => uint256) public rewardRate;
-    mapping(uint256 => IERC20) public rewardsToken;
+    uint256[3] public totalShares;
+    uint256[3] public lastUpdateTime;
 
-    /*      user    =>         token   => rpt       */
-    mapping(address => mapping(uint256 => uint256)) public lastUserRewardPerToken;
-    mapping(address => uint256) public shares;
+    uint256[3][3] public totalRewardPerToken;
+    uint256[3][3] public rewardRate;
+
+    mapping(address => uint256[3]) public shares;
+    mapping(address => uint256[3][3]) public lastUserRewardPerToken;
 
     /* ------------- Constructor ------------- */
 
@@ -54,64 +53,67 @@ contract StakingRewards is Owned {
 
     /* ------------- External ------------- */
 
-    function enter(uint256 amount) external {
-        _updateReward(msg.sender);
+    function enter(uint256 gang, uint256 amount) external {
+        _updateReward(gang, msg.sender);
 
-        totalShares += amount;
-        shares[msg.sender] += amount;
+        totalShares[gang] += amount;
+        shares[msg.sender][gang] += amount;
     }
 
-    function exit(uint256 amount) public {
-        _updateReward(msg.sender);
+    function exit(uint256 gang, uint256 amount) public {
+        _updateReward(gang, msg.sender);
 
-        totalShares -= amount;
-        shares[msg.sender] -= amount;
+        totalShares[gang] -= amount;
+        shares[msg.sender][gang] -= amount;
     }
 
-    function claim() public {
-        _updateReward(msg.sender);
+    function claim(uint256 gang) public {
+        _updateReward(gang, msg.sender);
     }
 
     /* ------------- Internal ------------- */
 
-    function _updateReward(address account) internal {
-        uint256 rpt_0;
-        uint256 rpt_1;
-        uint256 rpt_2;
+    function _updateReward(uint256 gang, address account) internal {
+        uint256 rpt_0 = totalRewardPerToken[gang][0];
+        uint256 rpt_1 = totalRewardPerToken[gang][1];
+        uint256 rpt_2 = totalRewardPerToken[gang][2];
 
-        if (totalShares != 0) {
-            uint256 timeScaled = (block.timestamp - lastUpdateTime) * 1e18;
-            rpt_0 = totalRewardPerToken[0] + (timeScaled * rewardRate[0]) / totalShares;
-            rpt_1 = totalRewardPerToken[1] + (timeScaled * rewardRate[1]) / totalShares;
-            rpt_2 = totalRewardPerToken[2] + (timeScaled * rewardRate[2]) / totalShares;
+        uint256 totalShares_ = totalShares[gang];
+
+        if (totalShares_ != 0) {
+            uint256 timeScaled = (block.timestamp - lastUpdateTime[gang]) * 1e18;
+
+            rpt_0 += (timeScaled * rewardRate[gang][0]) / totalShares_;
+            rpt_1 += (timeScaled * rewardRate[gang][1]) / totalShares_;
+            rpt_2 += (timeScaled * rewardRate[gang][2]) / totalShares_;
         }
 
-        totalRewardPerToken[0] = rpt_0;
-        totalRewardPerToken[1] = rpt_1;
-        totalRewardPerToken[2] = rpt_2;
+        totalRewardPerToken[gang][0] = rpt_0;
+        totalRewardPerToken[gang][1] = rpt_1;
+        totalRewardPerToken[gang][2] = rpt_2;
 
-        lastUpdateTime = block.timestamp;
+        lastUpdateTime[gang] = block.timestamp;
 
         if (account != address(0)) {
-            uint256 share = shares[account];
+            uint256 share = shares[account][gang];
 
-            rewardsToken[0].mint(account, (share * (rpt_0 - lastUserRewardPerToken[account][0])) / 1e18); //prettier-ignore
-            rewardsToken[1].mint(account, (share * (rpt_1 - lastUserRewardPerToken[account][1])) / 1e18); //prettier-ignore
-            rewardsToken[2].mint(account, (share * (rpt_2 - lastUserRewardPerToken[account][2])) / 1e18); //prettier-ignore
+            rewardsToken[0].mint(account, (share * (rpt_0 - lastUserRewardPerToken[account][gang][0])) / 1e18); //prettier-ignore
+            rewardsToken[1].mint(account, (share * (rpt_1 - lastUserRewardPerToken[account][gang][1])) / 1e18); //prettier-ignore
+            rewardsToken[2].mint(account, (share * (rpt_2 - lastUserRewardPerToken[account][gang][2])) / 1e18); //prettier-ignore
 
-            lastUserRewardPerToken[account][0] = rpt_0;
-            lastUserRewardPerToken[account][1] = rpt_1;
-            lastUserRewardPerToken[account][2] = rpt_2;
+            lastUserRewardPerToken[account][gang][0] = rpt_0;
+            lastUserRewardPerToken[account][gang][1] = rpt_1;
+            lastUserRewardPerToken[account][gang][2] = rpt_2;
         }
     }
 
     /* ------------- Owner ------------- */
 
-    function setRewardRate(uint256[] calldata rate) external onlyOwner {
-        _updateReward(address(0));
+    function setRewardRate(uint256 gang, uint256[] calldata rate) external onlyOwner {
+        _updateReward(gang, address(0));
 
-        rewardRate[0] = rate[0];
-        rewardRate[1] = rate[1];
-        rewardRate[2] = rate[2];
+        rewardRate[gang][0] = rate[0];
+        rewardRate[gang][1] = rate[1];
+        rewardRate[gang][2] = rate[2];
     }
 }
