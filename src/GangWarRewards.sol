@@ -7,7 +7,7 @@ import {ERC721UDS} from "UDS/ERC721UDS.sol";
 
 // import {GangWarBase} from "./GangWarBase.sol";
 // import {GMCMarket} from "./GMCMarket.sol";
-// import {ds, settings, District, Gangster} from
+// import {s, settings, District, Gangster} from
 import "./GangWarStorage.sol";
 // import "./GangWarBase.sol";
 
@@ -18,7 +18,7 @@ import "forge-std/console.sol";
 // error BaronMustDeclareInitialAttack();
 
 // keccak256("diamond.storage.gang.war.loot") == 0x076685b2aa01832c55a9b2559f78ba96625db8abd5a9610a05c48d76a9ae1fd5;
-bytes32 constant DIAMOND_STORAGE_Gang_WAR_LOOT = 0x076685b2aa01832c55a9b2559f78ba96625db8abd5a9610a05c48d76a9ae1fd5;
+bytes32 constant DIAMOND_STORAGE_GANG_WAR_LOOT = 0x076685b2aa01832c55a9b2559f78ba96625db8abd5a9610a05c48d76a9ae1fd5;
 
 struct YieldDS {
     uint256 totalSupply;
@@ -27,7 +27,7 @@ struct YieldDS {
 
 function yieldDS() pure returns (YieldDS storage diamondStorage) {
     assembly {
-        diamondStorage.slot := DIAMOND_STORAGE_Gang_WAR
+        diamondStorage.slot := DIAMOND_STORAGE_GANG_WAR
     }
 }
 
@@ -39,10 +39,10 @@ abstract contract GangWarRewards {
         Gang defenders,
         uint256 districtId
     ) internal {
-        uint256 yield = ds().districts[districtId].yield;
+        uint256 yield = s().districts[districtId].yield;
 
-        ds().gangYield[attackers] += yield;
-        ds().gangYield[defenders] -= yield;
+        s().gangYield[attackers] += yield;
+        s().gangYield[defenders] -= yield;
     }
 
     /* ------------- View ------------- */
@@ -56,8 +56,8 @@ abstract contract GangWarRewards {
             uint256 yieldCyberpunk
         )
     {
-        yieldYakuza = ds().gangYield[Gang.YAKUZA];
-        yieldCartel = ds().gangYield[Gang.CARTEL];
-        yieldCyberpunk = ds().gangYield[Gang.CYBERP];
+        yieldYakuza = s().gangYield[Gang.YAKUZA];
+        yieldCartel = s().gangYield[Gang.CARTEL];
+        yieldCyberpunk = s().gangYield[Gang.CYBERP];
     }
 }

@@ -15,105 +15,94 @@ interface IERC20 {
     function balanceOf(address owner) external view returns (uint256);
 }
 
-error CallerNotOwner();
+/* ============= Storage ============= */
 
-contract Owned {
-    address public owner;
+// keccak256("diamond.storage.gang.war.rewards") == 0x7663b7593c6b325747ef3546beebff6d1594934779e6cd28a66d956dd6fcb247;
+bytes32 constant DIAMOND_STORAGE_GANG_WAR_REWARDS = 0x7663b7593c6b325747ef3546beebff6d1594934779e6cd28a66d956dd6fcb247;
 
-    constructor() {
-        owner = msg.sender;
-    }
+struct GangWarRewardsDS {
+    IERC20[3] rewardsToken;
+    uint256[3] totalShares;
+    uint256[3] lastUpdateTime;
+    uint256[3][3] totalRewardPerToken;
+    uint256[3][3] rewardRate;
+    mapping(address => uint256[3]) shares;
+    mapping(address => uint256[3][3]) lastUserRewardPerToken;
+}
 
-    modifier onlyOwner() {
-        if (msg.sender != owner) revert CallerNotOwner();
-        _;
+function s() pure returns (GangWarRewardsDS storage diamondStorage) {
+    assembly {
+        diamondStorage.slot := DIAMOND_STORAGE_GANG_WAR_REWARDS
     }
 }
 
-import "forge-std/console.sol";
-
 // adapted from https://github.com/Synthetixio/synthetix/blob/develop/contracts/StakingRewards.sol
-contract StakingRewards is Owned {
-    IERC20[3] public rewardsToken;
-
-    uint256[3] public totalShares;
-    uint256[3] public lastUpdateTime;
-
-    uint256[3][3] public totalRewardPerToken;
-    uint256[3][3] public rewardRate;
-
-    mapping(address => uint256[3]) public shares;
-    mapping(address => uint256[3][3]) public lastUserRewardPerToken;
-
+contract GangRewards {
     /* ------------- Constructor ------------- */
 
     constructor(address[] memory _rewardsToken) {
-        for (uint256 i; i < 3; i++) rewardsToken[i] = IERC20(_rewardsToken[i]);
+        for (uint256 i; i < 3; i++) s().rewardsToken[i] = IERC20(_rewardsToken[i]);
     }
 
     /* ------------- External ------------- */
 
-    function enter(uint256 gang, uint256 amount) external {
+    function _enter(uint256 gang, uint256 amount) internal {
         _updateReward(gang, msg.sender);
 
-        totalShares[gang] += amount;
-        shares[msg.sender][gang] += amount;
+        s().totalShares[gang] += amount;
+        s().shares[msg.sender][gang] += amount;
     }
 
-    function exit(uint256 gang, uint256 amount) public {
+    function _exit(uint256 gang, uint256 amount) internal {
         _updateReward(gang, msg.sender);
 
-        totalShares[gang] -= amount;
-        shares[msg.sender][gang] -= amount;
-    }
-
-    function claim(uint256 gang) public {
-        _updateReward(gang, msg.sender);
+        s().totalShares[gang] -= amount;
+        s().shares[msg.sender][gang] -= amount;
     }
 
     /* ------------- Internal ------------- */
 
     function _updateReward(uint256 gang, address account) internal {
-        uint256 rpt_0 = totalRewardPerToken[gang][0];
-        uint256 rpt_1 = totalRewardPerToken[gang][1];
-        uint256 rpt_2 = totalRewardPerToken[gang][2];
+        uint256 rpt_0 = s().totalRewardPerToken[gang][0];
+        uint256 rpt_1 = s().totalRewardPerToken[gang][1];
+        uint256 rpt_2 = s().totalRewardPerToken[gang][2];
 
-        uint256 totalShares_ = totalShares[gang];
+        uint256 totalShares_ = s().totalShares[gang];
 
         if (totalShares_ != 0) {
-            uint256 timeScaled = (block.timestamp - lastUpdateTime[gang]) * 1e18;
+            uint256 timeScaled = (block.timestamp - s().lastUpdateTime[gang]);
 
-            rpt_0 += (timeScaled * rewardRate[gang][0]) / totalShares_;
-            rpt_1 += (timeScaled * rewardRate[gang][1]) / totalShares_;
-            rpt_2 += (timeScaled * rewardRate[gang][2]) / totalShares_;
+            rpt_0 += (timeScaled * s().rewardRate[gang][0]) / totalShares_;
+            rpt_1 += (timeScaled * s().rewardRate[gang][1]) / totalShares_;
+            rpt_2 += (timeScaled * s().rewardRate[gang][2]) / totalShares_;
+
+            s().totalRewardPerToken[gang][0] = rpt_0;
+            s().totalRewardPerToken[gang][1] = rpt_1;
+            s().totalRewardPerToken[gang][2] = rpt_2;
         }
 
-        totalRewardPerToken[gang][0] = rpt_0;
-        totalRewardPerToken[gang][1] = rpt_1;
-        totalRewardPerToken[gang][2] = rpt_2;
-
-        lastUpdateTime[gang] = block.timestamp;
+        s().lastUpdateTime[gang] = block.timestamp;
 
         if (account != address(0)) {
-            uint256 share = shares[account][gang];
+            uint256 share = s().shares[account][gang];
 
-            rewardsToken[0].mint(account, (share * (rpt_0 - lastUserRewardPerToken[account][gang][0])) / 1e18); //prettier-ignore
-            rewardsToken[1].mint(account, (share * (rpt_1 - lastUserRewardPerToken[account][gang][1])) / 1e18); //prettier-ignore
-            rewardsToken[2].mint(account, (share * (rpt_2 - lastUserRewardPerToken[account][gang][2])) / 1e18); //prettier-ignore
+            s().rewardsToken[0].mint(account, (share * (rpt_0 - s().lastUserRewardPerToken[account][gang][0])));
+            s().rewardsToken[1].mint(account, (share * (rpt_1 - s().lastUserRewardPerToken[account][gang][1])));
+            s().rewardsToken[2].mint(account, (share * (rpt_2 - s().lastUserRewardPerToken[account][gang][2])));
 
-            lastUserRewardPerToken[account][gang][0] = rpt_0;
-            lastUserRewardPerToken[account][gang][1] = rpt_1;
-            lastUserRewardPerToken[account][gang][2] = rpt_2;
+            s().lastUserRewardPerToken[account][gang][0] = rpt_0;
+            s().lastUserRewardPerToken[account][gang][1] = rpt_1;
+            s().lastUserRewardPerToken[account][gang][2] = rpt_2;
         }
     }
 
     /* ------------- Owner ------------- */
 
-    function setRewardRate(uint256 gang, uint256[] calldata rate) external onlyOwner {
+    function _setRewardRates(uint256 gang, uint256[] calldata rates) internal {
         _updateReward(gang, address(0));
 
-        rewardRate[gang][0] = rate[0];
-        rewardRate[gang][1] = rate[1];
-        rewardRate[gang][2] = rate[2];
+        s().rewardRate[gang][0] = rates[0];
+        s().rewardRate[gang][1] = rates[1];
+        s().rewardRate[gang][2] = rates[2];
     }
 }

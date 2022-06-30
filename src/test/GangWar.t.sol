@@ -28,6 +28,7 @@ contract TestGangWar is Test {
         gmc = new MockERC721("GMC", "GMC");
 
         Gang[] memory gangs = new Gang[](21);
+        // for (uint256 i; i < 21; i++) gangs[i] = Gang(i % 3);
         for (uint256 i; i < 21; i++) gangs[i] = Gang((i % 3) + 1);
 
         uint256[] memory yields = new uint256[](21);
@@ -84,6 +85,7 @@ contract TestGangWar is Test {
         for (uint256 i; i < 7; i++) {
             District memory district = game.getDistrict(i + 1);
 
+            // assertEq(district.occupants, Gang(i % 3));
             assertEq(district.occupants, Gang((i % 3) + 1));
             assertEq(district.roundId, 1);
             assertEq(district.attackDeclarationTime, 0);
@@ -133,11 +135,11 @@ contract TestGangWar is Test {
         (district, state) = game.getDistrictAndState(2);
         assertEq(state, DISTRICT_STATE.REINFORCEMENT);
 
-        // Gang_WAR
+        // GANG_WAR
         skip(game.getConstants().TIME_REINFORCEMENTS);
 
         (district, state) = game.getDistrictAndState(2);
-        assertEq(state, DISTRICT_STATE.Gang_WAR);
+        assertEq(state, DISTRICT_STATE.GANG_WAR);
 
         // POST_GANG_WAR
         skip(game.getConstants().TIME_GANG_WAR);
@@ -444,12 +446,6 @@ contract TestGangWar is Test {
         // perform upkeep
         game.performUpkeep(data);
 
-        (upkeepNeeded, data) = game.checkUpkeep("");
-        assertFalse(upkeepNeeded);
-
-        ids = abi.decode(data, (uint256[]));
-        assertEq(ids.length, 0);
-
         // performing upkeep twice does not do anything
         vm.record();
 
@@ -458,8 +454,15 @@ contract TestGangWar is Test {
         (, bytes32[] memory writes) = vm.accesses(address(game));
         assertEq(writes.length, 0);
 
+        // checkUpkeep should be false after perform
+        (upkeepNeeded, data) = game.checkUpkeep("");
+        assertFalse(upkeepNeeded);
+
+        ids = abi.decode(data, (uint256[]));
+        assertEq(ids.length, 0);
+
         // waiting for 1 minute without confirming VRF call should reset request status
-        skip(1 minutes + 1);
+        skip(5 minutes + 1);
 
         (upkeepNeeded, data) = game.checkUpkeep("");
         assertTrue(upkeepNeeded);
