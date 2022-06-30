@@ -83,7 +83,7 @@ struct GangWarDS {
     mapping(uint256 => District) districts;
     mapping(uint256 => Gangster) gangsters;
     /*   districtId => districtIds  */
-    mapping(uint256 => uint256[]) requestIdToDistrictIds;
+    mapping(uint256 => uint256) requestIdToDistrictIds;
     /*   districtId =>     roundId     => outcome  */
     mapping(uint256 => mapping(uint256 => uint256)) gangWarOutcomes;
     /*   districtId =>     roundId     =>         Gang => numForces */
@@ -143,7 +143,7 @@ abstract contract GangWarBase is OwnableUDS {
 
     /* ------------- View ------------- */
 
-    function requestIdToDistrictIds(uint256 requestId) public view returns (uint256[] memory) {
+    function requestIdToDistrictIds(uint256 requestId) public view returns (uint256) {
         return s().requestIdToDistrictIds[requestId];
     }
 

@@ -30,7 +30,9 @@ contract MockGangRewards is GangRewards {
     }
 
     function setRewardRate(uint256 gang, uint256[] calldata rates) external {
-        _setRewardRates(gang, rates);
+        _setRewardRate(gang, 0, rates[0]);
+        _setRewardRate(gang, 1, rates[1]);
+        _setRewardRate(gang, 2, rates[2]);
     }
 }
 

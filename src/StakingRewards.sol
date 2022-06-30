@@ -98,11 +98,13 @@ contract GangRewards {
 
     /* ------------- Owner ------------- */
 
-    function _setRewardRates(uint256 gang, uint256[] calldata rates) internal {
+    function _setRewardRate(
+        uint256 gang,
+        uint256 token,
+        uint256 rate
+    ) internal {
         _updateReward(gang, address(0));
 
-        s().rewardRate[gang][0] = rates[0];
-        s().rewardRate[gang][1] = rates[1];
-        s().rewardRate[gang][2] = rates[2];
+        s().rewardRate[gang][token] = rate;
     }
 }

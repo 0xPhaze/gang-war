@@ -60,7 +60,9 @@ contract GangWar is UUPSUpgradeV(1), OwnableUDS, GangWarBase, GangWarGameLogic, 
         Gang attackers,
         Gang defenders,
         uint256 id
-    ) internal override {}
+    ) internal override {
+        // _setRewardRate()
+    }
 
     function _authorizeUpgrade() internal override onlyOwner {}
 }

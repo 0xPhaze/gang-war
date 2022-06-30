@@ -405,7 +405,8 @@ contract TestGangWar is Test {
     function test_checkUpkeep() public {
         bool upkeepNeeded;
         bytes memory data;
-        uint256[] memory ids;
+        // uint256[] memory ids;
+        uint256 ids;
 
         (upkeepNeeded, ) = game.checkUpkeep("");
         assertFalse(upkeepNeeded);
@@ -428,8 +429,8 @@ contract TestGangWar is Test {
         (upkeepNeeded, data) = game.checkUpkeep("");
         assertTrue(upkeepNeeded);
 
-        ids = abi.decode(data, (uint256[]));
-        assertEq(ids, [2].toMemory());
+        ids = abi.decode(data, (uint256));
+        assertEq(ids, uint256(1) << 2);
 
         // add an additional attack that needs upkeep
         vm.prank(bob);
@@ -440,8 +441,8 @@ contract TestGangWar is Test {
         (upkeepNeeded, data) = game.checkUpkeep("");
         assertTrue(upkeepNeeded);
 
-        ids = abi.decode(data, (uint256[]));
-        assertEq(ids, [2, 5].toMemory());
+        ids = abi.decode(data, (uint256));
+        assertEq(ids, (1 << 2) | (1 << 5));
 
         // perform upkeep
         game.performUpkeep(data);
@@ -458,8 +459,8 @@ contract TestGangWar is Test {
         (upkeepNeeded, data) = game.checkUpkeep("");
         assertFalse(upkeepNeeded);
 
-        ids = abi.decode(data, (uint256[]));
-        assertEq(ids.length, 0);
+        ids = abi.decode(data, (uint256));
+        assertEq(ids, 0);
 
         // waiting for 1 minute without confirming VRF call should reset request status
         skip(5 minutes + 1);
@@ -467,8 +468,8 @@ contract TestGangWar is Test {
         (upkeepNeeded, data) = game.checkUpkeep("");
         assertTrue(upkeepNeeded);
 
-        ids = abi.decode(data, (uint256[]));
-        assertEq(ids, [2, 5].toMemory());
+        ids = abi.decode(data, (uint256));
+        assertEq(ids, (1 << 2) | (1 << 5));
     }
 
     /* ------------- fullfillRandomWords() ------------- */

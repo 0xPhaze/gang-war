@@ -28,6 +28,8 @@ error TokenMustBeBaron();
 error BaronAttackAlreadyDeclared();
 error CannotAttackDistrictOwnedByGang();
 
+error InvalidVRFRequest();
+
 function gangWarWonProb(
     uint256 attackForce,
     uint256 defenseForce,
@@ -247,10 +249,8 @@ abstract contract GangWarGameLogic is GangWarBase, VRFConsumerV2 {
     uint256 private constant UPKEEP_INTERVAL = 5 minutes;
 
     function checkUpkeep(bytes calldata) external view returns (bool, bytes memory) {
-        bool upkeepNeeded;
+        uint256 ids;
         District storage district;
-
-        uint256[] memory districtUpkeepIds;
 
         for (uint256 id; id < 21; ++id) {
             district = s().districts[id];
@@ -259,66 +259,73 @@ abstract contract GangWarGameLogic is GangWarBase, VRFConsumerV2 {
                 _districtStatus(district) == DISTRICT_STATE.POST_GANG_WAR &&
                 block.timestamp - district.lastUpkeepTime > UPKEEP_INTERVAL // at least wait 1 minute for re-run
             ) {
-                upkeepNeeded = true;
-                districtUpkeepIds = ArrayUtils.extend(districtUpkeepIds, id);
+                ids |= 1 << id;
             }
         }
 
-        return (upkeepNeeded, abi.encode(districtUpkeepIds));
+        return (ids > 0, abi.encode(ids));
     }
 
     // @note could exceed gas limits
     function performUpkeep(bytes calldata performData) external {
-        uint256[] memory districtIds = abi.decode(performData, (uint256[]));
+        uint256 ids = abi.decode(performData, (uint256));
+        District storage district;
 
-        uint256 length = districtIds.length;
+        for (uint256 id; id < 21; ++id) {
+            if ((ids >> id) & 1 != 0) {
+                district = s().districts[id];
 
-        for (uint256 i; i < length; ++i) {
-            uint256 districtId = districtIds[i];
-            District storage district = s().districts[districtId];
-
-            if (
-                _districtStatus(district) == DISTRICT_STATE.POST_GANG_WAR &&
-                block.timestamp - district.lastUpkeepTime > UPKEEP_INTERVAL // at least wait 1 minute for re-run
-            ) {
-                district.lastUpkeepTime = block.timestamp;
-                uint256 requestId = requestRandomWords(1);
-                s().requestIdToDistrictIds[requestId] = districtIds;
+                if (
+                    _districtStatus(district) == DISTRICT_STATE.POST_GANG_WAR &&
+                    block.timestamp - district.lastUpkeepTime > UPKEEP_INTERVAL // at least wait 1 minute for re-run
+                ) {
+                    district.lastUpkeepTime = block.timestamp;
+                } else {
+                    ids &= ~uint256(1 << id);
+                }
             }
+        }
+
+        if (ids > 0) {
+            uint256 requestId = requestRandomWords(1);
+            s().requestIdToDistrictIds[requestId] = ids;
         }
     }
 
     function fulfillRandomWords(uint256 requestId, uint256[] calldata randomWords) internal override {
-        uint256[] storage districtIds = s().requestIdToDistrictIds[requestId];
-        uint256 length = districtIds.length;
+        uint256 ids = s().requestIdToDistrictIds[requestId];
+
+        if (ids == 0) revert InvalidVRFRequest();
+
         uint256 rand = randomWords[0];
+        District storage district;
 
-        for (uint256 i; i < length; ++i) {
-            uint256 districtId = districtIds[i];
+        for (uint256 id; id < 21; ++id) {
+            if ((ids >> id) & 1 != 0) {
+                district = s().districts[id];
 
-            District storage district = s().districts[districtId];
+                if (_districtStatus(district) == DISTRICT_STATE.POST_GANG_WAR) {
+                    Gang occupants = district.occupants;
+                    Gang attackers = district.attackers;
 
-            if (_districtStatus(district) == DISTRICT_STATE.POST_GANG_WAR) {
-                Gang occupants = district.occupants;
-                Gang attackers = district.attackers;
+                    uint256 roundId = district.roundId++;
 
-                uint256 roundId = district.roundId++;
+                    uint256 r = uint256(keccak256(abi.encode(rand, id)));
 
-                uint256 r = uint256(keccak256(abi.encode(rand, i)));
+                    s().gangWarOutcomes[id][roundId] = r;
+                    district.lastOutcomeTime = block.timestamp;
 
-                s().gangWarOutcomes[districtId][roundId] = r;
-                district.lastOutcomeTime = block.timestamp;
+                    if (gangWarWon(id, roundId, r)) {
+                        _afterDistrictTransfer(attackers, occupants, id);
 
-                if (gangWarWon(districtId, roundId, r)) {
-                    _afterDistrictTransfer(attackers, occupants, districtId);
+                        district.occupants = attackers;
+                        district.attackers = Gang.NONE;
+                    }
 
-                    district.occupants = attackers;
-                    district.attackers = Gang.NONE;
+                    district.attackDeclarationTime = 0;
+                    district.baronAttackId = 0;
+                    district.baronDefenseId = 0;
                 }
-
-                district.attackDeclarationTime = 0;
-                district.baronAttackId = 0;
-                district.baronDefenseId = 0;
             }
         }
 
