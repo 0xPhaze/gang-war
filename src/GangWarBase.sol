@@ -25,10 +25,10 @@ bytes32 constant DIAMOND_STORAGE_GANG_WAR_SETTINGS = 0x8888f95c81e8a85148526340b
 /* ============= Enum ============= */
 
 enum Gang {
-    NONE,
     YAKUZA,
     CARTEL,
-    CYBERP
+    CYBERP,
+    NONE
 }
 
 enum DISTRICT_STATE {
@@ -68,6 +68,7 @@ struct District {
     // Gang gangTokenYield;
     Gang occupants;
     Gang attackers;
+    Gang token;
     uint256 roundId;
     uint256 attackDeclarationTime;
     uint256 baronAttackId;
@@ -90,7 +91,6 @@ struct GangWarDS {
     mapping(uint256 => mapping(uint256 => mapping(Gang => uint256))) districtAttackForces;
     mapping(uint256 => mapping(uint256 => mapping(Gang => uint256))) districtDefenseForces;
     mapping(uint256 => mapping(uint256 => bool)) districtConnections;
-    mapping(Gang => uint256) gangYield;
 }
 
 struct ConstantsDS {
@@ -122,25 +122,6 @@ function constants() pure returns (ConstantsDS storage diamondStorage) {
 error CallerNotOwner();
 
 abstract contract GangWarBase is OwnableUDS {
-    function __GangWarBase_init(address gmc) internal {
-        s().gmc = gmc;
-    }
-
-    function initDistrictRoundIds() internal {
-        for (uint256 i; i < 21; ++i) {
-            s().districts[i].roundId = 1;
-        }
-    }
-
-    function initDistrictOccupantsAndYield(Gang[] calldata gangs, uint256[] calldata yield) internal {
-        for (uint256 i; i < 21; ++i) {
-            s().districts[i + 1].occupants = gangs[i];
-            s().districts[i + 1].yield = yield[i];
-
-            s().gangYield[gangs[i]] += yield[i];
-        }
-    }
-
     /* ------------- View ------------- */
 
     function requestIdToDistrictIds(uint256 requestId) public view returns (uint256) {
@@ -153,7 +134,7 @@ abstract contract GangWarBase is OwnableUDS {
 
     function gangOf(uint256 id) public pure returns (Gang) {
         // return id == 0 ? Gang.NONE : Gang((id < 1000 ? id : id - 1000) % 3);
-        return id == 0 ? Gang.NONE : Gang(((id < 1000 ? id - 1 : id - 1001) % 3) + 1);
+        return id == 0 ? Gang.NONE : Gang((id < 1000 ? id - 1 : id - 1001) % 3);
     }
 
     function _validateOwnership(address owner, uint256 tokenId) internal view {
@@ -216,7 +197,7 @@ abstract contract GangWarBase is OwnableUDS {
     function _afterDistrictTransfer(
         Gang attackers,
         Gang defenders,
-        uint256 id
+        District storage district
     ) internal virtual;
 
     /* ------------- Owner ------------- */

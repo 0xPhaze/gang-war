@@ -6,7 +6,7 @@ import {OwnableUDS} from "UDS/OwnableUDS.sol";
 import {ERC721UDS} from "UDS/ERC721UDS.sol";
 
 // import {s, settings, District, Gangster} from
-import "./GangWarStorage.sol";
+import "./GangWarBase.sol";
 
 // import "forge-std/console.sol";
 
@@ -42,11 +42,11 @@ function gangWarWonProb(
     attackForce += 1;
     defenseForce += 1;
 
-    uint256 s = attackForce < c_defenseFavorLim
+    uint256 q = attackForce < c_defenseFavorLim
             ? ((1 << 32) - (attackForce << 32) / c_defenseFavorLim)**2
             : 0; // prettier-ignore
 
-    defenseForce = ((s * c_defenseFavor + ((1 << 64) - s) * c_attackFavor) * defenseForce) / 100;
+    defenseForce = ((q * c_defenseFavor + ((1 << 64) - q) * c_attackFavor) * defenseForce) / 100;
 
     if (baronDefense) defenseForce += c_baronDefenseForce << 64;
 
@@ -316,7 +316,7 @@ abstract contract GangWarGameLogic is GangWarBase, VRFConsumerV2 {
                     district.lastOutcomeTime = block.timestamp;
 
                     if (gangWarWon(id, roundId, r)) {
-                        _afterDistrictTransfer(attackers, occupants, id);
+                        _afterDistrictTransfer(attackers, occupants, district);
 
                         district.occupants = attackers;
                         district.attackers = Gang.NONE;

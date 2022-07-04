@@ -20,6 +20,8 @@ import "chainlink/contracts/src/v0.8/VRFCoordinatorV2.sol";
 
 /* 
 forge script script/GangWar.s.sol:Deploy --rpc-url $RINKEBY_RPC_URL  --private-key $PRIVATE_KEY --broadcast --verify --etherscan-api-key $ETHERSCAN_KEY -vvvv
+forge script script/GangWar.s.sol:Deploy --rpc-url $PROVIDER_MUMBAI  --private-key $PRIVATE_KEY --broadcast --verify --etherscan-api-key $POLYGONSCAN_KEY -vvvv
+forge script script/GangWar.s.sol:Deploy --rpc-url https://rpc.ankr.com/polygon  --private-key $PRIVATE_KEY --broadcast --verify --etherscan-api-key $POLYGONSCAN_KEY -vvvv
 */
 
 contract Deploy is Script {
@@ -30,9 +32,14 @@ contract Deploy is Script {
     // uint64 subId = 6985;
     // address coordinator = COORDINATOR_RINKEBY;
     // bytes32 keyHash = KEYHASH_RINKEBY;
-    uint64 subId = 862;
-    address coordinator = COORDINATOR_MUMBAI;
-    bytes32 keyHash = KEYHASH_MUMBAI;
+
+    // uint64 subId = 862;
+    // address coordinator = COORDINATOR_MUMBAI;
+    // bytes32 keyHash = KEYHASH_MUMBAI;
+
+    uint64 subId = 133;
+    address coordinator = COORDINATOR_POLYGON;
+    bytes32 keyHash = KEYHASH_POLYGON;
 
     function run() external {
         vm.startBroadcast();
@@ -40,7 +47,7 @@ contract Deploy is Script {
         MockERC721 gmc = new MockERC721("GMC", "GMC");
 
         Gang[] memory gangs = new Gang[](21);
-        for (uint256 i; i < 21; i++) gangs[i] = Gang((i % 3) + 1);
+        for (uint256 i; i < 21; i++) gangs[i] = Gang(i % 3);
 
         uint256[] memory yields = new uint256[](21);
         for (uint256 i; i < 21; i++) yields[i] = 100 + (i / 3);
@@ -56,8 +63,8 @@ contract Deploy is Script {
         gmc.mint(msg.sender, 1); // Yakuza Gangster
         gmc.mint(msg.sender, 1001); // Yakuza Baron
 
-        game.baronDeclareAttack(1, 2, 1001);
-        game.joinGangAttack(1, 2, [1].toMemory());
+        game.baronDeclareAttack(0, 1, 1001);
+        game.joinGangAttack(0, 1, [1].toMemory());
 
         VRFCoordinatorV2(coordinator).addConsumer(subId, address(game));
 
@@ -67,8 +74,8 @@ contract Deploy is Script {
     function initGangWar() internal {
         // bytes[] memory initData = new bytes[](2);
 
-        uint256[] memory districtsA = [1, 2, 3, 1, 4, 7].toMemory();
-        uint256[] memory districtsB = [2, 3, 4, 4, 5, 8].toMemory();
+        uint256[] memory districtsA = [0, 1, 2, 0, 3, 6].toMemory();
+        uint256[] memory districtsB = [1, 2, 3, 3, 4, 7].toMemory();
         // initData[0] = abi.encodeWithSelector(game.addDistrictConnections.selector, districtsA, districtsB);
 
         game.addDistrictConnections(districtsA, districtsB);

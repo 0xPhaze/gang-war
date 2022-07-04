@@ -5,8 +5,7 @@ import {UUPSUpgradeV} from "UDS/proxy/UUPSUpgradeV.sol";
 import {OwnableUDS} from "UDS/OwnableUDS.sol";
 import {ERC721UDS} from "UDS/ERC721UDS.sol";
 
-// import {GangWarBase} from "./GangWarBase.sol";
-import {s as gangWarDS} from "./GangWarStorage.sol";
+import {s as gangWarDS} from "./GangWarBase.sol";
 
 /* ============= Storage ============= */
 
@@ -14,10 +13,11 @@ import {s as gangWarDS} from "./GangWarStorage.sol";
 bytes32 constant DIAMOND_STORAGE_GANG_MARKET = 0x9350130b46a3a95c1d15eccf95069b652f55a1610fded59bd348259d7c017faf;
 
 struct GangMarketDS {
-    mapping(uint256 => address) renter;
+    // mapping(uint256 => address) renter;
+    mapping(uint256 => uint256) listedShare;
 }
 
-function ds() pure returns (GangMarketDS storage diamondStorage) {
+function s() pure returns (GangMarketDS storage diamondStorage) {
     assembly {
         diamondStorage.slot := DIAMOND_STORAGE_GANG_MARKET
     }
@@ -26,10 +26,20 @@ function ds() pure returns (GangMarketDS storage diamondStorage) {
 /* ============= Error ============= */
 
 error NotAuthorized();
+error InvalidOwnerShare();
 
-// abstract contract GMCMarket is GangWarBase {
-//     function ownerOrRenterOf(uint256 id) public view override returns (address) {
-//         address user = ds().renter[id];
-//         return user == address(0) ? gangWarDS().gmc.ownerOf(id) : user;
-//     }
-// }
+abstract contract GMCMarket {
+    // function ownerOrRenterOf(uint256 id) public view override returns (address) {
+    //     address user = ds().renter[id];
+    //     return user == address(0) ? gangWarDS().gmc.ownerOf(id) : user;
+    // }
+
+    function list(uint256[] calldata ids, uint256 ownerShare) external {
+        if (ownerShare > 70) revert InvalidOwnerShare();
+
+        for (uint256 i; i < ids.length; i++) {
+            // address owner = gangWarDS().gmc.trueOwnerOf(ids[i]);
+            s().listedShare[ids[i]] = ownerShare;
+        }
+    }
+}

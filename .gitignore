@@ -13,3 +13,7 @@ cache
 artifacts
 
 out
+
+!.vscode
+!.prettierrc
+!.gas-snapshot

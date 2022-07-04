@@ -2,21 +2,21 @@
 pragma solidity ^0.8.0;
 
 import {UUPSUpgradeV} from "UDS/proxy/UUPSUpgradeV.sol";
-import {OwnableUDS} from "UDS/OwnableUDS.sol";
+import {OwnableUDS as Ownable} from "UDS/OwnableUDS.sol";
 
 import {IERC721} from "./interfaces/IERC721.sol";
 
 // import {GangWarBase} from "./GangWarBase.sol";
 // import {GMCMarket} from "./GMCMarket.sol";
 // import {ds, settings, District, Gangster} from
-import "./GangWarStorage.sol";
-import "./GangWarRewards.sol";
+import {GangWarBase, s} from "./GangWarBase.sol";
+import {GangWarRewards, s as GangWarRewardsDS} from "./GangWarRewards.sol";
 // import {GangWarGameLogic} from "./GangWarGameLogic.sol";
 import "./GangWarGameLogic.sol";
 
 /* ============= Error ============= */
 
-contract GangWar is UUPSUpgradeV(1), OwnableUDS, GangWarBase, GangWarGameLogic, GangWarRewards {
+contract GangWar is UUPSUpgradeV(1), Ownable, GangWarBase, GangWarGameLogic, GangWarRewards {
     constructor(
         address coordinator,
         bytes32 keyHash,
@@ -27,11 +27,11 @@ contract GangWar is UUPSUpgradeV(1), OwnableUDS, GangWarBase, GangWarGameLogic, 
 
     function init(
         address gmc,
-        Gang[] calldata initialDistrictOccupants,
+        address[] memory gangTokens,
+        Gang[] calldata initialDistrictGangs,
         uint256[] calldata initialDistrictYields
     ) external initializer {
         __Ownable_init();
-        __GangWarBase_init(gmc);
 
         constants().TIME_GANG_WAR = 100;
         constants().TIME_LOCKUP = 100;
@@ -44,8 +44,38 @@ contract GangWar is UUPSUpgradeV(1), OwnableUDS, GangWarBase, GangWarGameLogic, 
         constants().ATTACK_FAVOR = 65;
         constants().DEFENSE_FAVOR = 200;
 
-        initDistrictRoundIds();
-        initDistrictOccupantsAndYield(initialDistrictOccupants, initialDistrictYields);
+        s().gmc = gmc;
+
+        District storage district;
+
+        uint256[3] memory initialGangYields;
+
+        for (uint256 i; i < 21; ++i) {
+            district = s().districts[i];
+
+            // initialize rounds
+            district.roundId = 1;
+
+            Gang gang = initialDistrictGangs[i];
+            uint256 yield = initialDistrictYields[i];
+
+            // initialize occupants and yield token
+            district.token = gang;
+            district.occupants = gang;
+
+            // initialize district yield amount
+            district.yield = yield;
+
+            initialGangYields[uint256(gang)] += yield;
+        }
+
+        // initialize gang tokens
+        _setGangTokens(gangTokens);
+
+        // initialize yields for gangs
+        _setYield(0, 0, initialGangYields[0]);
+        _setYield(1, 1, initialGangYields[1]);
+        _setYield(2, 2, initialGangYields[2]);
     }
 
     /* ------------- Internal ------------- */
@@ -59,9 +89,12 @@ contract GangWar is UUPSUpgradeV(1), OwnableUDS, GangWarBase, GangWarGameLogic, 
     function _afterDistrictTransfer(
         Gang attackers,
         Gang defenders,
-        uint256 id
+        District storage district
     ) internal override {
-        // _setRewardRate()
+        uint256 yield = district.yield;
+        Gang token = district.token;
+
+        _transferYield(uint256(defenders), uint256(attackers), uint256(token), yield);
     }
 
     function _authorizeUpgrade() internal override onlyOwner {}
