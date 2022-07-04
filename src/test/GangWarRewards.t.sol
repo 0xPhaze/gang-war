@@ -36,6 +36,15 @@ contract MockGangRewards is GangWarRewards {
         _setYield(gang, 1, rates[1]);
         _setYield(gang, 2, rates[2]);
     }
+
+    function transferYield(
+        uint256 gangFrom,
+        uint256 gangTo,
+        uint256 token,
+        uint256 yield
+    ) public {
+        _transferYield(gangFrom, gangTo, token, yield);
+    }
 }
 
 contract TestGangWarRewards is Test {
@@ -63,6 +72,15 @@ contract TestGangWarRewards is Test {
         rewardsAddress[1] = address(rewards[1]);
         rewardsAddress[2] = address(rewards[2]);
         staking = new MockGangRewards(rewardsAddress);
+    }
+
+    function test_transferYield() public {
+        staking.setRewardRate(0, [
+                uint256(1 ether),
+                uint256(1 ether),
+                uint256(1 ether)].toMemory()
+            ); //prettier-ignore
+        staking.transferYield(0, 1, 1, 100);
     }
 
     /// single user adds stake twice, claims multiple times
