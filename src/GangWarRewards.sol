@@ -22,11 +22,11 @@ bytes32 constant DIAMOND_STORAGE_GANG_WAR_REWARDS = 0x7663b7593c6b325747ef3546be
 
 struct GangWarRewardsDS {
     IERC20[3] gangToken;
-    uint80[3] totalShares;
-    uint40[3] lastUpdateTime;
+    uint256[3] totalShares;
+    uint256[3] lastUpdateTime;
     uint256[3][3] totalYieldPerToken;
     uint256[3][3] yield;
-    mapping(address => uint80[3]) userShares;
+    mapping(address => uint256[3]) userShares;
     mapping(address => uint256[3][3]) lastUserYieldPerToken;
 }
 
@@ -41,7 +41,7 @@ contract GangWarRewards {
     /* ------------- View ------------- */
 
     function getYield() external view returns (uint256[3][3] memory) {
-        return s().yield;
+        // return s().yield; //Fix
     }
 
     /* ------------- Internal ------------- */
@@ -71,7 +71,7 @@ contract GangWarRewards {
     ) internal {
         _updateReward(gang, address(0));
 
-        s().yield[gang][token] = yield;
+        s().yield[gang][token] = uint80(yield);
     }
 
     function _transferYield(
@@ -83,8 +83,8 @@ contract GangWarRewards {
         _updateReward(gangFrom, address(0));
         _updateReward(gangTo, address(0));
 
-        s().yield[gangFrom][token] -= yield;
-        s().yield[gangTo][token] += yield;
+        s().yield[gangFrom][token] -= uint80(yield);
+        s().yield[gangTo][token] += uint80(yield);
     }
 
     function _updateReward(uint256 gang, address account) internal {
@@ -101,12 +101,12 @@ contract GangWarRewards {
             ypt_1 += (timeScaled * s().yield[gang][1]) / divisor;
             ypt_2 += (timeScaled * s().yield[gang][2]) / divisor;
 
-            s().totalYieldPerToken[gang][0] = ypt_0;
-            s().totalYieldPerToken[gang][1] = ypt_1;
-            s().totalYieldPerToken[gang][2] = ypt_2;
+            s().totalYieldPerToken[gang][0] = uint80(ypt_0);
+            s().totalYieldPerToken[gang][1] = uint80(ypt_1);
+            s().totalYieldPerToken[gang][2] = uint80(ypt_2);
         }
 
-        s().lastUpdateTime[gang] = uint40(block.timestamp);
+        s().lastUpdateTime[gang] = uint80(block.timestamp);
 
         if (account != address(0)) {
             uint256 share = s().userShares[account][gang];
@@ -115,9 +115,9 @@ contract GangWarRewards {
             s().gangToken[1].mint(account, (share * (ypt_1 - s().lastUserYieldPerToken[account][gang][1])));
             s().gangToken[2].mint(account, (share * (ypt_2 - s().lastUserYieldPerToken[account][gang][2])));
 
-            s().lastUserYieldPerToken[account][gang][0] = ypt_0;
-            s().lastUserYieldPerToken[account][gang][1] = ypt_1;
-            s().lastUserYieldPerToken[account][gang][2] = ypt_2;
+            s().lastUserYieldPerToken[account][gang][0] = uint80(ypt_0);
+            s().lastUserYieldPerToken[account][gang][1] = uint80(ypt_1);
+            s().lastUserYieldPerToken[account][gang][2] = uint80(ypt_2);
         }
     }
 }
