@@ -12,17 +12,19 @@ import {MockVRFCoordinatorV2} from "./mocks/MockVRFCoordinator.sol";
 import "../lib/ArrayUtils.sol";
 import "../GangWar.sol";
 
-import {GangRewards} from "../StakingRewards.sol";
+import {GangWarRewards} from "../GangWarRewards.sol";
 
-contract MockGangRewards is GangRewards {
-    constructor(address[] memory rewardsToken) GangRewards(rewardsToken) {}
-
-    function enter(uint256 gang, uint256 amount) public {
-        _enter(gang, amount);
+contract MockGangRewards is GangWarRewards {
+    constructor(address[] memory gangTokens) {
+        _setGangTokens(gangTokens);
     }
 
-    function exit(uint256 gang, uint256 amount) public {
-        _exit(gang, amount);
+    function enter(uint256 gang, uint80 amount) public {
+        _enterRewardPool(gang, amount);
+    }
+
+    function exit(uint256 gang, uint80 amount) public {
+        _exitRewardPool(gang, amount);
     }
 
     function claim(uint256 gang) public {
@@ -30,9 +32,9 @@ contract MockGangRewards is GangRewards {
     }
 
     function setRewardRate(uint256 gang, uint256[] calldata rates) external {
-        _setRewardRate(gang, 0, rates[0]);
-        _setRewardRate(gang, 1, rates[1]);
-        _setRewardRate(gang, 2, rates[2]);
+        _setYield(gang, 0, rates[0]);
+        _setYield(gang, 1, rates[1]);
+        _setYield(gang, 2, rates[2]);
     }
 }
 
@@ -67,9 +69,9 @@ contract TestGangWarRewards is Test {
     function test_stake1() public {
         for (uint256 gang; gang < 3; gang++) {
             staking.setRewardRate(gang, [
-                uint256(1 ether) / 1 days,
-                uint256(1 ether) / 1 days,
-                uint256(1 ether) / 1 days].toMemory()
+                uint256(1 ether),
+                uint256(1 ether),
+                uint256(1 ether)].toMemory()
             ); //prettier-ignore
 
             staking.enter(gang, 10_000);
@@ -108,9 +110,9 @@ contract TestGangWarRewards is Test {
     function test_stake2() public {
         for (uint256 gang; gang < 3; gang++) {
             staking.setRewardRate(gang, [
-                uint256(1 ether) / 1 days,
-                uint256(1 ether) / 1 days,
-                uint256(1 ether) / 1 days].toMemory()
+                uint256(1 ether),
+                uint256(1 ether),
+                uint256(1 ether)].toMemory()
             ); //prettier-ignore
 
             staking.enter(gang, 10_000);
@@ -123,7 +125,11 @@ contract TestGangWarRewards is Test {
 
             staking.enter(gang, 10_000);
 
-            skip(50 days);
+            skip(25 days);
+
+            staking.claim(gang);
+
+            skip(25 days);
 
             staking.claim(gang);
 
@@ -161,17 +167,17 @@ contract TestGangWarRewards is Test {
             skip(50 days);
 
             staking.setRewardRate(gang, [
-                uint256(1 ether) / 1 days,
-                uint256(2 ether) / 1 days,
-                uint256(3 ether) / 1 days].toMemory()
+                uint256(1 ether),
+                uint256(2 ether),
+                uint256(3 ether)].toMemory()
             ); //prettier-ignore
 
             skip(100 days);
 
             staking.setRewardRate(gang, [
-                uint256(2 ether) / 1 days,
-                uint256(4 ether) / 1 days,
-                uint256(6 ether) / 1 days].toMemory()
+                uint256(2 ether),
+                uint256(4 ether),
+                uint256(6 ether)].toMemory()
             ); //prettier-ignore
 
             skip(100 days);
