@@ -106,7 +106,7 @@ contract GangWarRewards {
             s().totalYieldPerToken[gang][2] = uint80(ypt_2);
         }
 
-        s().lastUpdateTime[gang] = uint80(block.timestamp);
+        s().lastUpdateTime[gang] = uint40(block.timestamp);
 
         if (account != address(0)) {
             uint256 share = s().userShares[account][gang];

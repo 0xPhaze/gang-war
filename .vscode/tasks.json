@@ -4,6 +4,7 @@
 		{
             "type": "shell",
 			// "command": "forge test -vvv",
+			// "command": "forge test -vvv -m dummy",
 			"command": "forge test --gas-report --match transferYield > report.md",
 			// "command": "forge test --match transferYield -vvv",
 			// "command": "forge test -vvv --match-contract TestEncoding",
