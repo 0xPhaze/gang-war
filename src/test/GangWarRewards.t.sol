@@ -80,7 +80,14 @@ contract TestGangWarRewards is Test {
                 uint256(1 ether),
                 uint256(1 ether)].toMemory()
             ); //prettier-ignore
-        staking.transferYield(0, 1, 1, 100);
+        for (uint256 i; i < 3; i++) {
+            for (uint256 j; j < 3; j++) {
+                for (uint256 k; k < 3; k++) {
+                    staking.transferYield(i, j, k, 100);
+                    staking.transferYield(i, j, k, 100);
+                }
+            }
+        }
     }
 
     /// single user adds stake twice, claims multiple times
