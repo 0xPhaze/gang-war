@@ -1,5 +1,5 @@
-Compiling 1 files with 0.8.13
-Solc 0.8.13 finished in 1.73s
+Compiling 7 files with 0.8.13
+Solc 0.8.13 finished in 4.48s
 Compiler run successful (with warnings)
 warning[9302]: Warning: Return value of low-level calls not used.
   --> src/GangWar.sol:84:52:
@@ -12,7 +12,7 @@ warning[9302]: Warning: Return value of low-level calls not used.
 
 Running 1 test for src/test/GangWarRewards.t.sol:TestGangWarRewards
 [32m[PASS][0m test_transferYield() (gas: 36196)
-Test result: [32mok[0m. 1 passed; 0 failed; finished in 2.54ms
+Test result: [32mok[0m. 1 passed; 0 failed; finished in 1.56ms
 ╭────────────────────────────────────────────────────────┬─────────────────┬───────┬────────┬────────┬─────────╮
 │ src/test/GangWarRewards.t.sol:MockGangRewards contract ┆                 ┆       ┆        ┆        ┆         │
 ╞════════════════════════════════════════════════════════╪═════════════════╪═══════╪════════╪════════╪═════════╡
