@@ -105,8 +105,7 @@ abstract contract GangWarGameLogic is GangWarBase, VRFConsumerV2 {
 
         if (s().districts[connectingId].occupants != gang) revert InvalidConnectingDistrict();
         if (gangOf(district.baronAttackId) != gang) revert BaronMustDeclareInitialAttack();
-        if (districtId == connectingId || !s().districtConnections[connectingId][districtId])
-            revert InvalidConnectingDistrict();
+        if (districtId == connectingId || !isConnecting(connectingId, districtId)) revert InvalidConnectingDistrict();
 
         _joinGangWar(districtId, tokenIds);
     }

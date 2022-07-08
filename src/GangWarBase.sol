@@ -2,8 +2,9 @@
 pragma solidity ^0.8.0;
 
 import {ERC721UDS} from "UDS/ERC721UDS.sol";
-import {IERC721} from "./interfaces/IERC721.sol";
 import {OwnableUDS} from "UDS/OwnableUDS.sol";
+import {IERC721} from "./interfaces/IERC721.sol";
+import {PackedMap} from "./lib/PackedMap.sol";
 
 // import "./GangWarBase.sol";
 
@@ -90,7 +91,8 @@ struct GangWarDS {
     /*   districtId =>     roundId     =>         Gang => numForces */
     mapping(uint256 => mapping(uint256 => mapping(Gang => uint256))) districtAttackForces;
     mapping(uint256 => mapping(uint256 => mapping(Gang => uint256))) districtDefenseForces;
-    mapping(uint256 => mapping(uint256 => bool)) districtConnections;
+    // mapping(uint256 => mapping(uint256 => bool)) districtConnections;
+    uint256 districtConnections;
 }
 
 struct ConstantsDS {
@@ -122,19 +124,10 @@ function constants() pure returns (ConstantsDS storage diamondStorage) {
 error CallerNotOwner();
 
 abstract contract GangWarBase is OwnableUDS {
-    /* ------------- View ------------- */
-
-    function requestIdToDistrictIds(uint256 requestId) public view returns (uint256) {
-        return s().requestIdToDistrictIds[requestId];
-    }
+    /* ------------- Internal ------------- */
 
     function isBaron(uint256 tokenId) internal pure returns (bool) {
         return tokenId >= 1000;
-    }
-
-    function gangOf(uint256 id) public pure returns (Gang) {
-        // return id == 0 ? Gang.NONE : Gang((id < 1000 ? id : id - 1000) % 3);
-        return id == 0 ? Gang.NONE : Gang((id < 1000 ? id - 1 : id - 1001) % 3);
     }
 
     function _validateOwnership(address owner, uint256 tokenId) internal view {
@@ -142,10 +135,18 @@ abstract contract GangWarBase is OwnableUDS {
     }
 
     function isConnecting(uint256 districtA, uint256 districtB) internal view returns (bool) {
-        return
-            districtA < districtB
-                ? s().districtConnections[districtA][districtB]
-                : s().districtConnections[districtB][districtA]; // prettier-ignore
+        return PackedMap.isConnecting(s().districtConnections, districtA, districtB);
+    }
+
+    /* ------------- View ------------- */
+
+    function requestIdToDistrictIds(uint256 requestId) public view returns (uint256) {
+        return s().requestIdToDistrictIds[requestId];
+    }
+
+    function gangOf(uint256 id) public pure returns (Gang) {
+        // return id == 0 ? Gang.NONE : Gang((id < 1000 ? id : id - 1000) % 3);
+        return id == 0 ? Gang.NONE : Gang((id < 1000 ? id - 1 : id - 1001) % 3);
     }
 
     // function getDistrict(uint256 districtId) external view returns (District memory) {
@@ -156,16 +157,8 @@ abstract contract GangWarBase is OwnableUDS {
         return s().districts[districtId];
     }
 
-    function getDistrictConnections(uint256 districtA, uint256 districtB) external view returns (bool) {
-        return s().districtConnections[districtA][districtB];
-    }
-
-    function getAllDistrictConnections() external view returns (bool[21][21] memory out) {
-        for (uint256 i; i < 21; ++i) {
-            for (uint256 j; j < 21; ++j) {
-                out[i][j] = s().districtConnections[i][j];
-            }
-        }
+    function getDistrictConnections() external view returns (uint256) {
+        return s().districtConnections;
     }
 
     function getDistrictAttackForces(
@@ -206,20 +199,7 @@ abstract contract GangWarBase is OwnableUDS {
         for (uint256 i; i < 21; ++i) s().districts[i].occupants = gangs[i];
     }
 
-    function addDistrictConnections(uint256[] calldata districtsA, uint256[] calldata districtsB) external onlyOwner {
-        for (uint256 i; i < districtsA.length; ++i) {
-            assert(districtsA[i] < districtsB[i]);
-            s().districtConnections[districtsA[i]][districtsB[i]] = true;
-        }
-    }
-
-    function removeDistrictConnections(uint256[] calldata districtsA, uint256[] calldata districtsB)
-        external
-        onlyOwner
-    {
-        for (uint256 i; i < districtsA.length; ++i) {
-            assert(districtsA[i] < districtsB[i]);
-            s().districtConnections[districtsA[i]][districtsB[i]] = false;
-        }
+    function setDistrictConnections(uint256 connections) external onlyOwner {
+        s().districtConnections = connections;
     }
 }

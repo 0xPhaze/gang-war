@@ -21,7 +21,7 @@ import "chainlink/contracts/src/v0.8/VRFCoordinatorV2.sol";
 /* 
 forge script script/GangWar.s.sol:Deploy --rpc-url $RINKEBY_RPC_URL  --private-key $PRIVATE_KEY --broadcast --verify --etherscan-api-key $ETHERSCAN_KEY -vvvv
 forge script script/GangWar.s.sol:Deploy --rpc-url $PROVIDER_MUMBAI  --private-key $PRIVATE_KEY --broadcast --verify --etherscan-api-key $POLYGONSCAN_KEY -vvvv
-forge script script/GangWar.s.sol:Deploy --rpc-url https://rpc.ankr.com/polygon  --private-key $PRIVATE_KEY --broadcast --verify --etherscan-api-key $POLYGONSCAN_KEY -vvvv
+forge script script/GangWar.s.sol:Deploy --rpc-url https://rpc.ankr.com/polygon  --private-key $PRIVATE_KEY --broadcast --verify --etherscan-api-key $POLYGONSCAN_KEY --with-gas-price 30gwei -vvvv
 */
 
 contract Deploy is Script {
@@ -37,11 +37,37 @@ contract Deploy is Script {
     // address coordinator = COORDINATOR_MUMBAI;
     // bytes32 keyHash = KEYHASH_MUMBAI;
 
-    uint64 subId = 133;
-    address coordinator = COORDINATOR_POLYGON;
-    bytes32 keyHash = KEYHASH_POLYGON;
+    // uint64 subId = 133;
+    // address coordinator = COORDINATOR_POLYGON;
+    // bytes32 keyHash = KEYHASH_POLYGON;
+
+    function getChainlinkParams()
+        public
+        view
+        returns (
+            address coordinator,
+            bytes32 keyHash,
+            uint64 subId
+        )
+    {
+        if (block.chainid == 137) {
+            coordinator = COORDINATOR_POLYGON;
+            keyHash = KEYHASH_POLYGON;
+            subId = 133;
+        } else if (block.chainid == 80001) {
+            coordinator = COORDINATOR_MUMBAI;
+            keyHash = KEYHASH_MUMBAI;
+            subId = 862;
+        } else if (block.chainid == 4) {
+            coordinator = COORDINATOR_RINKEBY;
+            keyHash = KEYHASH_RINKEBY;
+            subId = 6985;
+        } else revert("unknown chainid");
+    }
 
     function run() external {
+        (address coordinator, bytes32 keyHash, uint64 subId) = getChainlinkParams();
+
         vm.startBroadcast();
 
         MockERC721 gmc = new MockERC721("GMC", "GMC");
@@ -74,11 +100,14 @@ contract Deploy is Script {
     function initGangWar() internal {
         // bytes[] memory initData = new bytes[](2);
 
-        uint256[] memory districtsA = [0, 1, 2, 0, 3, 6].toMemory();
-        uint256[] memory districtsB = [1, 2, 3, 3, 4, 7].toMemory();
-        // initData[0] = abi.encodeWithSelector(game.addDistrictConnections.selector, districtsA, districtsB);
-
-        game.addDistrictConnections(districtsA, districtsB);
+        bool[21][21] memory connections;
+        connections[0][1] = true;
+        connections[1][2] = true;
+        connections[2][3] = true;
+        connections[0][3] = true;
+        connections[3][4] = true;
+        connections[6][7] = true;
+        game.setDistrictConnections(PackedMap.encode(connections));
 
         // Gang[21] memory gangs;
         // for (uint256 i; i < 21; i++) gangs[i] = Gang((i % 3) + 1);

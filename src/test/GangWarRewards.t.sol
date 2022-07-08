@@ -15,20 +15,29 @@ import "../GangWar.sol";
 import {GangWarRewards} from "../GangWarRewards.sol";
 
 contract MockGangRewards is GangWarRewards {
-    constructor(address[] memory gangTokens) {
+    constructor(uint256 gangFee, address[3] memory gangTokens) GangWarRewards(gangFee) {
         _setGangTokens(gangTokens);
     }
 
-    function enter(uint256 gang, uint80 amount) public {
-        _enterRewardPool(gang, amount);
+    function enter(uint256 gang, uint40 amount) public {
+        _enterRewardPool(msg.sender, gang, amount);
     }
 
-    function exit(uint256 gang, uint80 amount) public {
-        _exitRewardPool(gang, amount);
+    function exit(uint256 gang, uint40 amount) public {
+        _exitRewardPool(msg.sender, gang, amount);
     }
 
-    function claim(uint256 gang) public {
-        _updateReward(gang, msg.sender);
+    function claim() public {
+        _claimUserBalance(msg.sender);
+    }
+
+    function spendGangVaultBalance(
+        uint256 gang,
+        uint256 amount_0,
+        uint256 amount_1,
+        uint256 amount_2
+    ) public {
+        _spendGangVaultBalance(gang, amount_0, amount_1, amount_2);
     }
 
     function setRewardRate(uint256 gang, uint256[] calldata rates) external {
@@ -62,86 +71,162 @@ contract TestGangWarRewards is Test {
     MockGangRewards staking;
     mapping(uint256 => MockERC20) rewards;
 
-    function setUp() public {
+    function _setUp(uint256 gangFee) internal {
         rewards[0] = new MockERC20("Token", "", 18);
         rewards[1] = new MockERC20("Token", "", 18);
         rewards[2] = new MockERC20("Token", "", 18);
 
-        address[] memory rewardsAddress = new address[](3);
+        address[3] memory rewardsAddress;
         rewardsAddress[0] = address(rewards[0]);
         rewardsAddress[1] = address(rewards[1]);
         rewardsAddress[2] = address(rewards[2]);
-        staking = new MockGangRewards(rewardsAddress);
 
-        staking.setRewardRate(0, [
-                uint256(1 ether),
-                uint256(1 ether),
-                uint256(1 ether)].toMemory()
-            ); //prettier-ignore
-        staking.setRewardRate(1, [
-                uint256(1 ether),
-                uint256(1 ether),
-                uint256(1 ether)].toMemory()
-            ); //prettier-ignore
-        staking.setRewardRate(2, [
-                uint256(1 ether),
-                uint256(1 ether),
-                uint256(1 ether)].toMemory()
-            ); //prettier-ignore
+        staking = new MockGangRewards(gangFee, rewardsAddress);
     }
 
     function test_transferYield() public {
+        _setUp(0);
+
+        staking.setRewardRate(0, [
+                uint256(100_000_000),
+                uint256(100_000_000),
+                uint256(100_000_000)].toMemory()
+            ); //prettier-ignore
+        staking.setRewardRate(1, [
+                uint256(100_000_000),
+                uint256(100_000_000),
+                uint256(100_000_000)].toMemory()
+            ); //prettier-ignore
+        staking.setRewardRate(2, [
+                uint256(100_000_000),
+                uint256(100_000_000),
+                uint256(100_000_000)].toMemory()
+            ); //prettier-ignore
+
         staking.transferYield(0, 1, 1, 100);
+    }
+
+    /// test limits to overflow
+    function test_rangeLimit() public {
+        _setUp(0);
+
+        staking.setRewardRate(0, [
+                uint256(1e12 * 1),
+                uint256(1e12 * 1),
+                uint256(1e12 * 1)].toMemory()
+            ); //prettier-ignore
+
+        staking.enter(0, 1);
+
+        skip(10_000 days);
+
+        staking.exit(0, 1);
+
+        skip(10_000 days);
+
+        // console.log("atests", staking.getClaimableUserBalance(tester)[0]);
+
+        for (uint256 token; token < 3; token++) {
+            vm.prank(address(0));
+            assertApproxEqAbs(staking.getClaimableUserBalance(tester)[token], 10_000 * 1e12 * 1 ether, 1e1);
+        }
+
+        staking.claim();
+
+        for (uint256 token; token < 3; token++) {
+            assertApproxEqAbs(rewards[0].balanceOf(tester), 10_000 * 1e12 * 1 ether, 1e1);
+        }
+    }
+
+    /// test limits to rounding errors
+    function test_roundingErrors() public {
+        _setUp(0);
+
+        // errors get relatively worse with lower rate (1e6 = approx yield of 1/10 district)
+        staking.setRewardRate(0, [
+                uint256(1e6),
+                uint256(1e6),
+                uint256(1e6)].toMemory()
+            ); //prettier-ignore
+
+        staking.enter(0, 10_000);
+
+        vm.prank(alice);
+        staking.enter(0, 1);
+
+        skip(10 hours);
+
+        staking.claim();
+
+        vm.prank(alice);
+        staking.claim();
+
+        assertApproxEqAbs(
+            rewards[0].balanceOf(tester),
+            uint256(10_000 * 1e6 * 1 ether * 10 hours) / (10_001 * 1 days),
+            0.0001 ether
+        );
+
+        assertApproxEqAbs(
+            rewards[0].balanceOf(alice),
+            uint256(1e6 * 1 ether * 10 hours) / (10_001 * 1 days),
+            0.00000001 ether
+        );
     }
 
     /// single user adds stake twice, claims multiple times
     function test_stake1() public {
+        _setUp(0);
+
         for (uint256 gang; gang < 3; gang++) {
             staking.setRewardRate(gang, [
-                uint256(1 ether),
-                uint256(1 ether),
-                uint256(1 ether)].toMemory()
+                uint256(1),
+                uint256(1),
+                uint256(1)].toMemory()
             ); //prettier-ignore
 
+            // stake for 100 days
             staking.enter(gang, 10_000);
 
             skip(25 days);
 
-            staking.enter(gang, 10_000);
+            staking.enter(gang, 10_000); // additional shares don't matter for single staker
 
             skip(25 days);
 
-            staking.claim(gang);
+            staking.claim();
 
             skip(25 days);
 
-            staking.claim(gang);
+            staking.claim();
 
             skip(25 days);
 
             staking.exit(gang, 20_000);
 
-            staking.claim(0);
-            // staking.claim(1);
-            // staking.claim(2);
+            skip(100 days); // this time won't count, since there are no shares for user
 
-            assertApproxEqAbs(rewards[0].balanceOf(tester), 100 ether, 1e8);
-            assertApproxEqAbs(rewards[1].balanceOf(tester), 100 ether, 1e8);
-            assertApproxEqAbs(rewards[2].balanceOf(tester), 100 ether, 1e8);
+            staking.claim();
 
-            rewards[0].burn(tester, rewards[0].balanceOf(tester));
-            rewards[1].burn(tester, rewards[1].balanceOf(tester));
-            rewards[2].burn(tester, rewards[2].balanceOf(tester));
+            assertApproxEqAbs(rewards[0].balanceOf(tester), 100 ether * (gang + 1), 1e1);
+            assertApproxEqAbs(rewards[1].balanceOf(tester), 100 ether * (gang + 1), 1e1);
+            assertApproxEqAbs(rewards[2].balanceOf(tester), 100 ether * (gang + 1), 1e1);
+
+            // rewards[0].burn(tester, rewards[0].balanceOf(tester));
+            // rewards[1].burn(tester, rewards[1].balanceOf(tester));
+            // rewards[2].burn(tester, rewards[2].balanceOf(tester));
         }
     }
 
     /// two users stake with different shares
     function test_stake2() public {
+        _setUp(0);
+
         for (uint256 gang; gang < 3; gang++) {
             staking.setRewardRate(gang, [
-                uint256(1 ether),
-                uint256(1 ether),
-                uint256(1 ether)].toMemory()
+                uint256(1),
+                uint256(1),
+                uint256(1)].toMemory()
             ); //prettier-ignore
 
             staking.enter(gang, 10_000);
@@ -156,23 +241,27 @@ contract TestGangWarRewards is Test {
 
             skip(25 days);
 
-            staking.claim(gang);
+            staking.claim();
 
             skip(25 days);
 
-            staking.claim(gang);
+            staking.exit(gang, 10_000);
+
+            staking.claim();
 
             vm.stopPrank();
 
-            staking.claim(gang);
+            staking.exit(gang, 30_000);
 
-            assertApproxEqAbs(rewards[0].balanceOf(tester), (100 ether * 7) / 8, 1e8);
-            assertApproxEqAbs(rewards[1].balanceOf(tester), (100 ether * 7) / 8, 1e8);
-            assertApproxEqAbs(rewards[2].balanceOf(tester), (100 ether * 7) / 8, 1e8);
+            staking.claim();
 
-            assertApproxEqAbs(rewards[0].balanceOf(alice), (100 ether * 1) / 8, 1e8);
-            assertApproxEqAbs(rewards[1].balanceOf(alice), (100 ether * 1) / 8, 1e8);
-            assertApproxEqAbs(rewards[2].balanceOf(alice), (100 ether * 1) / 8, 1e8);
+            assertApproxEqAbs(rewards[0].balanceOf(tester), ((100 ether * 7) / 8), 1e1);
+            assertApproxEqAbs(rewards[1].balanceOf(tester), ((100 ether * 7) / 8), 1e1);
+            assertApproxEqAbs(rewards[2].balanceOf(tester), ((100 ether * 7) / 8), 1e1);
+
+            assertApproxEqAbs(rewards[0].balanceOf(alice), ((100 ether * 1) / 8), 1e1);
+            assertApproxEqAbs(rewards[1].balanceOf(alice), ((100 ether * 1) / 8), 1e1);
+            assertApproxEqAbs(rewards[2].balanceOf(alice), ((100 ether * 1) / 8), 1e1);
 
             rewards[0].burn(tester, rewards[0].balanceOf(tester));
             rewards[1].burn(tester, rewards[1].balanceOf(tester));
@@ -186,6 +275,8 @@ contract TestGangWarRewards is Test {
 
     /// variable rate during stake
     function test_stake3() public {
+        _setUp(0);
+
         for (uint256 gang; gang < 3; gang++) {
             staking.setRewardRate(gang, [0, 0, 0].toMemory());
 
@@ -196,17 +287,17 @@ contract TestGangWarRewards is Test {
             skip(50 days);
 
             staking.setRewardRate(gang, [
-                uint256(1 ether),
-                uint256(2 ether),
-                uint256(3 ether)].toMemory()
+                uint256(1),
+                uint256(2),
+                uint256(3)].toMemory()
             ); //prettier-ignore
 
             skip(100 days);
 
             staking.setRewardRate(gang, [
-                uint256(2 ether),
-                uint256(4 ether),
-                uint256(6 ether)].toMemory()
+                uint256(2),
+                uint256(4),
+                uint256(6)].toMemory()
             ); //prettier-ignore
 
             skip(100 days);
@@ -215,11 +306,55 @@ contract TestGangWarRewards is Test {
 
             skip(50 days);
 
-            staking.claim(gang);
+            staking.claim();
 
-            assertApproxEqAbs(rewards[0].balanceOf(tester), 300 ether, 1e8);
-            assertApproxEqAbs(rewards[1].balanceOf(tester), 600 ether, 1e8);
-            assertApproxEqAbs(rewards[2].balanceOf(tester), 900 ether, 1e8);
+            assertApproxEqAbs(rewards[0].balanceOf(tester), 300 ether * (gang + 1), 1e1);
+            assertApproxEqAbs(rewards[1].balanceOf(tester), 600 ether * (gang + 1), 1e1);
+            assertApproxEqAbs(rewards[2].balanceOf(tester), 900 ether * (gang + 1), 1e1);
+        }
+    }
+
+    /// gang vault fees
+    function test_stake4() public {
+        _setUp(80);
+
+        for (uint256 gang; gang < 3; gang++) {
+            staking.setRewardRate(gang, [
+                uint256(1),
+                uint256(1),
+                uint256(1)].toMemory()
+            ); //prettier-ignore
+
+            staking.enter(gang, 1);
+
+            skip(100 days);
+
+            staking.claim();
+
+            assertApproxEqAbs(rewards[0].balanceOf(tester), 20 ether * (gang + 1), 1e1);
+            assertApproxEqAbs(rewards[1].balanceOf(tester), 20 ether * (gang + 1), 1e1);
+            assertApproxEqAbs(rewards[2].balanceOf(tester), 20 ether * (gang + 1), 1e1);
+
+            vm.prank(address(0));
+            uint256[3] memory balances = staking.getGangVaultBalance(gang);
+
+            assertApproxEqAbs(balances[0], 80 ether, 1e1);
+            assertApproxEqAbs(balances[1], 80 ether, 1e1);
+            assertApproxEqAbs(balances[2], 80 ether, 1e1);
+
+            staking.spendGangVaultBalance(gang, 40 ether, 30 ether, 20 ether);
+
+            vm.prank(address(0));
+            balances = staking.getGangVaultBalance(gang);
+
+            assertApproxEqAbs(balances[0], 40 ether, 1e1);
+            assertApproxEqAbs(balances[1], 50 ether, 1e1);
+            assertApproxEqAbs(balances[2], 60 ether, 1e1);
+
+            staking.spendGangVaultBalance(gang, 40 ether, 50 ether, 60 ether);
+
+            // vm.expectRevert();
+            // staking.spendGangVaultBalance(gang, 1 ether, 0 ether, 0 ether);
 
             rewards[0].burn(tester, rewards[0].balanceOf(tester));
             rewards[1].burn(tester, rewards[1].balanceOf(tester));

@@ -12,6 +12,7 @@ import {ERC1967Proxy} from "UDS/proxy/ERC1967VersionedUDS.sol";
 import {MockVRFCoordinatorV2} from "./mocks/MockVRFCoordinator.sol";
 
 import "../lib/ArrayUtils.sol";
+import "../lib/PackedMap.sol";
 import "../GangWar.sol";
 
 contract TestGangWar is Test {
@@ -46,11 +47,14 @@ contract TestGangWar is Test {
         bytes memory initCall = abi.encodeWithSelector(game.init.selector, address(gmc), gangTokens, gangs, yields);
         game = GangWar(address(new ERC1967Proxy(address(impl), initCall)));
 
-        // uint256 connections;
-        // connections |= 1 << (1 *)
-        uint256[] memory districtsA = [0, 1, 2, 0, 3, 6].toMemory();
-        uint256[] memory districtsB = [1, 2, 3, 3, 4, 7].toMemory();
-        game.addDistrictConnections(districtsA, districtsB);
+        bool[21][21] memory connections;
+        connections[0][1] = true;
+        connections[1][2] = true;
+        connections[2][3] = true;
+        connections[0][3] = true;
+        connections[3][4] = true;
+        connections[6][7] = true;
+        game.setDistrictConnections(PackedMap.encode(connections));
 
         // uint256[] memory gDistrictIds = [1, 2, 3, 4, 5, 6].toMemory();
         // uint256[] memory gangsUint256 = [1, 2, 3, 1, 2, 3].toMemory();
@@ -87,11 +91,12 @@ contract TestGangWar is Test {
     }
 
     function test_setUp() public {
-        assertTrue(game.getDistrictConnections(0, 1));
-        assertTrue(game.getDistrictConnections(1, 2));
-        assertTrue(game.getDistrictConnections(2, 3));
-        assertTrue(game.getDistrictConnections(3, 4));
-        assertTrue(game.getDistrictConnections(6, 7));
+        uint256 connections = game.getDistrictConnections();
+        assertTrue(PackedMap.isConnecting(connections, 0, 1));
+        assertTrue(PackedMap.isConnecting(connections, 1, 2));
+        assertTrue(PackedMap.isConnecting(connections, 2, 3));
+        assertTrue(PackedMap.isConnecting(connections, 3, 4));
+        assertTrue(PackedMap.isConnecting(connections, 6, 7));
 
         for (uint256 i; i < 21; i++) {
             District memory district = game.getDistrict(i);

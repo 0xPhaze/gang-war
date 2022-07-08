@@ -23,11 +23,11 @@ contract GangWar is UUPSUpgradeV(1), Ownable, GangWarBase, GangWarGameLogic, Gan
         uint64 subscriptionId,
         uint16 requestConfirmations,
         uint32 callbackGasLimit
-    ) VRFConsumerV2(coordinator, keyHash, subscriptionId, requestConfirmations, callbackGasLimit) {}
+    ) VRFConsumerV2(coordinator, keyHash, subscriptionId, requestConfirmations, callbackGasLimit) GangWarRewards(0) {}
 
     function init(
         address gmc,
-        address[] memory gangTokens,
+        address[3] memory gangTokens,
         Gang[] calldata initialDistrictGangs,
         uint256[] calldata initialDistrictYields
     ) external initializer {
