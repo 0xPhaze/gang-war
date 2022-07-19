@@ -1,29 +1,28 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import {ERC721UDS} from "UDS/ERC721UDS.sol";
-import {OwnableUDS} from "UDS/OwnableUDS.sol";
+import {ERC721UDS} from "UDS/tokens/ERC721UDS.sol";
+import {OwnableUDS} from "UDS/auth/OwnableUDS.sol";
 import {IERC721} from "./interfaces/IERC721.sol";
 import {PackedMap} from "./lib/PackedMap.sol";
 
-// import "./GangWarBase.sol";
+// ------------- Constants
 
-/* ============= Constants ============= */
-// uint256 constant STATUS_IDLE = 0;
-// uint256 constant STATUS_ATTACK = 1;
-// uint256 constant STATUS_DEFEND = 2;
-// uint256 constant STATUS_RECOVERY = 3;
-// uint256 constant STATUS_LOCKUP = 4;
+uint256 constant TIME_TRUCE = 4 hours;
+uint256 constant TIME_LOCKUP = 12 hours;
+uint256 constant TIME_GANG_WAR = 3 hours;
+uint256 constant TIME_RECOVERY = 12 hours;
+uint256 constant TIME_REINFORCEMENTS = 5 hours;
 
-/* ============= Storage ============= */
+uint256 constant DEFENSE_FAVOR_LIM = 150;
+uint256 constant BARON_DEFENSE_FORCE = 50;
+uint256 constant ATTACK_FAVOR = 65;
+uint256 constant DEFENSE_FAVOR = 200;
 
-// keccak256("diamond.storage.gang.war") == 0x1465defc4302777e9f3331026df5b673e1fdbf0798e6f23608defa528993ece8;
-bytes32 constant DIAMOND_STORAGE_GANG_WAR = 0x1465defc4302777e9f3331026df5b673e1fdbf0798e6f23608defa528993ece8;
+uint256 constant INJURED_WON_FACTOR = 35;
+uint256 constant INJURED_LOST_FACTOR = 65;
 
-// keccak256("diamond.storage.gang.war.settings") == 0x8888f95c81e8a85148526340bc32f8046bd9cdfc432a8ade56077881a62383a9;
-bytes32 constant DIAMOND_STORAGE_GANG_WAR_SETTINGS = 0x8888f95c81e8a85148526340bc32f8046bd9cdfc432a8ade56077881a62383a9;
-
-/* ============= Enum ============= */
+// ------------- Enum
 
 enum Gang {
     YAKUZA,
@@ -50,7 +49,7 @@ enum PLAYER_STATE {
     LOCKUP
 }
 
-/* ============= Struct ============= */
+// ------------- Struct
 
 struct Gangster {
     uint256 roundId;
@@ -82,44 +81,28 @@ struct District {
 
 struct GangWarDS {
     address gmc;
+    uint256 districtConnections; // packed bool matrix
     mapping(uint256 => District) districts;
     mapping(uint256 => Gangster) gangsters;
     /*   districtId => districtIds  */
-    mapping(uint256 => uint256) requestIdToDistrictIds;
+    mapping(uint256 => uint256) requestIdToDistrictIds; // used by chainlink VRF request callbacks
     /*   districtId =>     roundId     => outcome  */
     mapping(uint256 => mapping(uint256 => uint256)) gangWarOutcomes;
     /*   districtId =>     roundId     =>         Gang => numForces */
     mapping(uint256 => mapping(uint256 => mapping(Gang => uint256))) districtAttackForces;
     mapping(uint256 => mapping(uint256 => mapping(Gang => uint256))) districtDefenseForces;
-    // mapping(uint256 => mapping(uint256 => bool)) districtConnections;
-    uint256 districtConnections;
 }
 
-struct ConstantsDS {
-    uint256 TIME_TRUCE;
-    uint256 TIME_LOCKUP;
-    uint256 TIME_GANG_WAR;
-    uint256 TIME_RECOVERY;
-    uint256 TIME_REINFORCEMENTS;
-    uint256 DEFENSE_FAVOR_LIM;
-    uint256 BARON_DEFENSE_FORCE;
-    uint256 ATTACK_FAVOR;
-    uint256 DEFENSE_FAVOR;
-}
+// ------------- Storage
+
+// keccak256("diamond.storage.gang.war") == 0x1465defc4302777e9f3331026df5b673e1fdbf0798e6f23608defa528993ece8;
+bytes32 constant DIAMOND_STORAGE_GANG_WAR = 0x1465defc4302777e9f3331026df5b673e1fdbf0798e6f23608defa528993ece8;
 
 function s() pure returns (GangWarDS storage diamondStorage) {
-    assembly {
-        diamondStorage.slot := DIAMOND_STORAGE_GANG_WAR
-    }
+    assembly { diamondStorage.slot := DIAMOND_STORAGE_GANG_WAR } // prettier-ignore
 }
 
-function constants() pure returns (ConstantsDS storage diamondStorage) {
-    assembly {
-        diamondStorage.slot := DIAMOND_STORAGE_GANG_WAR_SETTINGS
-    }
-}
-
-/* ============= Errors ============= */
+// ------------- Errors
 
 error CallerNotOwner();
 
@@ -139,10 +122,6 @@ abstract contract GangWarBase is OwnableUDS {
     }
 
     /* ------------- View ------------- */
-
-    function requestIdToDistrictIds(uint256 requestId) public view returns (uint256) {
-        return s().requestIdToDistrictIds[requestId];
-    }
 
     function gangOf(uint256 id) public pure returns (Gang) {
         // return id == 0 ? Gang.NONE : Gang((id < 1000 ? id : id - 1000) % 3);
@@ -181,9 +160,9 @@ abstract contract GangWarBase is OwnableUDS {
         return s().gangWarOutcomes[districtId][roundId];
     }
 
-    function getConstants() external pure returns (ConstantsDS memory) {
-        return constants();
-    }
+    // function getConstants() external pure returns (ConstantsDS memory) {
+    //     return constants();
+    // }
 
     /* ------------- Internal ------------- */
 

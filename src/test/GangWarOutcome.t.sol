@@ -7,8 +7,8 @@ import "solmate/test/utils/mocks/MockERC721.sol";
 import "solmate/utils/LibString.sol";
 
 import "../lib/ArrayUtils.sol";
-import {ERC721UDS} from "UDS/ERC721UDS.sol";
-import {ERC1967Proxy} from "UDS/proxy/ERC1967VersionedUDS.sol";
+import {ERC721UDS} from "UDS/tokens/ERC721UDS.sol";
+import {ERC1967Proxy} from "UDS/proxy/ERC1967Proxy.sol";
 
 import "../GangWar.sol";
 
@@ -37,11 +37,6 @@ contract TestGangWarOutcome is Test {
         assertEq(uint8(a), uint8(b));
     }
 
-    function assertEq(uint256[] memory a, uint256[] memory b) internal {
-        assertEq(a.length, b.length);
-        for (uint256 i; i < a.length; ++i) assertEq(a[i], b[i]);
-    }
-
     /* ------------- gangWarWonProbFFI() ------------- */
 
     function test_fuzz_gangWarWonProbFFI(
@@ -65,15 +60,7 @@ contract TestGangWarOutcome is Test {
         bytes memory result = vm.ffi(inputs);
         uint256 res = abi.decode(result, (uint256));
 
-        uint256 prob = gangWarWonProb(
-            attackForce,
-            defenseForce,
-            baronDefense,
-            65, // c_attackFavor
-            200, // c_defenseFavor
-            150, // c_defenseFavorLim
-            50 // c_baronDefenseForce
-        );
+        uint256 prob = gangWarWonProb(attackForce, defenseForce, baronDefense);
         assertEq((prob * 1e12) >> 128, (res * 1e12) >> 128);
     }
 
@@ -85,15 +72,7 @@ contract TestGangWarOutcome is Test {
         vm.assume(attackForce < 10_000);
         vm.assume(defenseForce < 10_000);
 
-        uint256 prob = gangWarWonProb(
-            attackForce,
-            defenseForce,
-            baronDefense,
-            65, // c_attackFavor
-            200, // c_defenseFavor
-            150, // c_defenseFavorLim
-            50 // c_baronDefenseForce
-        );
+        uint256 prob = gangWarWonProb(attackForce, defenseForce, baronDefense);
 
         // in valid range [0, 128]
         assertTrue(prob < 1 << 128);

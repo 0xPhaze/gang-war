@@ -5,11 +5,11 @@
 // import {FxERC20ChildUDS, FxBaseChildTunnelUDS} from "./lib/upgradeable/FxERC20ChildUDS.sol";
 // // import {FxBaseChildTunnelUDS} from "./FxBaseChildTunnelUDS.sol";
 // import {AccessControlUDS} from "./lib/upgradeable/AccessControlUDS.sol";
-// import {UUPSUpgradeV} from "./lib/upgradeable/proxy/UUPSUpgradeV.sol";
+// import {UUPSUpgrade} from "./lib/upgradeable/proxy/UUPSUpgrade.sol";
 
 // import {ds as erc20ds} from "./lib/upgradeable/ERC20UDS.sol";
 
-// contract MiceChild is UUPSUpgradeV(1), OwnableUDS, FxERC20ChildUDS, AccessControlUDS {
+// contract MiceChild is UUPSUpgrade(1), OwnableUDS, FxERC20ChildUDS, AccessControlUDS {
 //     bytes32 private constant MINT_AUTHORITY = keccak256("MINT_AUTHORITY");
 //     bytes32 private constant BURN_AUTHORITY = keccak256("BURN_AUTHORITY");
 

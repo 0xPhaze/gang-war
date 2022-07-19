@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import {OwnableUDS} from "UDS/OwnableUDS.sol";
+import {OwnableUDS} from "UDS/auth/OwnableUDS.sol";
 import {InitializableUDS} from "UDS/InitializableUDS.sol";
-import {UUPSUpgradeV} from "UDS/proxy/UUPSUpgradeV.sol";
+import {UUPSUpgrade} from "UDS/proxy/UUPSUpgrade.sol";
 
 import {LibString} from "solmate/utils/LibString.sol";
 
@@ -28,7 +28,7 @@ function ds() pure returns (SafeHouseDS storage diamondStorage) {
 
 error Disabled();
 
-contract SafeHouse is UUPSUpgradeV(1), OwnableUDS, FxERC721ChildUDS {
+contract SafeHouse is UUPSUpgrade(1), OwnableUDS, FxERC721ChildUDS {
     constructor(address _fxChild) FxBaseChildTunnelUDS(_fxChild) {}
 
     function init() public initializer {

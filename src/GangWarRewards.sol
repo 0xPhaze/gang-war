@@ -17,7 +17,7 @@ interface IERC20 {
     function balanceOf(address owner) external view returns (uint256);
 }
 
-/* ============= Storage ============= */
+// ------------- Storage
 
 // keccak256("diamond.storage.gang.war.rewards") == 0x7663b7593c6b325747ef3546beebff6d1594934779e6cd28a66d956dd6fcb247;
 bytes32 constant DIAMOND_STORAGE_GANG_WAR_REWARDS = 0x7663b7593c6b325747ef3546beebff6d1594934779e6cd28a66d956dd6fcb247;
@@ -39,7 +39,7 @@ function s() pure returns (GangWarRewardsDS storage diamondStorage) {
     }
 }
 
-/// @notice Gang Staking Rewards
+/// @title Gang Staking Rewards
 /// @author phaze (https://github.com/0xPhaze)
 /// @author Adapted from Synthetix StakingRewards (https://github.com/Synthetixio/synthetix/blob/develop/contracts/StakingRewards.sol)
 contract GangWarRewards {

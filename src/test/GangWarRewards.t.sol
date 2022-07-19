@@ -5,7 +5,7 @@ import "forge-std/Test.sol";
 import "forge-std/console.sol";
 import "solmate/test/utils/mocks/MockERC20.sol";
 
-import {ERC1967Proxy} from "UDS/proxy/ERC1967VersionedUDS.sol";
+import {ERC1967Proxy} from "UDS/proxy/ERC1967Proxy.sol";
 
 import {MockVRFCoordinatorV2} from "./mocks/MockVRFCoordinator.sol";
 

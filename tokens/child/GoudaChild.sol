@@ -4,11 +4,11 @@
 // import {OwnableUDS} from "./lib/upgradeable/OwnableUDS.sol";
 // import {FxERC20ChildUDS} from "./lib/upgradeable/FxERC20ChildUDS.sol";
 // import {AccessControlUDS} from "./lib/upgradeable/AccessControlUDS.sol";
-// import {UUPSUpgradeV} from "./lib/upgradeable/proxy/UUPSUpgradeV.sol";
+// import {UUPSUpgrade} from "./lib/upgradeable/proxy/UUPSUpgrade.sol";
 
 // import {ds as erc20ds} from "./lib/upgradeable/ERC20UDS.sol";
 
-// contract GoudaChild is UUPSUpgradeV, OwnableUDS, FxERC20ChildUDS, AccessControlUDS {
+// contract GoudaChild is UUPSUpgrade, OwnableUDS, FxERC20ChildUDS, AccessControlUDS {
 //     bytes32 private constant MINT_AUTHORITY = keccak256("MINT_AUTHORITY");
 //     bytes32 private constant BURN_AUTHORITY = keccak256("BURN_AUTHORITY");
 

@@ -4,7 +4,7 @@ pragma solidity ^0.8.13;
 import "forge-std/Script.sol";
 
 import "solmate/test/utils/mocks/MockERC721.sol";
-import {ERC1967Proxy} from "UDS/proxy/ERC1967VersionedUDS.sol";
+import {ERC1967Proxy} from "UDS/proxy/ERC1967Proxy.sol";
 
 import "../src/GangWar.sol";
 import "../src/lib/VRFConsumerV2.sol";

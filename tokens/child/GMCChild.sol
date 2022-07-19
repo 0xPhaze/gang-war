@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import {UUPSUpgradeV} from "UDS/proxy/UUPSUpgradeV.sol";
+import {UUPSUpgrade} from "UDS/proxy/UUPSUpgrade.sol";
 import {FxBaseChildTunnelUDS} from "./lib/FxBaseChildTunnelUDS.sol";
 import {FxERC721SyncedChildUDS} from "./lib/FxERC721SyncedChildUDS.sol";
 
@@ -9,7 +9,7 @@ import "solmate/utils/LibString.sol";
 
 error Disabled();
 
-contract GMCChild is UUPSUpgradeV(1), FxERC721SyncedChildUDS {
+contract GMCChild is UUPSUpgrade(1), FxERC721SyncedChildUDS {
     using LibString for uint256;
 
     constructor(address fxChild) FxBaseChildTunnelUDS(fxChild) {}

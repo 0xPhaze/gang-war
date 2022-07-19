@@ -3,12 +3,7 @@
 	"tasks": [
 		{
             "type": "shell",
-			// "command": "forge test -vvv -m rounding",
-			"command": "forge test -vvv --match-contract Rewards",
-			// "command": "forge test -vvv -m dummy",
-			// "command": "forge test --gas-report --match-contract Rewards > report.md",
-			// "command": "forge test --match transferYield -vvv",
-			// "command": "forge test -vvv --match-contract TestEncoding",
+			"command": "forge test -vvv -m district",
 			"group": {
 				"kind": "test",
 				"isDefault": true
