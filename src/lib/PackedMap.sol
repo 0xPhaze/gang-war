@@ -63,6 +63,6 @@ library PackedMap {
         uint256 b
     ) public pure returns (bool) {
         if (a > b) (a, b) = (b, a);
-        return a == b || (enc >> (a * 21 + b - ((a + 1) * (a + 2)) / 2)) & 1 != 0;
+        return (a != b) && (enc >> (a * 21 + b - ((a + 1) * (a + 2)) / 2)) & 1 != 0;
     }
 }

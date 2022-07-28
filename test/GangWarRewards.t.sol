@@ -9,10 +9,10 @@ import {ERC1967Proxy} from "UDS/proxy/ERC1967Proxy.sol";
 
 import {MockVRFCoordinatorV2} from "./mocks/MockVRFCoordinator.sol";
 
-import "../lib/ArrayUtils.sol";
-import "../GangWar.sol";
+import "/lib/ArrayUtils.sol";
+import "/GangWar.sol";
 
-import {GangWarRewards} from "../GangWarRewards.sol";
+import {GangWarRewards} from "/GangWarRewards.sol";
 
 contract MockGangRewards is GangWarRewards {
     constructor(uint256 gangFee, address[3] memory gangTokens) GangWarRewards(gangFee) {
@@ -20,11 +20,11 @@ contract MockGangRewards is GangWarRewards {
     }
 
     function enter(uint256 gang, uint40 amount) public {
-        _enterRewardPool(msg.sender, gang, amount);
+        _addShares(msg.sender, gang, amount);
     }
 
     function exit(uint256 gang, uint40 amount) public {
-        _exitRewardPool(msg.sender, gang, amount);
+        _removeShares(msg.sender, gang, amount);
     }
 
     function claim() public {

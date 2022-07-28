@@ -8,7 +8,7 @@ import {ERC1967Proxy} from "UDS/proxy/ERC1967Proxy.sol";
 
 import "../src/GangWar.sol";
 import "../src/lib/VRFConsumerV2.sol";
-import {MockVRFCoordinatorV2} from "../src/test/mocks/MockVRFCoordinator.sol";
+import {MockVRFCoordinatorV2} from "../test/mocks/MockVRFCoordinator.sol";
 
 import "../src/lib/ArrayUtils.sol";
 

@@ -32,4 +32,6 @@ interface IERC721 {
     function getApproved(uint256 tokenId) external view returns (address operator);
 
     function isApprovedForAll(address owner, address operator) external view returns (bool);
+
+    function mint(address to, uint256 amount) external;
 }

@@ -22,6 +22,9 @@ uint256 constant DEFENSE_FAVOR = 200;
 uint256 constant INJURED_WON_FACTOR = 35;
 uint256 constant INJURED_LOST_FACTOR = 65;
 
+uint256 constant BADGES_EARNED_VICTORY = 6e18;
+uint256 constant BADGES_EARNED_DEFEAT = 2e18;
+
 // ------------- Enum
 
 enum Gang {
@@ -54,18 +57,18 @@ enum PLAYER_STATE {
 struct Gangster {
     uint256 roundId;
     uint256 location;
+    bool attack;
 }
 
 struct GangsterView {
+    uint256 roundId;
+    uint256 location;
     Gang gang;
     PLAYER_STATE state;
     int256 stateCountdown;
-    uint256 roundId;
-    uint256 location;
 }
 
 struct District {
-    // Gang gangTokenYield;
     Gang occupants;
     Gang attackers;
     Gang token;
@@ -73,14 +76,33 @@ struct District {
     uint256 attackDeclarationTime;
     uint256 baronAttackId;
     uint256 baronDefenseId;
-    uint256 lastUpkeepTime;
-    uint256 lastOutcomeTime;
+    uint256 lastUpkeepTime; // set when upkeep is triggered
+    uint256 lastOutcomeTime; // set when vrf result is in
     uint256 lockupTime;
     uint256 yield;
 }
 
+struct DistrictView {
+    Gang occupants;
+    Gang attackers;
+    Gang token;
+    uint256 roundId;
+    uint256 attackDeclarationTime;
+    uint256 baronAttackId;
+    uint256 baronDefenseId;
+    uint256 lastUpkeepTime; // set when upkeep is triggered
+    uint256 lastOutcomeTime; // set when vrf result is in
+    uint256 lockupTime;
+    uint256 yield;
+    DISTRICT_STATE state;
+    int256 stateCountdown;
+    uint256 attackForces;
+    uint256 defenseForces;
+}
+
 struct GangWarDS {
     address gmc;
+    address badges;
     uint256 districtConnections; // packed bool matrix
     mapping(uint256 => District) districts;
     mapping(uint256 => Gangster) gangsters;
@@ -88,9 +110,9 @@ struct GangWarDS {
     mapping(uint256 => uint256) requestIdToDistrictIds; // used by chainlink VRF request callbacks
     /*   districtId =>     roundId     => outcome  */
     mapping(uint256 => mapping(uint256 => uint256)) gangWarOutcomes;
-    /*   districtId =>     roundId     =>         Gang => numForces */
-    mapping(uint256 => mapping(uint256 => mapping(Gang => uint256))) districtAttackForces;
-    mapping(uint256 => mapping(uint256 => mapping(Gang => uint256))) districtDefenseForces;
+    /*   districtId =>     roundId     => numForces */
+    mapping(uint256 => mapping(uint256 => uint256)) districtAttackForces;
+    mapping(uint256 => mapping(uint256 => uint256)) districtDefenseForces;
 }
 
 // ------------- Storage
@@ -107,24 +129,25 @@ function s() pure returns (GangWarDS storage diamondStorage) {
 error CallerNotOwner();
 
 abstract contract GangWarBase is OwnableUDS {
-    /* ------------- Internal ------------- */
+    /* ------------- internal ------------- */
 
     function isBaron(uint256 tokenId) internal pure returns (bool) {
         return tokenId >= 1000;
     }
 
-    function _validateOwnership(address owner, uint256 tokenId) internal view {
-        if (IERC721(s().gmc).ownerOf(tokenId) != owner) revert CallerNotOwner();
-    }
+    function _verifyAuthorized(address owner, uint256 tokenId) internal view virtual;
 
     function isConnecting(uint256 districtA, uint256 districtB) internal view returns (bool) {
         return PackedMap.isConnecting(s().districtConnections, districtA, districtB);
     }
 
-    /* ------------- View ------------- */
+    /* ------------- view ------------- */
+
+    function gmc() public view returns (address) {
+        return s().gmc;
+    }
 
     function gangOf(uint256 id) public pure returns (Gang) {
-        // return id == 0 ? Gang.NONE : Gang((id < 1000 ? id : id - 1000) % 3);
         return id == 0 ? Gang.NONE : Gang((id < 1000 ? id - 1 : id - 1001) % 3);
     }
 
@@ -140,22 +163,6 @@ abstract contract GangWarBase is OwnableUDS {
         return s().districtConnections;
     }
 
-    function getDistrictAttackForces(
-        uint256 districtId,
-        uint256 roundId,
-        Gang gang
-    ) external view returns (uint256) {
-        return s().districtAttackForces[districtId][roundId][gang];
-    }
-
-    function getDistrictDefenseForces(
-        uint256 districtId,
-        uint256 roundId,
-        Gang gang
-    ) external view returns (uint256) {
-        return s().districtDefenseForces[districtId][roundId][gang];
-    }
-
     function getGangWarOutcome(uint256 districtId, uint256 roundId) external view returns (uint256) {
         return s().gangWarOutcomes[districtId][roundId];
     }
@@ -164,7 +171,7 @@ abstract contract GangWarBase is OwnableUDS {
     //     return constants();
     // }
 
-    /* ------------- Internal ------------- */
+    /* ------------- internal ------------- */
 
     function _afterDistrictTransfer(
         Gang attackers,

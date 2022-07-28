@@ -3,7 +3,7 @@
 	"tasks": [
 		{
             "type": "shell",
-			"command": "forge test -vvv -m district",
+			"command": "forge test -vvv --match-contract Logic",
 			"group": {
 				"kind": "test",
 				"isDefault": true

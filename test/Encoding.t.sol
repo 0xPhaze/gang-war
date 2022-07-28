@@ -6,7 +6,7 @@ import "forge-std/console.sol";
 import "solmate/test/utils/mocks/MockERC721.sol";
 import "solmate/utils/LibString.sol";
 
-import "../lib/PackedMap.sol";
+import "/lib/PackedMap.sol";
 
 contract TestEncoding is Test {
     using PackedMap for *;
@@ -67,7 +67,7 @@ contract TestEncoding is Test {
         assertEq(map.encode(), (1 << 45) - 1); // all 44 bits set to true
     }
 
-    function test_fuzz_encode10(bool[10][10] memory map) public {
+    function test_encode10(bool[10][10] memory map) public {
         for (uint256 i; i < 10; i++) {
             for (uint256 j; j <= i; j++) {
                 map[i][j] = false;
@@ -77,7 +77,7 @@ contract TestEncoding is Test {
         assertEq(map.encode().decode10(), map);
     }
 
-    function test_fuzz_encode21(bool[21][21] memory map) public {
+    function test_encode21(bool[21][21] memory map) public {
         for (uint256 i; i < 21; i++) {
             for (uint256 j; j <= i; j++) {
                 map[i][j] = false;

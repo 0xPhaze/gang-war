@@ -6,11 +6,11 @@ import "forge-std/console.sol";
 import "solmate/test/utils/mocks/MockERC721.sol";
 import "solmate/utils/LibString.sol";
 
-import "../lib/ArrayUtils.sol";
+import "/lib/ArrayUtils.sol";
 import {ERC721UDS} from "UDS/tokens/ERC721UDS.sol";
 import {ERC1967Proxy} from "UDS/proxy/ERC1967Proxy.sol";
 
-import "../GangWar.sol";
+import "/GangWar.sol";
 
 contract TestGangWarOutcome is Test {
     using ArrayUtils for *;
@@ -39,7 +39,7 @@ contract TestGangWarOutcome is Test {
 
     /* ------------- gangWarWonProbFFI() ------------- */
 
-    function test_fuzz_gangWarWonProbFFI(
+    function test_gangWarWonProbFFI(
         uint256 attackForce,
         uint256 defenseForce,
         bool baronDefense
@@ -64,9 +64,9 @@ contract TestGangWarOutcome is Test {
         assertEq((prob * 1e12) >> 128, (res * 1e12) >> 128);
     }
 
-    function test_fuzz_gangWarWonProbProperties(
-        uint256 attackForce,
-        uint256 defenseForce,
+    function test_gangWarWonProbProperties(
+        uint16 attackForce,
+        uint16 defenseForce,
         bool baronDefense
     ) public {
         vm.assume(attackForce < 10_000);
@@ -90,7 +90,7 @@ contract TestGangWarOutcome is Test {
         }
     }
 
-    // function test_fuzz_gangWarWon(
+    // function test_gangWarWon(
     //     uint256 attackForce,
     //     uint256 defenseForce,
     //     bool baronDefense
@@ -105,6 +105,6 @@ contract TestGangWarOutcome is Test {
     // }
 
     // function test_gangWarWonProb() public {
-    //     test_fuzz_gangWarWonProbProperties(94, 95, false);
+    //     test_gangWarWonProbProperties(94, 95, false);
     // }
 }

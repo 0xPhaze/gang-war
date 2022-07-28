@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "../../lib/VRFConsumerV2.sol";
+import "/lib/VRFConsumerV2.sol";
 
 contract MockVRFCoordinatorV2 is IVRFCoordinatorV2 {
     uint256 public requestIdCounter;

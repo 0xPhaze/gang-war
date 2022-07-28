@@ -1,21 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "forge-std/console.sol";
-
-interface IERC20 {
-    function transferFrom(
-        address from,
-        address to,
-        uint256 amount
-    ) external;
-
-    function transfer(address to, uint256 amount) external;
-
-    function mint(address to, uint256 amount) external;
-
-    function balanceOf(address owner) external view returns (uint256);
-}
+import {IERC20} from "./interfaces/IERC20.sol";
 
 // ------------- Storage
 
@@ -23,7 +9,7 @@ interface IERC20 {
 bytes32 constant DIAMOND_STORAGE_GANG_WAR_REWARDS = 0x7663b7593c6b325747ef3546beebff6d1594934779e6cd28a66d956dd6fcb247;
 
 struct GangWarRewardsDS {
-    IERC20[3] gangToken;
+    address[3] gangToken;
     uint40[3] totalShares;
     uint40[3] lastUpdateTime;
     uint80[3][3] yield;
@@ -34,9 +20,7 @@ struct GangWarRewardsDS {
 }
 
 function s() pure returns (GangWarRewardsDS storage diamondStorage) {
-    assembly {
-        diamondStorage.slot := DIAMOND_STORAGE_GANG_WAR_REWARDS
-    }
+    assembly { diamondStorage.slot := DIAMOND_STORAGE_GANG_WAR_REWARDS } // prettier-ignore
 }
 
 /// @title Gang Staking Rewards
@@ -51,7 +35,7 @@ contract GangWarRewards {
         gangVaultFeesPercent = gangVaultFees;
     }
 
-    /* ------------- View ------------- */
+    /* ------------- view ------------- */
 
     function getYield() external view returns (uint256[3][3] memory out) {
         uint80[3][3] memory yield = s().yield;
@@ -85,9 +69,9 @@ contract GangWarRewards {
         out[2] = uint256(s().userBalance[gangVault][2]) * 1e10;
     }
 
-    /* ------------- Enter/Exit ------------- */
+    /* ------------- enter/exit ------------- */
 
-    function _enterRewardPool(
+    function _addShares(
         address account,
         uint256 gang,
         uint40 amount
@@ -98,7 +82,7 @@ contract GangWarRewards {
         s().userShares[account][gang] += amount;
     }
 
-    function _exitRewardPool(
+    function _removeShares(
         address account,
         uint256 gang,
         uint40 amount
@@ -109,7 +93,7 @@ contract GangWarRewards {
         s().userShares[account][gang] -= amount;
     }
 
-    /* ------------- Claim/Spend ------------- */
+    /* ------------- claim/spend ------------- */
 
     function _claimUserBalance(address account) internal {
         _updateUserReward(0, account);
@@ -120,9 +104,9 @@ contract GangWarRewards {
         uint256 balance_1 = uint256(s().userBalance[account][1]) * 1e10;
         uint256 balance_2 = uint256(s().userBalance[account][2]) * 1e10;
 
-        s().gangToken[0].mint(account, balance_0);
-        s().gangToken[1].mint(account, balance_1);
-        s().gangToken[2].mint(account, balance_2);
+        IERC20(s().gangToken[0]).mint(account, balance_0);
+        IERC20(s().gangToken[1]).mint(account, balance_1);
+        IERC20(s().gangToken[2]).mint(account, balance_2);
 
         s().userBalance[account][0] = 0;
         s().userBalance[account][1] = 0;
@@ -149,7 +133,7 @@ contract GangWarRewards {
         s().userBalance[gangVault][2] = uint80((balance_2 - amount_2) / 1e10);
     }
 
-    /* ------------- Update ------------- */
+    /* ------------- update ------------- */
 
     function _updateUserReward(uint256 gang, address account) internal {
         uint256 numSharesTimes100 = s().userShares[account][gang] * (100 - gangVaultFeesPercent);
@@ -228,10 +212,10 @@ contract GangWarRewards {
         }
     }
 
-    /* ------------- Set ------------- */
+    /* ------------- set ------------- */
 
-    function _setGangTokens(address[3] memory _rewardsToken) internal {
-        for (uint256 i; i < 3; i++) s().gangToken[i] = IERC20(_rewardsToken[i]);
+    function _setGangTokens(address[3] memory rewardsToken_) internal {
+        for (uint256 i; i < 3; i++) s().gangToken[i] = rewardsToken_[i];
     }
 
     function _setYield(

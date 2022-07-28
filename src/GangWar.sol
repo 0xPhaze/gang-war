@@ -7,16 +7,17 @@ import {OwnableUDS as Ownable} from "UDS/auth/OwnableUDS.sol";
 import {IERC721} from "./interfaces/IERC721.sol";
 
 // import {GangWarBase} from "./GangWarBase.sol";
-// import {GMCMarket} from "./GMCMarket.sol";
-// import {ds, settings, District, Gangster} from
+import {GMCMarket, Offer} from "./GMCMarket.sol";
 import {GangWarBase, s} from "./GangWarBase.sol";
 import {GangWarRewards, s as GangWarRewardsDS} from "./GangWarRewards.sol";
 // import {GangWarGameLogic} from "./GangWarGameLogic.sol";
 import "./GangWarGameLogic.sol";
 
-// ------------- Error
+// ------------- error
 
-contract GangWar is UUPSUpgrade, Ownable, GangWarBase, GangWarGameLogic, GangWarRewards {
+error NotAuthorized();
+
+contract GangWar is UUPSUpgrade, Ownable, GangWarBase, GangWarGameLogic, GangWarRewards, GMCMarket {
     constructor(
         address coordinator,
         bytes32 keyHash,
@@ -28,12 +29,14 @@ contract GangWar is UUPSUpgrade, Ownable, GangWarBase, GangWarGameLogic, GangWar
     function init(
         address gmc,
         address[3] memory gangTokens,
-        Gang[21] calldata initialDistrictGangs,
+        address badges,
+        Gang[21] calldata initialDistrictOwners,
         uint256[21] calldata initialDistrictYields
     ) external initializer {
         __Ownable_init();
 
         s().gmc = gmc;
+        s().badges = badges;
 
         District storage district;
 
@@ -45,7 +48,7 @@ contract GangWar is UUPSUpgrade, Ownable, GangWarBase, GangWarGameLogic, GangWar
             // initialize rounds
             district.roundId = 1;
 
-            Gang gang = initialDistrictGangs[i];
+            Gang gang = initialDistrictOwners[i];
             uint256 yield = initialDistrictYields[i];
 
             // initialize occupants and yield token
@@ -67,13 +70,33 @@ contract GangWar is UUPSUpgrade, Ownable, GangWarBase, GangWarGameLogic, GangWar
         _setYield(2, 2, initialGangYields[2]);
     }
 
-    /* ------------- Internal ------------- */
+    /* ------------- protected ------------- */
 
-    function multiCall(bytes[] calldata calldata_) external {
-        for (uint256 i; i < calldata_.length; ++i) address(this).delegatecall(calldata_[i]);
+    // XXX change to accesscontrol!!
+    function enterGangWar(address owner, uint256 tokenId) public onlyOwner {
+        Gang gang = gangOf(tokenId);
+
+        _addShares(owner, uint256(gang), 100);
     }
 
-    /* ------------- Internal ------------- */
+    // XXX change to accesscontrol!!
+    function exitGangWar(address owner, uint256 tokenId) public onlyOwner {
+        Gang gang = gangOf(tokenId);
+
+        _removeShares(owner, uint256(gang), 100);
+    }
+
+    /* ------------- internal ------------- */
+
+    function multiCall(bytes[] calldata data) external {
+        for (uint256 i; i < data.length; ++i) {
+            (bool success, ) = address(this).delegatecall(data[i]);
+
+            if (!success) revert();
+        }
+    }
+
+    /* ------------- hooks ------------- */
 
     function _afterDistrictTransfer(
         Gang attackers,
@@ -84,6 +107,69 @@ contract GangWar is UUPSUpgrade, Ownable, GangWarBase, GangWarGameLogic, GangWar
         Gang token = district.token;
 
         _transferYield(uint256(defenders), uint256(attackers), uint256(token), yield);
+    }
+
+    function _collectBadges(uint256 gangsterId) internal override {
+        Gangster storage gangster = s().gangsters[gangsterId];
+
+        uint256 roundId = gangster.roundId;
+
+        if (roundId != 0) {
+            uint256 districtId = gangster.location;
+
+            uint256 outcome = gangWarOutcome(districtId, roundId);
+
+            if (outcome != 0) {
+                uint256 badgesEarned = gangWarWon(districtId, roundId) ? BADGES_EARNED_VICTORY : BADGES_EARNED_DEFEAT;
+
+                address owner = IERC721(gmc()).ownerOf(gangsterId);
+
+                Offer memory rental = getActiveRental(gangsterId);
+
+                address renter = rental.renter;
+
+                address badges = s().badges;
+                uint256 renterAmount;
+
+                if (renter != address(0)) {
+                    renterAmount = (badgesEarned * 100) / rental.renterShare;
+
+                    IERC721(badges).mint(renter, renterAmount);
+                }
+
+                IERC721(badges).mint(owner, badgesEarned - renterAmount);
+
+                gangster.roundId = 0;
+            }
+        }
+    }
+
+    function _afterStartRent(
+        address owner,
+        address renter,
+        uint256 tokenId,
+        uint256 rentershares
+    ) internal override {
+        Gang gang = gangOf(tokenId);
+
+        _removeShares(owner, uint256(gang), uint40(rentershares));
+        _addShares(renter, uint256(gang), uint40(rentershares));
+    }
+
+    function _afterEndRent(
+        address owner,
+        address renter,
+        uint256 tokenId,
+        uint256 rentershares
+    ) internal override {
+        Gang gang = gangOf(tokenId);
+
+        _removeShares(renter, uint256(gang), uint40(rentershares));
+        _addShares(owner, uint256(gang), uint40(rentershares));
+    }
+
+    function _verifyAuthorized(address owner, uint256 tokenId) internal view override {
+        if (!isOwnerOrRenter(owner, tokenId)) revert NotAuthorized();
     }
 
     function _authorizeUpgrade() internal override onlyOwner {}

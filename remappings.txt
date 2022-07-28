@@ -1,3 +1,4 @@
+/=src/
 @ensdomains/=node_modules/@ensdomains/
 @openzeppelin/=node_modules/@openzeppelin/
 UDS/=lib/UDS/src/
