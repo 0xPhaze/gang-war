@@ -4,12 +4,13 @@
 [submodule "lib/contracts"]
 	path = lib/fx-portal
 	url = https://github.com/fx-portal/contracts
-[submodule "lib/UDS"]
-	path = lib/UDS
-	url = https://github.com/0xphaze/UDS
 [submodule "lib/chainlink"]
 	path = lib/chainlink
 	url = https://github.com/smartcontractkit/chainlink
 [submodule "lib/solmate"]
 	path = lib/solmate
-	url = https://github.com/rari-capital/solmate
+	url = https://github.com/transmissions11/solmate
+	branch = v7
+[submodule "lib/UDS"]
+	path = lib/UDS
+	url = https://github.com/0xPhaze/UDS
