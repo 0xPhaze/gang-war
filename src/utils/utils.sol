@@ -5,6 +5,7 @@ library utils {
     function getOwnedIds(
         mapping(uint256 => address) storage ownerOf,
         address user,
+        uint256 start,
         uint256 collectionSize
     ) internal view returns (uint256[] memory ids) {
         uint256 ptr;
@@ -16,7 +17,7 @@ library utils {
         }
 
         unchecked {
-            for (uint256 id = 0; id < collectionSize + 1; ++id) {
+            for (uint256 id = start; id < start + collectionSize; ++id) {
                 if (ownerOf[id] == user) {
                     assembly {
                         mstore(ptr, id)

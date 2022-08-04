@@ -10,3 +10,8 @@
 - market listing
 
 - GMC NFT random offset, random gang
+
+
+
+- token exchange
+- bribery / recovery

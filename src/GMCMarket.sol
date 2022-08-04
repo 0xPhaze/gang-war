@@ -8,6 +8,8 @@ import {IERC721} from "./interfaces/IERC721.sol";
 
 import {s as gangWarDS} from "./GangWarBase.sol";
 
+uint256 constant RENTAL_ACCEPTANCE_MINIMUM_TIME_DELAY = 1 days;
+
 // ------------- storage
 
 // keccak256("diamond.storage.gang.market") == 0x9350130b46a3a95c1d15eccf95069b652f55a1610fded59bd348259d7c017faf;
@@ -20,8 +22,8 @@ struct Offer {
 }
 
 struct GangMarketDS {
-    mapping(uint256 => Offer) activeRentals;
     mapping(uint256 => Offer) activeOffers;
+    mapping(address => uint256) lastRentalAcceptance;
 }
 
 function s() pure returns (GangMarketDS storage diamondStorage) {
@@ -35,20 +37,17 @@ error ActiveRental();
 error NotAuthorized();
 error InvalidRenterShare();
 error OfferAlreadyAccepted();
+error MinimumTimeDelayNotReached();
 
 abstract contract GMCMarket {
     /* ------------- view ------------- */
 
     function isOwnerOrRenter(address user, uint256 id) public view returns (bool) {
-        return IERC721(gangWarDS().gmc).ownerOf(id) == user || s().activeRentals[id].renter == user;
+        return IERC721(gangWarDS().gmc).ownerOf(id) == user || s().activeOffers[id].renter == user;
     }
 
-    function getActiveOffer(uint256 id) external view returns (Offer memory) {
+    function getActiveOffer(uint256 id) public view returns (Offer memory) {
         return s().activeOffers[id];
-    }
-
-    function getActiveRental(uint256 id) public view returns (Offer memory) {
-        return s().activeRentals[id];
     }
 
     /* ------------- external ------------- */
@@ -61,51 +60,39 @@ abstract contract GMCMarket {
             if (owner != msg.sender) revert NotAuthorized();
             if (share < 30 || 100 < share) revert InvalidRenterShare();
 
-            Offer storage activeRental = s().activeRentals[ids[i]];
+            Offer storage activeRental = s().activeOffers[ids[i]];
+            address currentRenter = activeRental.renter;
 
-            if (activeRental.renter != address(0)) revert ActiveRental();
+            if (currentRenter != address(0)) {
+                // can't change renter once rental is active
+                if (offers[i].renter != currentRenter) revert ActiveRental();
+                // can't change share once rental is active
+                if (offers[i].renterShare != activeRental.renterShare) revert ActiveRental();
+            }
 
             s().activeOffers[ids[i]] = offers[i];
-        }
-    }
-
-    function delistOffer(uint256[] calldata ids) external {
-        for (uint256 i; i < ids.length; i++) {
-            address owner = IERC721(gangWarDS().gmc).ownerOf(ids[i]);
-
-            if (owner != msg.sender) revert NotAuthorized();
-
-            delete s().activeOffers[ids[i]];
         }
     }
 
     function acceptOffer(uint256 id) external {
         Offer storage offer = s().activeOffers[id];
 
-        address forUser = offer.renter;
+        if (block.timestamp - s().lastRentalAcceptance[msg.sender] > RENTAL_ACCEPTANCE_MINIMUM_TIME_DELAY)
+            revert MinimumTimeDelayNotReached();
+        if (offer.renter != address(0)) revert OfferAlreadyAccepted();
 
-        // make sure this isn't a private offer or is meant for the caller
-        if (forUser != address(0) && forUser != msg.sender) revert PrivateOffer();
+        offer.renter = msg.sender;
 
-        Offer storage activeRental = s().activeRentals[id];
-
-        // make sure the offer hasn't been accepted yet
-        if (activeRental.renter != address(0)) revert OfferAlreadyAccepted();
-
-        uint8 share = offer.renterShare;
-
-        activeRental.renter = msg.sender;
-        activeRental.renterShare = share;
-
-        // _afterStartRent()
-
-        if (offer.expiresOnAcceptance) delete s().activeOffers[id];
+        s().lastRentalAcceptance[msg.sender] = block.timestamp;
     }
 
     function endRent(uint256 id) external {
         if (!isOwnerOrRenter(msg.sender, id)) revert NotAuthorized();
 
-        delete s().activeRentals[id];
+        Offer storage offer = s().activeOffers[id];
+
+        if (offer.expiresOnAcceptance) delete s().activeOffers[id];
+        else offer.renter = address(0);
     }
 
     /* ------------- hooks ------------- */

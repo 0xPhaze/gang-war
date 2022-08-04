@@ -39,7 +39,8 @@ enum DISTRICT_STATE {
     REINFORCEMENT,
     GANG_WAR,
     POST_GANG_WAR,
-    TRUCE
+    TRUCE,
+    LOCKUP
 }
 
 enum PLAYER_STATE {
@@ -181,7 +182,7 @@ abstract contract GangWarBase is OwnableUDS {
 
     /* ------------- Owner ------------- */
 
-    function setDistrictsInitialOwnership(Gang[21] calldata gangs) external onlyOwner {
+    function setDistrictOccupants(Gang[21] calldata gangs) external onlyOwner {
         for (uint256 i; i < 21; ++i) s().districts[i].occupants = gangs[i];
     }
 

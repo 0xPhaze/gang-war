@@ -30,13 +30,18 @@ contract GangWar is UUPSUpgrade, Ownable, GangWarBase, GangWarGameLogic, GangWar
         address gmc,
         address[3] memory gangTokens,
         address badges,
-        Gang[21] calldata initialDistrictOwners,
-        uint256[21] calldata initialDistrictYields
+        uint256 connections,
+        Gang[21] calldata occupants,
+        uint256[21] calldata yields
     ) external initializer {
         __Ownable_init();
 
         s().gmc = gmc;
         s().badges = badges;
+        s().districtConnections = connections;
+
+        // initialize gang tokens
+        _setGangTokens(gangTokens);
 
         District storage district;
 
@@ -48,8 +53,8 @@ contract GangWar is UUPSUpgrade, Ownable, GangWarBase, GangWarGameLogic, GangWar
             // initialize rounds
             district.roundId = 1;
 
-            Gang gang = initialDistrictOwners[i];
-            uint256 yield = initialDistrictYields[i];
+            Gang gang = occupants[i];
+            uint256 yield = yields[i];
 
             // initialize occupants and yield token
             district.token = gang;
@@ -61,9 +66,6 @@ contract GangWar is UUPSUpgrade, Ownable, GangWarBase, GangWarGameLogic, GangWar
             initialGangYields[uint256(gang)] += yield;
         }
 
-        // initialize gang tokens
-        _setGangTokens(gangTokens);
-
         // initialize yields for gangs
         _setYield(0, 0, initialGangYields[0]);
         _setYield(1, 1, initialGangYields[1]);
@@ -72,15 +74,17 @@ contract GangWar is UUPSUpgrade, Ownable, GangWarBase, GangWarGameLogic, GangWar
 
     /* ------------- protected ------------- */
 
-    // XXX change to accesscontrol!!
-    function enterGangWar(address owner, uint256 tokenId) public onlyOwner {
+    function enterGangWar(address owner, uint256 tokenId) public {
+        require(msg.sender == gmc());
+
         Gang gang = gangOf(tokenId);
 
         _addShares(owner, uint256(gang), 100);
     }
 
-    // XXX change to accesscontrol!!
-    function exitGangWar(address owner, uint256 tokenId) public onlyOwner {
+    function exitGangWar(address owner, uint256 tokenId) public {
+        require(msg.sender == gmc());
+
         Gang gang = gangOf(tokenId);
 
         _removeShares(owner, uint256(gang), 100);
@@ -124,7 +128,7 @@ contract GangWar is UUPSUpgrade, Ownable, GangWarBase, GangWarGameLogic, GangWar
 
                 address owner = IERC721(gmc()).ownerOf(gangsterId);
 
-                Offer memory rental = getActiveRental(gangsterId);
+                Offer memory rental = getActiveOffer(gangsterId);
 
                 address renter = rental.renter;
 

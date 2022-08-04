@@ -1,9 +1,12 @@
 /=src/
-@ensdomains/=node_modules/@ensdomains/
-@openzeppelin/=node_modules/@openzeppelin/
+ArrayUtils/=lib/fx-contracts/lib/ArrayUtils/src/
+ERC721A/=lib/fx-contracts/lib/ERC721M/lib/ERC721A/contracts/
+ERC721M/=lib/fx-contracts/lib/ERC721M/src/
 UDS/=lib/UDS/src/
 chainlink/=lib/chainlink/
 ds-test/=lib/solmate/lib/ds-test/src/
 forge-std/=lib/forge-std/src/
-hardhat/=node_modules/hardhat/
+fx-contracts/=lib/fx-contracts/src/
+fx-portal/=lib/fx-contracts/lib/fx-portal/contracts/
+openzeppelin-contracts/=lib/fx-contracts/lib/ERC721M/lib/openzeppelin-contracts/
 solmate/=lib/solmate/src/
