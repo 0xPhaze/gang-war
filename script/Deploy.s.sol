@@ -3,20 +3,23 @@ pragma solidity ^0.8.13;
 
 import "forge-std/Script.sol";
 
-import "solmate/test/utils/mocks/MockERC721.sol";
-import "solmate/test/utils/mocks/MockERC20.sol";
 import {ERC1967Proxy} from "UDS/proxy/ERC1967Proxy.sol";
 
-import "../src/GangWar.sol";
-import "../src/lib/VRFConsumerV2.sol";
-import {MockVRFCoordinatorV2} from "../test/mocks/MockVRFCoordinator.sol";
+import "/lib/VRFConsumerV2.sol";
+import "/GangWar.sol";
+import "/tokens/GangToken.sol";
+import "/tokens/GangWarItems.sol";
+
+import "solmate/test/utils/mocks/MockERC721.sol";
+import "solmate/test/utils/mocks/MockERC20.sol";
+import {MockVRFCoordinator} from "../test/mocks/MockVRFCoordinator.sol";
 import {MockGMC} from "../test/mocks/MockGMC.sol";
 
 import {Mice} from "/tokens/Mice.sol";
 
-import "../src/lib/ArrayUtils.sol";
+import "f-utils/fUtils.sol";
 
-import "chainlink/contracts/src/v0.8/VRFCoordinatorV2.sol";
+// import "chainlink/contracts/src/v0.8/VRFCoordinatorV2.sol";
 
 // function addConsumer(uint64 subId, address consumer) external override onlySubOwner(subId) nonReentrant {
 
@@ -24,66 +27,95 @@ import "chainlink/contracts/src/v0.8/VRFCoordinatorV2.sol";
 
 /* 
 source .env && forge script script/Deploy.s.sol:Deploy --rpc-url $RINKEBY_RPC_URL  --private-key $PRIVATE_KEY --broadcast --verify --etherscan-api-key $ETHERSCAN_KEY -vvvv
-source .env && forge script script/Deploy.s.sol:Deploy --rpc-url $PROVIDER_MUMBAI  --private-key $PRIVATE_KEY --broadcast --verify --etherscan-api-key $POLYGONSCAN_KEY -vvvv
 source .env && forge script script/Deploy.s.sol:Deploy --rpc-url https://rpc.ankr.com/polygon  --private-key $PRIVATE_KEY --broadcast --verify --etherscan-api-key $POLYGONSCAN_KEY --with-gas-price 30gwei -vvvv
+
+cp ~/git/eth/GangWar/out/MockGMC.sol/MockGMC.json ~/git/eth/gmc-website/data/abi
+cp ~/git/eth/GangWar/out/MockERC20.sol/MockERC20.json ~/git/eth/gmc-website/data/abi
+cp ~/git/eth/GangWar/out/MockVRFCoordinator.sol/MockVRFCoordinator.json ~/git/eth/gmc-website/data/abi
+cp ~/git/eth/GangWar/out/GangWar.sol/GangWar.json ~/git/eth/gmc-website/data/abi
+cp ~/git/eth/GangWar/out/Mice.sol/Mice.json ~/git/eth/gmc-website/data/abi
 */
 
-contract Deploy is Script {
-    using ArrayUtils for *;
+contract MockGangWar is GangWar {
+    constructor(
+        address coordinator,
+        bytes32 keyHash,
+        uint64 subscriptionId,
+        uint16 requestConfirmations,
+        uint32 callbackGasLimit
+    ) GangWar(coordinator, keyHash, subscriptionId, requestConfirmations, callbackGasLimit) {}
 
-    bool[22][22] connections;
-    uint256[22] yields;
-    Gang[22] occupants;
+    function setGangWarOutcome(
+        uint256 districtId,
+        uint256 roundId,
+        uint256 outcome
+    ) public {
+        s().gangWarOutcomes[districtId][roundId] = outcome;
+    }
+
+    function setAttackForce(
+        uint256 districtId,
+        uint256 roundId,
+        uint256 force
+    ) public {
+        s().districtAttackForces[districtId][roundId] = force;
+    }
+
+    function setDefenseForces(
+        uint256 districtId,
+        uint256 roundId,
+        uint256 force
+    ) public {
+        s().districtDefenseForces[districtId][roundId] = force;
+    }
+
+    function getDistrictConnections() external view returns (uint256) {
+        return s().districtConnections;
+    }
+}
+
+contract Deploy is Script {
+    using fUtils for *;
+
+    // contracts
+    MockGMC gmc;
+
+    MockVRFCoordinator coordinator;
+
+    GangToken[3] tokens;
+
+    GangToken badges;
+
+    GangWarItems gangItems;
+    Mice mice;
+    MockGangWar game;
+
+    MockERC20 gouda;
+
+    uint256 STAGING = (block.chainid == 31337) ? 0 : (block.chainid != 1 && block.chainid != 137) ? 1 : 2;
 
     function run() external {
-        (address coordinator, bytes32 keyHash, uint64 subId) = getChainlinkParams();
-        coordinator;
-
         vm.startBroadcast();
 
-        MockGMC gmc = new MockGMC();
+        deployAndSetupGangWar();
 
-        MockVRFCoordinatorV2 mockCoordinator = new MockVRFCoordinatorV2();
+        vm.stopBroadcast();
 
-        MockERC20[3] memory tokens;
-        tokens[0] = new MockERC20("Yakuza Token", "YKZ", 18);
-        tokens[1] = new MockERC20("Cartel Token", "CTL", 18);
-        tokens[2] = new MockERC20("Cyberpunk Token", "CBP", 18);
-        MockERC20 badges = new MockERC20("Badges", "BADGE", 18);
-
-        Mice mice = new Mice(address(tokens[0]), address(tokens[1]), address(tokens[2]), address(badges));
-
-        // GangWar impl = new GangWar(coordinator, keyHash, subId, 3, 200_000);
-        GangWar impl = new GangWar(address(mockCoordinator), keyHash, subId, 3, 200_000);
-
-        (uint256 connectionsPacked, uint256[21] memory initialOccupants, uint256[21] memory initialYields) = initData();
-
-        bytes memory initCallData = abi.encodeWithSelector(
-            GangWar.init.selector,
-            gmc,
-            tokens,
-            badges,
-            connectionsPacked,
-            initialOccupants,
-            initialYields
-        );
-
-        GangWar game = GangWar(address(new ERC1967Proxy(address(impl), initCallData)));
+        // testing
+        GangToken(tokens[0]).grantMintAuthority(msg.sender);
+        GangToken(tokens[1]).grantMintAuthority(msg.sender);
+        GangToken(tokens[2]).grantMintAuthority(msg.sender);
 
         // VRFCoordinatorV2(coordinator).addConsumer(subId, address(game));
 
-        // setup
-        gmc.setGangWar(address(game));
-
-        gmc.mintBatch();
+        gmc.mintBatch(msg.sender);
+        gmc.mintBatch(0x2181838c46bEf020b8Beb756340ad385f5BD82a8);
 
         game.baronDeclareAttack(2, 0, 10_001);
         game.joinGangAttack(2, 0, [1].toMemory());
 
         game.baronDeclareAttack(2, 10, 10_004);
         game.joinGangAttack(2, 10, [4].toMemory());
-
-        vm.stopBroadcast();
 
         console.log('gmc: "', address(gmc), '",');
         console.log('mice: "', address(mice), '",');
@@ -92,32 +124,85 @@ contract Deploy is Script {
         console.log('tokenCyberpunk: "', address(tokens[2]), '",');
         console.log('badges: "', address(badges), '",');
         console.log('game: "', address(game), '",');
-        console.log('mockVRF: "', address(mockCoordinator), '",');
+        console.log('mockVRF: "', address(coordinator), '",');
+    }
+
+    function deployAndSetupGangWar() internal {
+        (address coordinatorDeployed, bytes32 keyHash, uint64 subId) = getChainlinkParams();
+
+        if (STAGING < 2) {
+            coordinator = new MockVRFCoordinator();
+            gmc = new MockGMC();
+            gouda = new MockERC20("Gouda", "GOUDA", 18);
+        } else {
+            coordinator = MockVRFCoordinator(coordinatorDeployed);
+        }
+
+        address gangTokenImpl = address(new GangToken());
+
+        tokens[0] = GangToken(address(new ERC1967Proxy(gangTokenImpl, abi.encodeWithSelector(GangToken.init.selector, "Yakuza Token", "YKZ")))); // prettier-ignore
+        tokens[1] = GangToken(address(new ERC1967Proxy(gangTokenImpl, abi.encodeWithSelector(GangToken.init.selector, "Cartel Token", "CTL")))); // prettier-ignore
+        tokens[2] = GangToken(address(new ERC1967Proxy(gangTokenImpl, abi.encodeWithSelector(GangToken.init.selector, "Cyberpunk Token", "CPK")))); // prettier-ignore
+
+        badges = GangToken(address(new ERC1967Proxy(gangTokenImpl, abi.encodeWithSelector(GangToken.init.selector, "Badges", "BADGE")))); // prettier-ignore
+
+        mice = Mice(address(new ERC1967Proxy(address(new Mice(address(tokens[0]), address(tokens[1]), address(tokens[2]), address(badges))), abi.encodePacked(Mice.init.selector)))); // prettier-ignore
+
+        gangItems = GangWarItems(address(new ERC1967Proxy(address(new GangWarItems()), abi.encodeWithSelector(GangWarItems.init.selector, '', 5)))); // prettier-ignore
+
+        if (STAGING == 0) {
+            game = MockGangWar(address(new ERC1967Proxy(address(new MockGangWar(address(coordinator), keyHash, subId, 3, 200_000)), GangWarInitCalldata()))); // prettier-ignore
+        } else {
+            game = MockGangWar(address(new ERC1967Proxy(address(new GangWar(address(coordinator), keyHash, subId, 3, 200_000)), GangWarInitCalldata()))); // prettier-ignore
+        }
+
+        // setup
+
+        gmc.setGangWar(address(game));
+
+        GangToken(tokens[0]).grantMintAuthority(address(game));
+        GangToken(tokens[1]).grantMintAuthority(address(game));
+        GangToken(tokens[2]).grantMintAuthority(address(game));
+        GangToken(badges).grantMintAuthority(address(game));
+
+        GangToken(tokens[0]).grantBurnAuthority(address(mice));
+        GangToken(tokens[1]).grantBurnAuthority(address(mice));
+        GangToken(tokens[2]).grantBurnAuthority(address(mice));
+        GangToken(badges).grantBurnAuthority(address(mice));
     }
 
     function getChainlinkParams()
         internal
         view
         returns (
-            address coordinator,
+            address coordinator_,
             bytes32 keyHash,
             uint64 subId
         )
     {
         if (block.chainid == 137) {
-            coordinator = COORDINATOR_POLYGON;
+            coordinator_ = COORDINATOR_POLYGON;
             keyHash = KEYHASH_POLYGON;
             subId = 133;
         } else if (block.chainid == 80001) {
-            coordinator = COORDINATOR_MUMBAI;
+            coordinator_ = COORDINATOR_MUMBAI;
             keyHash = KEYHASH_MUMBAI;
             subId = 862;
         } else if (block.chainid == 4) {
-            coordinator = COORDINATOR_RINKEBY;
+            coordinator_ = COORDINATOR_RINKEBY;
+            keyHash = KEYHASH_RINKEBY;
+            subId = 6985;
+        } else if (block.chainid == 31337) {
+            coordinator_ = COORDINATOR_RINKEBY;
             keyHash = KEYHASH_RINKEBY;
             subId = 6985;
         } else revert("unknown chainid");
     }
+
+    // settings
+    bool[22][22] connections;
+    uint256[22] yields;
+    Gang[22] occupants;
 
     constructor() {
         connections[1][2] = true;
@@ -256,15 +341,7 @@ contract Deploy is Script {
         yields[17] = 1_300_000;
     }
 
-    function initData()
-        internal
-        view
-        returns (
-            uint256,
-            uint256[21] memory,
-            uint256[21] memory
-        )
-    {
+    function GangWarInitCalldata() internal view returns (bytes memory) {
         bool[21][21] memory connectionsNormalized;
         for (uint256 i; i < 21; i++) {
             for (uint256 j; j < 21; j++) {
@@ -289,7 +366,9 @@ contract Deploy is Script {
             initialYields.slot := add(yields.slot, 1)
         }
 
-        return (connectionsPacked, initialOccupants, initialYields);
+        bytes memory initCalldata = abi.encodeWithSelector(GangWar.init.selector, gmc, tokens, badges, connectionsPacked, initialOccupants, initialYields); // prettier-ignore
+
+        return initCalldata;
     }
 
     function validateSetup() external {}

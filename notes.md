@@ -15,3 +15,9 @@
 
 - token exchange
 - bribery / recovery
+
+- ERC1155 items
+- purchase with gang vault
+- use items
+- cops lockup
+- make sure district doesn't earn yield in cops time

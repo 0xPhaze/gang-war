@@ -4,9 +4,6 @@
 [submodule "lib/contracts"]
 	path = lib/fx-portal
 	url = https://github.com/fx-portal/contracts
-[submodule "lib/chainlink"]
-	path = lib/chainlink
-	url = https://github.com/smartcontractkit/chainlink
 [submodule "lib/solmate"]
 	path = lib/solmate
 	url = https://github.com/transmissions11/solmate
@@ -17,3 +14,6 @@
 [submodule "lib/fx-contracts"]
 	path = lib/fx-contracts
 	url = https://github.com/0xPhaze/fx-contracts
+[submodule "lib/f-utils"]
+	path = lib/f-utils
+	url = https://github.com/0xPhaze/f-utils

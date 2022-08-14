@@ -7,15 +7,16 @@ import {s as erc20ds} from "UDS/tokens/ERC20UDS.sol";
 import {ERC20BurnableUDS} from "UDS/tokens/ERC20BurnableUDS.sol";
 import {AccessControlUDS} from "UDS/auth/AccessControlUDS.sol";
 
-abstract contract GangToken is UUPSUpgrade, OwnableUDS, ERC20BurnableUDS, AccessControlUDS {
+contract GangToken is UUPSUpgrade, OwnableUDS, ERC20BurnableUDS, AccessControlUDS {
     uint8 public constant override decimals = 18;
 
     bytes32 constant MINT_AUTHORITY = keccak256("MINT_AUTHORITY");
     bytes32 constant BURN_AUTHORITY = keccak256("BURN_AUTHORITY");
 
-    function init() public virtual initializer {
+    function init(string calldata name_, string calldata symbol_) external initializer {
         __Ownable_init();
         __AccessControl_init();
+        __ERC20_init(name_, symbol_, 18);
     }
 
     /* ------------- external ------------- */
@@ -44,24 +45,4 @@ abstract contract GangToken is UUPSUpgrade, OwnableUDS, ERC20BurnableUDS, Access
     /* ------------- owner ------------- */
 
     function _authorizeUpgrade() internal override onlyOwner {}
-}
-
-contract YakuzaToken is GangToken {
-    string public constant override name = "Yakuza Token";
-    string public constant override symbol = "YKZ";
-}
-
-contract CartelToken is GangToken {
-    string public constant override name = "Cartel Token";
-    string public constant override symbol = "CTL";
-}
-
-contract CyberpunkToken is GangToken {
-    string public constant override name = "Cyberpunk Token";
-    string public constant override symbol = "CPK";
-}
-
-contract Badges is GangToken {
-    string public constant override name = "Badges";
-    string public constant override symbol = "BDG";
 }

@@ -3,12 +3,13 @@ pragma solidity ^0.8.0;
 
 import {IERC20} from "./interfaces/IERC20.sol";
 
+import "forge-std/test.sol";
+
 // ------------- Storage
 
-// keccak256("diamond.storage.gang.war.rewards") == 0x7663b7593c6b325747ef3546beebff6d1594934779e6cd28a66d956dd6fcb247;
-bytes32 constant DIAMOND_STORAGE_GANG_WAR_REWARDS = 0x7663b7593c6b325747ef3546beebff6d1594934779e6cd28a66d956dd6fcb247;
+bytes32 constant DIAMOND_STORAGE_GANG_WAR_REWARD = keccak256("diamond.storage.gang.war.reward");
 
-struct GangWarRewardsDS {
+struct GangWarRewardDS {
     address[3] gangToken;
     uint40[3] totalShares;
     uint40[3] lastUpdateTime;
@@ -19,15 +20,17 @@ struct GangWarRewardsDS {
     mapping(address => uint80[3][3]) lastUserYieldPerToken;
 }
 
-function s() pure returns (GangWarRewardsDS storage diamondStorage) {
-    assembly { diamondStorage.slot := DIAMOND_STORAGE_GANG_WAR_REWARDS } // prettier-ignore
+function s() pure returns (GangWarRewardDS storage diamondStorage) {
+    bytes32 slot = DIAMOND_STORAGE_GANG_WAR_REWARD;
+    assembly { diamondStorage.slot := slot } // prettier-ignore
 }
 
-/// @title Gang Staking Rewards
+/// @title Gang Staking Reward
 /// @author phaze (https://github.com/0xPhaze)
-/// @author Adapted from Synthetix StakingRewards (https://github.com/Synthetixio/synthetix/blob/develop/contracts/StakingRewards.sol)
-contract GangWarRewards {
+/// @author Adapted from Synthetix StakingReward (https://github.com/Synthetixio/synthetix/blob/develop/contracts/StakingReward.sol)
+contract GangWarReward {
     uint256 public immutable gangVaultFeesPercent;
+    event Burn(address indexed from, uint256 indexed token, uint256 amount);
 
     constructor(uint256 gangVaultFees) {
         require(gangVaultFees < 100); // invalid range
@@ -58,8 +61,8 @@ contract GangWarRewards {
     function getGangVaultBalance(uint256 gang) external returns (uint256[3] memory out) {
         require(msg.sender == address(0));
 
-        // gang vault balances are stuck in user balances under address 1000, 1001, 1002.
-        address gangVault = address(uint160(1000 + gang));
+        // gang vault balances are stuck in user balances under address 13370, 13371, 13372.
+        address gangVault = address(uint160(13370 + gang));
         uint256 numSharesTimes100 = s().totalShares[gang] * gangVaultFeesPercent;
 
         _updateReward(gang, gangVault, numSharesTimes100);
@@ -117,9 +120,10 @@ contract GangWarRewards {
         uint256 gang,
         uint256 amount_0,
         uint256 amount_1,
-        uint256 amount_2
+        uint256 amount_2,
+        bool strict
     ) internal {
-        address gangVault = address(uint160(1000 + gang));
+        address gangVault = address(uint160(13370 + gang));
         uint256 numSharesTimes100 = s().totalShares[gang] * gangVaultFeesPercent;
 
         _updateReward(gang, gangVault, numSharesTimes100);
@@ -128,9 +132,19 @@ contract GangWarRewards {
         uint256 balance_1 = uint256(s().userBalance[gangVault][1]) * 1e10;
         uint256 balance_2 = uint256(s().userBalance[gangVault][2]) * 1e10;
 
+        if (!strict) {
+            amount_0 = balance_0 > amount_0 ? amount_0 : balance_0;
+            amount_1 = balance_1 > amount_1 ? amount_1 : balance_1;
+            amount_2 = balance_2 > amount_2 ? amount_2 : balance_2;
+        }
+
         s().userBalance[gangVault][0] = uint80((balance_0 - amount_0) / 1e10);
         s().userBalance[gangVault][1] = uint80((balance_1 - amount_1) / 1e10);
         s().userBalance[gangVault][2] = uint80((balance_2 - amount_2) / 1e10);
+
+        if (amount_0 > 0) emit Burn(gangVault, 0, amount_0);
+        if (amount_1 > 0) emit Burn(gangVault, 1, amount_1);
+        if (amount_2 > 0) emit Burn(gangVault, 2, amount_2);
     }
 
     /* ------------- update ------------- */
@@ -142,7 +156,7 @@ contract GangWarRewards {
     }
 
     function _updateGangReward(uint256 gang) internal {
-        address account = address(uint160(1000 + gang));
+        address account = address(uint160(13370 + gang));
         uint256 numSharesTimes100 = s().totalShares[gang] * gangVaultFeesPercent;
 
         _updateReward(gang, account, numSharesTimes100);
@@ -214,8 +228,8 @@ contract GangWarRewards {
 
     /* ------------- set ------------- */
 
-    function _setGangTokens(address[3] memory rewardsToken_) internal {
-        for (uint256 i; i < 3; i++) s().gangToken[i] = rewardsToken_[i];
+    function _setGangTokens(address[3] memory rewardToken_) internal {
+        for (uint256 i; i < 3; i++) s().gangToken[i] = rewardToken_[i];
     }
 
     function _setYield(
@@ -229,6 +243,16 @@ contract GangWarRewards {
 
         s().yield[gang][token] = uint80(yield);
     }
+
+    // function _setYield(
+    //     uint256 gang,
+    //     uint256 token,
+    //     int256 yield
+    // ) internal {
+    //     // _updateReward(gang, address(0), 0);
+    //     // require(yield > 0 ? yield : -yield <= 1e12); // implicit 1e18 decimals
+    //     // s().yield[gang][token] += int80(yield);
+    // }
 
     function _transferYield(
         uint256 gangFrom,

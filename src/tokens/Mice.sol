@@ -24,6 +24,11 @@ contract Mice is GangToken {
         badges = badges_;
     }
 
+    function init() external initializer {
+        __Ownable_init();
+        __AccessControl_init();
+    }
+
     function exchange(uint256 choice, uint256 amount) external {
         if (choice == 0) GangToken(tokenYakuza).burnFrom(msg.sender, amount);
         else if (choice == 1) GangToken(tokenCyberpunk).burnFrom(msg.sender, amount);

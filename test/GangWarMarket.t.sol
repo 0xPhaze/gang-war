@@ -3,12 +3,12 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 
-import "/lib/ArrayUtils.sol";
+import "f-utils/fUtils.sol";
 import {TestGangWar} from "./GangWarBase.t.sol";
 import "/GMCMarket.sol";
 
 contract TestGangWarMarket is TestGangWar {
-    using ArrayUtils for *;
+    using fUtils for *;
 
     /* ------------- upkeep ------------- */
 

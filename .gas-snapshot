@@ -1,3 +1,3 @@
-TestGangWarRewards:test_stake1() (gas: 1195711)
-TestGangWarRewards:test_stake2() (gas: 1562513)
-TestGangWarRewards:test_stake3() (gas: 1131889)
+TestGangWarReward:test_stake1() (gas: 1195711)
+TestGangWarReward:test_stake2() (gas: 1562513)
+TestGangWarReward:test_stake3() (gas: 1131889)

@@ -9,7 +9,6 @@ import {IERC721} from "./interfaces/IERC721.sol";
 // import {GangWarBase} from "./GangWarBase.sol";
 import {GMCMarket, Offer} from "./GMCMarket.sol";
 import {GangWarBase, s} from "./GangWarBase.sol";
-import {GangWarRewards, s as GangWarRewardsDS} from "./GangWarRewards.sol";
 // import {GangWarGameLogic} from "./GangWarGameLogic.sol";
 import "./GangWarGameLogic.sol";
 
@@ -17,14 +16,14 @@ import "./GangWarGameLogic.sol";
 
 error NotAuthorized();
 
-contract GangWar is UUPSUpgrade, Ownable, GangWarBase, GangWarGameLogic, GangWarRewards, GMCMarket {
+contract GangWar is UUPSUpgrade, Ownable, GangWarBase, GangWarGameLogic, GMCMarket {
     constructor(
         address coordinator,
         bytes32 keyHash,
         uint64 subscriptionId,
         uint16 requestConfirmations,
         uint32 callbackGasLimit
-    ) VRFConsumerV2(coordinator, keyHash, subscriptionId, requestConfirmations, callbackGasLimit) GangWarRewards(0) {}
+    ) VRFConsumerV2(coordinator, keyHash, subscriptionId, requestConfirmations, callbackGasLimit) {}
 
     function init(
         address gmc,
@@ -101,17 +100,6 @@ contract GangWar is UUPSUpgrade, Ownable, GangWarBase, GangWarGameLogic, GangWar
     }
 
     /* ------------- hooks ------------- */
-
-    function _afterDistrictTransfer(
-        Gang attackers,
-        Gang defenders,
-        District storage district
-    ) internal override {
-        uint256 yield = district.yield;
-        Gang token = district.token;
-
-        _transferYield(uint256(defenders), uint256(attackers), uint256(token), yield);
-    }
 
     function _collectBadges(uint256 gangsterId) internal override {
         Gangster storage gangster = s().gangsters[gangsterId];

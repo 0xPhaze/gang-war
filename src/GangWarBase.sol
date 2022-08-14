@@ -19,11 +19,16 @@ uint256 constant BARON_DEFENSE_FORCE = 50;
 uint256 constant ATTACK_FAVOR = 65;
 uint256 constant DEFENSE_FAVOR = 200;
 
+uint256 constant LOCKUP_CHANCE = 20;
+uint256 constant LOCKUP_FINE = 50e18;
+
 uint256 constant INJURED_WON_FACTOR = 35;
 uint256 constant INJURED_LOST_FACTOR = 65;
 
 uint256 constant BADGES_EARNED_VICTORY = 6e18;
 uint256 constant BADGES_EARNED_DEFEAT = 2e18;
+
+uint256 constant UPKEEP_INTERVAL = 5 minutes;
 
 // ------------- Enum
 
@@ -58,6 +63,8 @@ enum PLAYER_STATE {
 struct Gangster {
     uint256 roundId;
     uint256 location;
+    uint256 bribery;
+    uint256 recovery;
     bool attack;
 }
 
@@ -105,8 +112,11 @@ struct GangWarDS {
     address gmc;
     address badges;
     uint256 districtConnections; // packed bool matrix
+    uint256 lockupTime;
     mapping(uint256 => District) districts;
     mapping(uint256 => Gangster) gangsters;
+    /*      address => fee  */
+    mapping(address => uint256) briberyFee;
     /*   districtId => districtIds  */
     mapping(uint256 => uint256) requestIdToDistrictIds; // used by chainlink VRF request callbacks
     /*   districtId =>     roundId     => outcome  */
@@ -118,11 +128,11 @@ struct GangWarDS {
 
 // ------------- Storage
 
-// keccak256("diamond.storage.gang.war") == 0x1465defc4302777e9f3331026df5b673e1fdbf0798e6f23608defa528993ece8;
-bytes32 constant DIAMOND_STORAGE_GANG_WAR = 0x1465defc4302777e9f3331026df5b673e1fdbf0798e6f23608defa528993ece8;
+bytes32 constant DIAMOND_STORAGE_GANG_WAR = keccak256("diamond.storage.gang.war");
 
 function s() pure returns (GangWarDS storage diamondStorage) {
-    assembly { diamondStorage.slot := DIAMOND_STORAGE_GANG_WAR } // prettier-ignore
+    bytes32 slot = DIAMOND_STORAGE_GANG_WAR;
+    assembly { diamondStorage.slot := slot } // prettier-ignore
 }
 
 // ------------- Errors
@@ -152,33 +162,17 @@ abstract contract GangWarBase is OwnableUDS {
         return id == 0 ? Gang.NONE : Gang((id < 1000 ? id - 1 : id - 1001) % 3);
     }
 
-    // function getDistrict(uint256 districtId) external view returns (District memory) {
-    //     return s().districts[districtId];
-    // }
-
-    function getDistrict(uint256 districtId) external view returns (District memory) {
-        return s().districts[districtId];
-    }
-
-    function getDistrictConnections() external view returns (uint256) {
-        return s().districtConnections;
-    }
-
     function getGangWarOutcome(uint256 districtId, uint256 roundId) external view returns (uint256) {
         return s().gangWarOutcomes[districtId][roundId];
     }
 
-    // function getConstants() external pure returns (ConstantsDS memory) {
-    //     return constants();
-    // }
+    function briberyFee(address token) public view returns (uint256) {
+        return s().briberyFee[token];
+    }
 
-    /* ------------- internal ------------- */
-
-    function _afterDistrictTransfer(
-        Gang attackers,
-        Gang defenders,
-        District storage district
-    ) internal virtual;
+    function setBriberyFee(address token, uint256 amount) public returns (uint256) {
+        return s().briberyFee[token] = amount;
+    }
 
     /* ------------- Owner ------------- */
 

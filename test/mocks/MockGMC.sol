@@ -15,9 +15,9 @@ contract MockGMC is MockERC721("Gangsta Mice City", "GMC") {
         gangWar = gangWar_;
     }
 
-    function mintBatch() public {
-        for (uint256 i; i < 20; i++) mint(msg.sender, ++gangsterSupply);
-        for (uint256 i; i < 10; i++) mint(msg.sender, ++baronSupply + 10_000);
+    function mintBatch(address to) public {
+        for (uint256 i; i < 10; i++) mint(to, ++gangsterSupply);
+        for (uint256 i; i < 5; i++) mint(to, ++baronSupply + 10_000);
     }
 
     function mint(address to, uint256 id) public override {
