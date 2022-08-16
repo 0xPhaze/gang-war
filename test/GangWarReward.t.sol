@@ -9,7 +9,7 @@ import {ERC1967Proxy} from "UDS/proxy/ERC1967Proxy.sol";
 
 import {MockVRFCoordinator} from "./mocks/MockVRFCoordinator.sol";
 
-import "f-utils/fUtils.sol";
+import "futils/futils.sol";
 import "/GangWar.sol";
 
 import {GangWarReward, DIAMOND_STORAGE_GANG_WAR_REWARD} from "/GangWarReward.sol";
@@ -57,7 +57,7 @@ contract MockGangReward is GangWarReward {
 }
 
 contract TestGangWarReward is Test {
-    using fUtils for *;
+    using futils for *;
 
     address bob = address(0xb0b);
     address alice = address(0xbabe);

@@ -10,7 +10,7 @@ import "/tokens/GangToken.sol";
 import {Deploy} from "../script/Deploy.s.sol";
 
 // utils
-import "f-utils/fUtils.sol";
+import "futils/futils.sol";
 import "/lib/PackedMap.sol";
 import "./utils.sol";
 
@@ -19,7 +19,7 @@ import {MockVRFCoordinator} from "./mocks/MockVRFCoordinator.sol";
 import "solmate/test/utils/mocks/MockERC721.sol";
 
 contract TestGangWar is Test, Deploy {
-    using fUtils for *;
+    using futils for *;
 
     address bob = address(0xb0b);
     address alice = address(0xbabe);

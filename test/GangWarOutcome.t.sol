@@ -6,14 +6,14 @@ import "forge-std/console.sol";
 import "solmate/test/utils/mocks/MockERC721.sol";
 import "solmate/utils/LibString.sol";
 
-import "f-utils/fUtils.sol";
+import "futils/futils.sol";
 import {ERC721UDS} from "UDS/tokens/ERC721UDS.sol";
 import {ERC1967Proxy} from "UDS/proxy/ERC1967Proxy.sol";
 
 import "/GangWar.sol";
 
 contract TestGangWarOutcome is Test {
-    using fUtils for *;
+    using futils for *;
     using LibString for uint256;
 
     address bob = address(0xb0b);

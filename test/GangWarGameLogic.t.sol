@@ -3,11 +3,11 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 
-import "f-utils/fUtils.sol";
+import "futils/futils.sol";
 import "./GangWarBase.t.sol";
 
 contract TestGangWarGameLogic is TestGangWar {
-    using fUtils for *;
+    using futils for *;
 
     /* ------------- districtState() & gangsterState() ------------- */
 
@@ -27,7 +27,7 @@ contract TestGangWarGameLogic is TestGangWar {
 
         // REINFORCEMENT
         vm.prank(bob);
-        game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, BARON_YAKUZA_1);
+        game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, BARON_YAKUZA_1, false);
 
         vm.prank(alice);
         game.joinGangAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, [GANGSTER_YAKUZA_1].toMemory());
@@ -91,7 +91,7 @@ contract TestGangWarGameLogic is TestGangWar {
 
     function test_baronDeclareAttack() public {
         vm.prank(bob);
-        game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, BARON_YAKUZA_1);
+        game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, BARON_YAKUZA_1, false);
 
         DistrictView memory district = game.getDistrictView(DISTRICT_CARTEL_1);
 
@@ -118,21 +118,21 @@ contract TestGangWarGameLogic is TestGangWar {
     /// declare attack during locked district state
     function test_baronDeclareAttack_fail_DistrictInvalidState() public {
         vm.prank(bob);
-        game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, BARON_YAKUZA_1);
+        game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, BARON_YAKUZA_1, false);
 
         skip(TIME_REINFORCEMENTS);
 
         vm.prank(bob);
         vm.expectRevert(DistrictInvalidState.selector);
 
-        game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, BARON_YAKUZA_2);
+        game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, BARON_YAKUZA_2, false);
 
         skip(TIME_GANG_WAR);
 
         vm.prank(bob);
         vm.expectRevert(DistrictInvalidState.selector);
 
-        game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, BARON_YAKUZA_2);
+        game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, BARON_YAKUZA_2, false);
 
         game.performUpkeep(abi.encode(1 << DISTRICT_CARTEL_1));
 
@@ -141,7 +141,7 @@ contract TestGangWarGameLogic is TestGangWar {
         vm.prank(bob);
         vm.expectRevert(DistrictInvalidState.selector);
 
-        game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, BARON_YAKUZA_2);
+        game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, BARON_YAKUZA_2, false);
 
         skip(TIME_TRUCE);
     }
@@ -153,12 +153,12 @@ contract TestGangWarGameLogic is TestGangWar {
     /// baron already in an attack
     function test_baronDeclareAttack_fail_BaronInactionable() public {
         vm.prank(bob);
-        game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, BARON_YAKUZA_1);
+        game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, BARON_YAKUZA_1, false);
 
         vm.expectRevert(BaronInactionable.selector);
 
         vm.prank(bob);
-        game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_2, BARON_YAKUZA_1);
+        game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_2, BARON_YAKUZA_1, false);
     }
 
     /// Can't attack own district
@@ -166,14 +166,14 @@ contract TestGangWarGameLogic is TestGangWar {
         vm.expectRevert(CannotAttackDistrictOwnedByGang.selector);
 
         vm.prank(bob);
-        game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_YAKUZA_2, BARON_YAKUZA_1);
+        game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_YAKUZA_2, BARON_YAKUZA_1, false);
     }
 
     /* ------------- joinGangAttack() ------------- */
 
     function test_joinGangAttack() public {
         vm.prank(bob);
-        game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, BARON_YAKUZA_1);
+        game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, BARON_YAKUZA_1, false);
 
         vm.prank(alice);
         game.joinGangAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, [GANGSTER_YAKUZA_1].toMemory());
@@ -199,7 +199,7 @@ contract TestGangWarGameLogic is TestGangWar {
 
         // -------- perform second attack
         vm.prank(bob);
-        game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_2, BARON_YAKUZA_2);
+        game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_2, BARON_YAKUZA_2, false);
 
         vm.prank(alice);
         game.joinGangAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_2, [GANGSTER_YAKUZA_2].toMemory());
@@ -243,7 +243,7 @@ contract TestGangWarGameLogic is TestGangWar {
 
         // -------- perform second attack
         vm.prank(bob);
-        game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_2, BARON_YAKUZA_1);
+        game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_2, BARON_YAKUZA_1, false);
 
         vm.prank(alice);
         game.joinGangAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_2, [GANGSTER_YAKUZA_1].toMemory());
@@ -264,7 +264,7 @@ contract TestGangWarGameLogic is TestGangWar {
 
         // -------- perform second attack
         vm.prank(bob);
-        game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_2, BARON_YAKUZA_2);
+        game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_2, BARON_YAKUZA_2, false);
 
         // -------- perform fakeout
         vm.prank(alice);
@@ -306,7 +306,7 @@ contract TestGangWarGameLogic is TestGangWar {
     /// join attack during locked district state
     function test_joinGangAttack_fail_DistrictInvalidState() public {
         vm.prank(bob);
-        game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, BARON_YAKUZA_1);
+        game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, BARON_YAKUZA_1, false);
 
         skip(TIME_REINFORCEMENTS);
 
@@ -346,7 +346,7 @@ contract TestGangWarGameLogic is TestGangWar {
     /// Call for NFT not owned by caller
     function test_joinGangAttack_fail_CallerNotOwner() public {
         vm.prank(bob);
-        game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, BARON_YAKUZA_1);
+        game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, BARON_YAKUZA_1, false);
 
         vm.expectRevert(NotAuthorized.selector);
 
@@ -359,13 +359,13 @@ contract TestGangWarGameLogic is TestGangWar {
         vm.prank(bob);
         vm.expectRevert(InvalidConnectingDistrict.selector);
 
-        game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CYBERP_1, BARON_YAKUZA_1);
+        game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CYBERP_1, BARON_YAKUZA_1, false);
     }
 
     /// Mixed Gang ids
     function test_joinGangAttack_fail_IdsMustBeOfSameGang() public {
         vm.prank(bob);
-        game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, BARON_YAKUZA_1);
+        game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, BARON_YAKUZA_1, false);
 
         vm.expectRevert(IdsMustBeOfSameGang.selector);
 
@@ -376,7 +376,7 @@ contract TestGangWarGameLogic is TestGangWar {
     /// Attack as baron
     function test_joinGangAttack_fail_TokenMustBeGangster() public {
         vm.prank(bob);
-        game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, BARON_YAKUZA_1);
+        game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, BARON_YAKUZA_1, false);
 
         vm.expectRevert(TokenMustBeGangster.selector);
 
@@ -387,20 +387,20 @@ contract TestGangWarGameLogic is TestGangWar {
     /// Locked in attack/defense
     function test_joinGangAttack_fail_BaronInactionable() public {
         vm.prank(bob);
-        game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, BARON_YAKUZA_1);
+        game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, BARON_YAKUZA_1, false);
 
         skip(TIME_REINFORCEMENTS);
 
         vm.expectRevert(BaronInactionable.selector);
 
         vm.prank(bob);
-        game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_2, BARON_YAKUZA_1);
+        game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_2, BARON_YAKUZA_1, false);
     }
 
     /// Locked in attack/defense
     function test_joinGangAttack_fail_GangsterInactionable() public {
         vm.prank(bob);
-        game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, BARON_YAKUZA_1);
+        game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, BARON_YAKUZA_1, false);
 
         vm.prank(alice);
         game.joinGangAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, [GANGSTER_YAKUZA_1].toMemory());
@@ -416,7 +416,7 @@ contract TestGangWarGameLogic is TestGangWar {
 
         // try attacking while locked
         vm.prank(bob);
-        game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_2, BARON_YAKUZA_2);
+        game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_2, BARON_YAKUZA_2, false);
 
         vm.expectRevert(GangsterInactionable.selector);
 
@@ -425,7 +425,7 @@ contract TestGangWarGameLogic is TestGangWar {
 
         // // try defending while locked
         // vm.prank(bob);
-        // game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_2, BARON_YAKUZA_2);
+        // game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_2, BARON_YAKUZA_2, false);
         // vm.expectRevert(GangsterInactionable.selector);
 
         // vm.prank(alice);
@@ -436,7 +436,7 @@ contract TestGangWarGameLogic is TestGangWar {
 
     function test_joinGangDefense() public {
         vm.prank(bob);
-        game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, BARON_YAKUZA_1);
+        game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, BARON_YAKUZA_1, false);
 
         vm.prank(alice);
         game.joinGangDefense(DISTRICT_CARTEL_1, [GANGSTER_CARTEL_1].toMemory());
@@ -467,7 +467,7 @@ contract TestGangWarGameLogic is TestGangWar {
 
         // first district that will need upkeep
         vm.prank(bob);
-        game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, BARON_YAKUZA_1);
+        game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, BARON_YAKUZA_1, false);
 
         (upkeepNeeded, ) = game.checkUpkeep("");
         assertFalse(upkeepNeeded);
@@ -491,7 +491,7 @@ contract TestGangWarGameLogic is TestGangWar {
         bytes32[] memory writes;
 
         vm.prank(bob);
-        game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, BARON_YAKUZA_1);
+        game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, BARON_YAKUZA_1, false);
 
         skip(TIME_REINFORCEMENTS + TIME_GANG_WAR);
 
@@ -511,7 +511,7 @@ contract TestGangWarGameLogic is TestGangWar {
 
         // add an additional attack that needs upkeep
         vm.prank(bob);
-        game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_2, BARON_YAKUZA_2);
+        game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_2, BARON_YAKUZA_2, false);
 
         skip(TIME_REINFORCEMENTS + TIME_GANG_WAR);
 
@@ -555,10 +555,10 @@ contract TestGangWarGameLogic is TestGangWar {
         bytes memory data;
 
         vm.prank(bob);
-        game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, BARON_YAKUZA_1);
+        game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, BARON_YAKUZA_1, false);
 
         vm.prank(bob);
-        game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_2, BARON_YAKUZA_2);
+        game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_2, BARON_YAKUZA_2, false);
 
         skip(TIME_REINFORCEMENTS + TIME_GANG_WAR);
 
@@ -620,7 +620,7 @@ contract TestGangWarGameLogic is TestGangWar {
 
     function test_injury() public {
         vm.prank(bob);
-        game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, BARON_YAKUZA_1);
+        game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, BARON_YAKUZA_1, false);
 
         vm.prank(alice);
         game.joinGangAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, [GANGSTER_YAKUZA_1].toMemory());
@@ -651,18 +651,23 @@ contract TestGangWarGameLogic is TestGangWar {
 
         game.setBriberyFee(address(gouda), 100);
 
+        address(gouda).balanceDiff(bob);
+
         vm.startPrank(bob);
 
         game.bribery([GANGSTER_YAKUZA_1].toMemory(), address(gouda), false);
 
+        assertEq(address(gouda).balanceDiff(bob), -100);
         assertEq(game.getGangsterView(GANGSTER_YAKUZA_1).stateCountdown, int256(TIME_RECOVERY) / 2);
 
         game.bribery([GANGSTER_YAKUZA_1].toMemory(), address(gouda), false);
 
+        assertEq(address(gouda).balanceDiff(bob), -100);
         assertEq(game.getGangsterView(GANGSTER_YAKUZA_1).stateCountdown, int256(TIME_RECOVERY) / 4);
 
         game.bribery([GANGSTER_YAKUZA_1].toMemory(), address(gouda), false);
 
+        assertEq(address(gouda).balanceDiff(bob), -100);
         assertEq(game.getGangsterView(GANGSTER_YAKUZA_1).stateCountdown, int256(TIME_RECOVERY) / 8);
     }
 
@@ -676,9 +681,9 @@ contract TestGangWarGameLogic is TestGangWar {
         assertEq(game.getGangsterView(GANGSTER_YAKUZA_1).stateCountdown, int256(TIME_RECOVERY));
     }
 
-    function test_bribery() public {
+    function test_lockup() public {
         vm.prank(bob);
-        game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, BARON_YAKUZA_1);
+        game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, BARON_YAKUZA_1, false);
 
         vm.prank(alice);
         game.joinGangAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, [GANGSTER_YAKUZA_1].toMemory());
@@ -696,33 +701,31 @@ contract TestGangWarGameLogic is TestGangWar {
         assertEq(district.roundId, 2);
         assertEq(district.state, DISTRICT_STATE.LOCKUP);
         assertEq(district.lastOutcomeTime, block.timestamp);
-
-        // test_injury();
-
-        // game.setBriberyFee(address(gouda), 100);
-
-        // vm.startPrank(bob);
-
-        // game.bribery([GANGSTER_YAKUZA_1].toMemory(), address(gouda), false);
-
-        // assertEq(game.getGangsterView(GANGSTER_YAKUZA_1).stateCountdown, int256(TIME_RECOVERY) / 2);
-
-        // game.bribery([GANGSTER_YAKUZA_1].toMemory(), address(gouda), false);
-
-        // assertEq(game.getGangsterView(GANGSTER_YAKUZA_1).stateCountdown, int256(TIME_RECOVERY) / 4);
-
-        // game.bribery([GANGSTER_YAKUZA_1].toMemory(), address(gouda), false);
-
-        // assertEq(game.getGangsterView(GANGSTER_YAKUZA_1).stateCountdown, int256(TIME_RECOVERY) / 8);
     }
 
-    // function test_bribery_InvalidToken() public {
-    //     test_injury();
+    function test_bribery() public {
+        test_lockup();
 
-    //     vm.expectRevert(InvalidToken.selector);
+        game.setBriberyFee(address(gouda), 100);
 
-    //     game.bribery([GANGSTER_YAKUZA_1].toMemory(), address(gouda), false);
+        address(gouda).balanceDiff(bob);
 
-    //     assertEq(game.getGangsterView(GANGSTER_YAKUZA_1).stateCountdown, int256(TIME_RECOVERY));
-    // }
+        vm.startPrank(bob);
+
+        game.bribery([GANGSTER_YAKUZA_1].toMemory(), address(gouda), true);
+
+        assertEq(address(gouda).balanceDiff(bob), -100);
+        assertEq(game.getGangsterView(GANGSTER_YAKUZA_1).stateCountdown, int256(TIME_LOCKUP) / 2);
+
+        game.bribery([GANGSTER_YAKUZA_1].toMemory(), address(gouda), true);
+
+        assertEq(address(gouda).balanceDiff(bob), -100);
+        assertEq(game.getGangsterView(GANGSTER_YAKUZA_1).stateCountdown, int256(TIME_LOCKUP) / 4);
+
+        game.bribery([GANGSTER_YAKUZA_1].toMemory(), address(gouda), true);
+
+        assertEq(address(gouda).balanceDiff(bob), -100);
+        assertEq(game.getGangsterView(GANGSTER_YAKUZA_1).stateCountdown, int256(TIME_LOCKUP) / 8);
+    }
+    // @notice test with all roundId mismatch combinations
 }

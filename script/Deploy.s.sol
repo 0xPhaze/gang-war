@@ -17,7 +17,7 @@ import {MockGMC} from "../test/mocks/MockGMC.sol";
 
 import {Mice} from "/tokens/Mice.sol";
 
-import "f-utils/fUtils.sol";
+import "futils/futils.sol";
 
 // import "chainlink/contracts/src/v0.8/VRFCoordinatorV2.sol";
 
@@ -72,10 +72,18 @@ contract MockGangWar is GangWar {
     function getDistrictConnections() external view returns (uint256) {
         return s().districtConnections;
     }
+
+    function setYield(
+        uint256 gang,
+        uint256 token,
+        uint256 yield
+    ) public {
+        _setYield(gang, token, yield);
+    }
 }
 
 contract Deploy is Script {
-    using fUtils for *;
+    using futils for *;
 
     // contracts
     MockGMC gmc;
@@ -111,10 +119,10 @@ contract Deploy is Script {
         gmc.mintBatch(msg.sender);
         gmc.mintBatch(0x2181838c46bEf020b8Beb756340ad385f5BD82a8);
 
-        game.baronDeclareAttack(2, 0, 10_001);
+        game.baronDeclareAttack(2, 0, 10_001, false);
         game.joinGangAttack(2, 0, [1].toMemory());
 
-        game.baronDeclareAttack(2, 10, 10_004);
+        game.baronDeclareAttack(2, 10, 10_004, false);
         game.joinGangAttack(2, 10, [4].toMemory());
 
         console.log('gmc: "', address(gmc), '",');
