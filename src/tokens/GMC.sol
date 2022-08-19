@@ -1,7 +1,7 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import {FxERC721MRootUDS} from "fx-contracts/FxERC721MRootUDS.sol";
+import {FxERC721MRootUDS} from "fx-contracts/extensions/FxERC721MRootUDS.sol";
 import {OwnableUDS} from "UDS/auth/OwnableUDS.sol";
 import {ERC20UDS as ERC20} from "UDS/tokens/ERC20UDS.sol";
 
@@ -127,6 +127,8 @@ contract GMC is OwnableUDS, FxERC721MRootUDS {
         uint256 balance = token.balanceOf(address(this));
         token.transfer(msg.sender, balance);
     }
+
+    function _authorizeTunnelController() internal override onlyOwner {}
 
     /* ------------- modifier ------------- */
 

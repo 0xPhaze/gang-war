@@ -457,25 +457,25 @@ contract TestGangWarGameLogic is TestGangWar {
         bool upkeepNeeded;
         bytes memory data;
 
-        (upkeepNeeded, ) = game.checkUpkeep("");
+        (upkeepNeeded,) = game.checkUpkeep("");
         assertFalse(upkeepNeeded);
 
         skip(100 days);
 
-        (upkeepNeeded, ) = game.checkUpkeep("");
+        (upkeepNeeded,) = game.checkUpkeep("");
         assertFalse(upkeepNeeded);
 
         // first district that will need upkeep
         vm.prank(bob);
         game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, BARON_YAKUZA_1, false);
 
-        (upkeepNeeded, ) = game.checkUpkeep("");
+        (upkeepNeeded,) = game.checkUpkeep("");
         assertFalse(upkeepNeeded);
 
         // upkeep is needed after time passage
         skip(TIME_REINFORCEMENTS);
 
-        (upkeepNeeded, ) = game.checkUpkeep("");
+        (upkeepNeeded,) = game.checkUpkeep("");
         assertFalse(upkeepNeeded);
 
         // upkeep is needed after gang war
@@ -676,7 +676,7 @@ contract TestGangWarGameLogic is TestGangWar {
 
         vm.expectRevert(InvalidToken.selector);
 
-        game.bribery([GANGSTER_YAKUZA_1].toMemory(), address(gouda), false);
+        game.bribery([GANGSTER_YAKUZA_1].toMemory(), address(0x1337), false);
 
         assertEq(game.getGangsterView(GANGSTER_YAKUZA_1).stateCountdown, int256(TIME_RECOVERY));
     }

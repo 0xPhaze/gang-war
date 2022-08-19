@@ -24,7 +24,9 @@ interface IVRFCoordinatorV2 {
         uint16 minimumRequestConfirmations,
         uint32 callbackGasLimit,
         uint32 numWords
-    ) external returns (uint256 requestId);
+    )
+        external
+        returns (uint256 requestId);
 }
 
 // ---------- Errors
@@ -55,18 +57,15 @@ abstract contract VRFConsumerV2 {
     }
 
     function requestRandomWords(uint32 numWords) internal virtual returns (uint256) {
-        return
-            IVRFCoordinatorV2(coordinator).requestRandomWords(
-                keyHash,
-                subscriptionId,
-                requestConfirmations,
-                callbackGasLimit,
-                numWords
-            );
+        return IVRFCoordinatorV2(coordinator).requestRandomWords(
+            keyHash, subscriptionId, requestConfirmations, callbackGasLimit, numWords
+        );
     }
 
     function rawFulfillRandomWords(uint256 requestId, uint256[] calldata randomWords) external payable {
-        if (msg.sender != coordinator) revert CallerNotCoordinator();
+        if (msg.sender != coordinator) {
+            revert CallerNotCoordinator();
+        }
 
         fulfillRandomWords(requestId, randomWords);
     }

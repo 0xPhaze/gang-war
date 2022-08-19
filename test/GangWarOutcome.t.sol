@@ -39,11 +39,7 @@ contract TestGangWarOutcome is Test {
 
     /* ------------- gangWarWonProbFFI() ------------- */
 
-    function test_gangWarWonProbFFI(
-        uint256 attackForce,
-        uint256 defenseForce,
-        bool baronDefense
-    ) internal {
+    function test_gangWarWonProbFFI(uint256 attackForce, uint256 defenseForce, bool baronDefense) internal {
         vm.assume(attackForce < 10_000);
         vm.assume(defenseForce < 10_000);
 
@@ -64,11 +60,7 @@ contract TestGangWarOutcome is Test {
         assertEq((prob * 1e12) >> 128, (res * 1e12) >> 128);
     }
 
-    function test_gangWarWonProbProperties(
-        uint16 attackForce,
-        uint16 defenseForce,
-        bool baronDefense
-    ) public {
+    function test_gangWarWonProbProperties(uint16 attackForce, uint16 defenseForce, bool baronDefense) public {
         vm.assume(attackForce < 10_000);
         vm.assume(defenseForce < 10_000);
 

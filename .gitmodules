@@ -11,9 +11,12 @@
 [submodule "lib/UDS"]
 	path = lib/UDS
 	url = https://github.com/0xPhaze/UDS
-[submodule "lib/fx-contracts"]
-	path = lib/fx-contracts
-	url = https://github.com/0xPhaze/fx-contracts
 [submodule "lib/futils"]
 	path = lib/futils
 	url = https://github.com/0xPhaze/futils
+[submodule "lib/f-utils"]
+	path = lib/f-utils
+	url = https://github.com/0xPhaze/f-utils
+[submodule "lib/fx-contracts"]
+	path = lib/fx-contracts
+	url = https://github.com/0xPhaze/fx-contracts

@@ -52,7 +52,9 @@ contract GangWarItems is UUPSUpgrade, OwnableUDS, ERC1155UDS, AccessControlUDS {
 
     function setBaseURI(string calldata base, uint256 maxId) public onlyOwner {
         baseURI = base;
-        for (uint256 i; i < maxId; i++) emit URI(uri(i), i);
+        for (uint256 i; i < maxId; i++) {
+            emit URI(uri(i), i);
+        }
     }
 
     function grantMintAuthority(address operator) external {

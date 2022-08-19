@@ -15,6 +15,8 @@ import "./GangWarGameLogic.sol";
 // ------------- error
 
 error NotAuthorized();
+error InvalidItemId();
+error ItemAlreadyActive();
 
 contract GangWar is UUPSUpgrade, Ownable, GangWarBase, GangWarGameLogic, GMCMarket {
     constructor(
@@ -69,6 +71,49 @@ contract GangWar is UUPSUpgrade, Ownable, GangWarBase, GangWarGameLogic, GMCMark
         _setYield(0, 0, initialGangYields[0]);
         _setYield(1, 1, initialGangYields[1]);
         _setYield(2, 2, initialGangYields[2]);
+    }
+
+    function purchaseGangWarItem(uint256 baronId, uint256 itemId) external {
+        _verifyAuthorized(msg.sender, baronId);
+
+        if (!isBaron(baronId)) {
+            revert TokenMustBeBaron();
+        }
+
+        uint256 price = s().itemPrice[itemId];
+        if (price == 0) {
+            revert InvalidItemId();
+        }
+
+        Gang gang = gangOf(baronId);
+
+        _spendGangVaultBalance(uint256(gang), price, price, price, true);
+
+        s().warItems[gang][itemId] += 1;
+    }
+
+    function useGangWarItem(
+        uint256 baronId,
+        uint256 itemId,
+        uint256 districtId
+    ) external {
+        _verifyAuthorized(msg.sender, baronId);
+
+        if (!isBaron(baronId)) {
+            revert TokenMustBeBaron();
+        }
+
+        Gang gang = gangOf(baronId);
+
+        s().warItems[gang][itemId] -= 1;
+
+        uint256 items = s().districts[districtId].activeItems;
+
+        if (items & (1 << itemId) != 0) {
+            revert ItemAlreadyActive();
+        }
+
+        s().districts[districtId].activeItems = items | (1 << itemId);
     }
 
     /* ------------- protected ------------- */

@@ -25,10 +25,21 @@ uint256 constant LOCKUP_FINE = 50e18;
 uint256 constant INJURED_WON_FACTOR = 35;
 uint256 constant INJURED_LOST_FACTOR = 65;
 
+uint256 constant GANG_VAULT_FEE = 20;
+
 uint256 constant BADGES_EARNED_VICTORY = 6e18;
 uint256 constant BADGES_EARNED_DEFEAT = 2e18;
 
 uint256 constant UPKEEP_INTERVAL = 5 minutes;
+
+uint256 constant ITEM_SEWER = 0;
+uint256 constant ITEM_BLITZ = 1;
+uint256 constant ITEM_BARRICADES = 2;
+uint256 constant ITEM_SMOKE = 3;
+
+uint256 constant ITEM_BLITZ_TIME_REDUCTION = 80;
+uint256 constant ITEM_BARRICADES_DEFENSE_INCREASE = 30;
+uint256 constant ITEM_SMOKE_ATTACK_INCREASE = 30;
 
 // ------------- Enum
 
@@ -88,6 +99,7 @@ struct District {
     uint256 lastOutcomeTime; // set when vrf result is in
     uint256 lockupTime;
     uint256 yield;
+    uint256 activeItems;
 }
 
 struct DistrictView {
@@ -102,6 +114,7 @@ struct DistrictView {
     uint256 lastOutcomeTime; // set when vrf result is in
     uint256 lockupTime;
     uint256 yield;
+    uint256[] activeItems;
     DISTRICT_STATE state;
     int256 stateCountdown;
     uint256 attackForces;
@@ -115,8 +128,12 @@ struct GangWarDS {
     uint256 lockupTime;
     mapping(uint256 => District) districts;
     mapping(uint256 => Gangster) gangsters;
+    /*      id      => price  */
+    mapping(uint256 => uint256) itemPrice;
     /*      address => fee  */
     mapping(address => uint256) briberyFee;
+    /*      Gang =>        itemId   => balance  */
+    mapping(Gang => mapping(uint256 => uint256)) warItems;
     /*   districtId => districtIds  */
     mapping(uint256 => uint256) requestIdToDistrictIds; // used by chainlink VRF request callbacks
     /*   districtId =>     roundId     => outcome  */
@@ -159,7 +176,7 @@ abstract contract GangWarBase is OwnableUDS {
     }
 
     function gangOf(uint256 id) public pure returns (Gang) {
-        return id == 0 ? Gang.NONE : Gang((id < 1000 ? id - 1 : id - 1001) % 3);
+        return id == 0 ? Gang.NONE : Gang((id < 10000 ? id - 1 : id - 10001) % 3);
     }
 
     function getGangWarOutcome(uint256 districtId, uint256 roundId) external view returns (uint256) {
@@ -170,17 +187,23 @@ abstract contract GangWarBase is OwnableUDS {
         return s().briberyFee[token];
     }
 
-    function setBriberyFee(address token, uint256 amount) public returns (uint256) {
-        return s().briberyFee[token] = amount;
-    }
-
     /* ------------- Owner ------------- */
 
-    function setDistrictOccupants(Gang[21] calldata gangs) external onlyOwner {
-        for (uint256 i; i < 21; ++i) s().districts[i].occupants = gangs[i];
+    function setItemCost(uint256 itemId, uint256 cost) external payable onlyOwner {
+        s().itemPrice[itemId] = cost;
     }
 
-    function setDistrictConnections(uint256 connections) external onlyOwner {
+    function setBriberyFee(address token, uint256 amount) external payable onlyOwner {
+        s().briberyFee[token] = amount;
+    }
+
+    function setDistrictOccupants(Gang[21] calldata gangs) external payable onlyOwner {
+        for (uint256 i; i < 21; ++i) {
+            s().districts[i].occupants = gangs[i];
+        }
+    }
+
+    function setDistrictConnections(uint256 connections) external payable onlyOwner {
         s().districtConnections = connections;
     }
 }

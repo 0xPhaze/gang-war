@@ -31,12 +31,7 @@ contract MockGangReward is GangWarReward {
         _claimUserBalance(msg.sender);
     }
 
-    function spendGangVaultBalance(
-        uint256 gang,
-        uint256 amount_0,
-        uint256 amount_1,
-        uint256 amount_2
-    ) public {
+    function spendGangVaultBalance(uint256 gang, uint256 amount_0, uint256 amount_1, uint256 amount_2) public {
         _spendGangVaultBalance(gang, amount_0, amount_1, amount_2, true);
     }
 
@@ -46,12 +41,7 @@ contract MockGangReward is GangWarReward {
         _setYield(gang, 2, rates[2]);
     }
 
-    function transferYield(
-        uint256 gangFrom,
-        uint256 gangTo,
-        uint256 token,
-        uint256 yield
-    ) public {
+    function transferYield(uint256 gangFrom, uint256 gangTo, uint256 token, uint256 yield) public {
         _transferYield(gangFrom, gangTo, token, yield);
     }
 }
@@ -91,21 +81,9 @@ contract TestGangWarReward is Test {
     function test_transferYield() public {
         _setUp(0);
 
-        staking.setRewardRate(0, [
-                uint256(100_000_000),
-                uint256(100_000_000),
-                uint256(100_000_000)].toMemory()
-            ); //prettier-ignore
-        staking.setRewardRate(1, [
-                uint256(100_000_000),
-                uint256(100_000_000),
-                uint256(100_000_000)].toMemory()
-            ); //prettier-ignore
-        staking.setRewardRate(2, [
-                uint256(100_000_000),
-                uint256(100_000_000),
-                uint256(100_000_000)].toMemory()
-            ); //prettier-ignore
+        staking.setRewardRate(0, [uint256(100_000_000), uint256(100_000_000), uint256(100_000_000)].toMemory()); //prettier-ignore
+        staking.setRewardRate(1, [uint256(100_000_000), uint256(100_000_000), uint256(100_000_000)].toMemory()); //prettier-ignore
+        staking.setRewardRate(2, [uint256(100_000_000), uint256(100_000_000), uint256(100_000_000)].toMemory()); //prettier-ignore
 
         staking.transferYield(0, 1, 1, 100);
     }
@@ -114,11 +92,7 @@ contract TestGangWarReward is Test {
     function test_rangeLimit() public {
         _setUp(0);
 
-        staking.setRewardRate(0, [
-                uint256(1e12 * 1),
-                uint256(1e12 * 1),
-                uint256(1e12 * 1)].toMemory()
-            ); //prettier-ignore
+        staking.setRewardRate(0, [uint256(1e12 * 1), uint256(1e12 * 1), uint256(1e12 * 1)].toMemory()); //prettier-ignore
 
         staking.enter(0, 1);
 
@@ -147,11 +121,7 @@ contract TestGangWarReward is Test {
         _setUp(0);
 
         // errors get relatively worse with lower rate (1e6 = approx yield of 1/10 district)
-        staking.setRewardRate(0, [
-                uint256(1e6),
-                uint256(1e6),
-                uint256(1e6)].toMemory()
-            ); //prettier-ignore
+        staking.setRewardRate(0, [uint256(1e6), uint256(1e6), uint256(1e6)].toMemory()); //prettier-ignore
 
         staking.enter(0, 10_000);
 
@@ -166,15 +136,11 @@ contract TestGangWarReward is Test {
         staking.claim();
 
         assertApproxEqAbs(
-            reward[0].balanceOf(tester),
-            uint256(10_000 * 1e6 * 1 ether * 10 hours) / (10_001 * 1 days),
-            0.0001 ether
+            reward[0].balanceOf(tester), uint256(10_000 * 1e6 * 1 ether * 10 hours) / (10_001 * 1 days), 0.0001 ether
         );
 
         assertApproxEqAbs(
-            reward[0].balanceOf(alice),
-            uint256(1e6 * 1 ether * 10 hours) / (10_001 * 1 days),
-            0.00000001 ether
+            reward[0].balanceOf(alice), uint256(1e6 * 1 ether * 10 hours) / (10_001 * 1 days), 0.00000001 ether
         );
     }
 
@@ -183,11 +149,7 @@ contract TestGangWarReward is Test {
         _setUp(0);
 
         for (uint256 gang; gang < 3; gang++) {
-            staking.setRewardRate(gang, [
-                uint256(1),
-                uint256(1),
-                uint256(1)].toMemory()
-            ); //prettier-ignore
+            staking.setRewardRate(gang, [uint256(1), uint256(1), uint256(1)].toMemory()); //prettier-ignore
 
             // stake for 100 days
             staking.enter(gang, 10_000);
@@ -227,11 +189,7 @@ contract TestGangWarReward is Test {
         _setUp(0);
 
         for (uint256 gang; gang < 3; gang++) {
-            staking.setRewardRate(gang, [
-                uint256(1),
-                uint256(1),
-                uint256(1)].toMemory()
-            ); //prettier-ignore
+            staking.setRewardRate(gang, [uint256(1), uint256(1), uint256(1)].toMemory()); //prettier-ignore
 
             staking.enter(gang, 10_000);
 
@@ -290,19 +248,11 @@ contract TestGangWarReward is Test {
 
             skip(50 days);
 
-            staking.setRewardRate(gang, [
-                uint256(1),
-                uint256(2),
-                uint256(3)].toMemory()
-            ); //prettier-ignore
+            staking.setRewardRate(gang, [uint256(1), uint256(2), uint256(3)].toMemory()); //prettier-ignore
 
             skip(100 days);
 
-            staking.setRewardRate(gang, [
-                uint256(2),
-                uint256(4),
-                uint256(6)].toMemory()
-            ); //prettier-ignore
+            staking.setRewardRate(gang, [uint256(2), uint256(4), uint256(6)].toMemory()); //prettier-ignore
 
             skip(100 days);
 
@@ -323,11 +273,7 @@ contract TestGangWarReward is Test {
         _setUp(80);
 
         for (uint256 gang; gang < 3; gang++) {
-            staking.setRewardRate(gang, [
-                uint256(1),
-                uint256(1),
-                uint256(1)].toMemory()
-            ); //prettier-ignore
+            staking.setRewardRate(gang, [uint256(1), uint256(1), uint256(1)].toMemory()); //prettier-ignore
 
             staking.enter(gang, 1);
 

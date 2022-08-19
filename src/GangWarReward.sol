@@ -30,6 +30,7 @@ function s() pure returns (GangWarRewardDS storage diamondStorage) {
 /// @author Adapted from Synthetix StakingReward (https://github.com/Synthetixio/synthetix/blob/develop/contracts/StakingReward.sol)
 contract GangWarReward {
     uint256 public immutable gangVaultFeesPercent;
+
     event Burn(address indexed from, uint256 indexed token, uint256 amount);
 
     constructor(uint256 gangVaultFees) {
@@ -42,7 +43,7 @@ contract GangWarReward {
 
     function getYield() external view returns (uint256[3][3] memory out) {
         uint80[3][3] memory yield = s().yield;
-        assembly {out := yield} //prettier-ignore
+        assembly { out := yield } //prettier-ignore
     }
 
     // should only be called as view

@@ -16,8 +16,12 @@ contract MockGMC is MockERC721("Gangsta Mice City", "GMC") {
     }
 
     function mintBatch(address to) public {
-        for (uint256 i; i < 10; i++) mint(to, ++gangsterSupply);
-        for (uint256 i; i < 5; i++) mint(to, ++baronSupply + 10_000);
+        for (uint256 i; i < 10; i++) {
+            mint(to, ++gangsterSupply);
+        }
+        for (uint256 i; i < 5; i++) {
+            mint(to, ++baronSupply + 10_000);
+        }
     }
 
     function mint(address to, uint256 id) public override {
@@ -32,7 +36,11 @@ contract MockGMC is MockERC721("Gangsta Mice City", "GMC") {
         uint256 len = gangsters.length + barons.length;
         ids = new uint256[](len);
 
-        for (uint256 i; i < gangsters.length; i++) ids[i] = gangsters[i];
-        for (uint256 i; i < barons.length; i++) ids[i + gangsters.length] = barons[i];
+        for (uint256 i; i < gangsters.length; i++) {
+            ids[i] = gangsters[i];
+        }
+        for (uint256 i; i < barons.length; i++) {
+            ids[i + gangsters.length] = barons[i];
+        }
     }
 }

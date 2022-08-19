@@ -77,8 +77,9 @@ abstract contract GMCMarket {
     function acceptOffer(uint256 id) external {
         Offer storage offer = s().activeOffers[id];
 
-        if (block.timestamp - s().lastRentalAcceptance[msg.sender] > RENTAL_ACCEPTANCE_MINIMUM_TIME_DELAY)
+        if (block.timestamp - s().lastRentalAcceptance[msg.sender] > RENTAL_ACCEPTANCE_MINIMUM_TIME_DELAY) {
             revert MinimumTimeDelayNotReached();
+        }
         if (offer.renter != address(0)) revert OfferAlreadyAccepted();
 
         offer.renter = msg.sender;

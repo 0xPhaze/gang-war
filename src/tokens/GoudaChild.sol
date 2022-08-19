@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import {OwnableUDS} from "UDS/auth/OwnableUDS.sol";
 import {UUPSUpgrade} from "UDS/proxy/UUPSUpgrade.sol";
 import {s as erc20ds} from "UDS/tokens/ERC20UDS.sol";
-import {ERC20BurnableUDS} from "UDS/tokens/ERC20BurnableUDS.sol";
+import {ERC20BurnableUDS} from "UDS/tokens/extensions/ERC20BurnableUDS.sol";
 import {AccessControlUDS} from "UDS/auth/AccessControlUDS.sol";
 
 import {FxERC20ChildUDS} from "fx-contracts/FxERC20ChildUDS.sol";
@@ -24,6 +24,10 @@ contract GoudaChild is UUPSUpgrade, OwnableUDS, ERC20BurnableUDS, FxERC20ChildUD
         __Ownable_init();
         __AccessControl_init();
     }
+
+    /* ------------- override ------------- */
+
+    function _authorizeTunnelController() internal override onlyOwner {}
 
     /* ------------- external ------------- */
 

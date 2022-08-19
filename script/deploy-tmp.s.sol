@@ -26,8 +26,10 @@ import "futils/futils.sol";
 // interface IVRFCoordinator
 
 /* 
-source .env && forge script script/Deploy.s.sol:Deploy --rpc-url $RINKEBY_RPC_URL  --private-key $PRIVATE_KEY --broadcast --verify --etherscan-api-key $ETHERSCAN_KEY -vvvv
-source .env && forge script script/Deploy.s.sol:Deploy --rpc-url https://rpc.ankr.com/polygon  --private-key $PRIVATE_KEY --broadcast --verify --etherscan-api-key $POLYGONSCAN_KEY --with-gas-price 30gwei -vvvv
+source .env.local && forge script deploy --rpc-url $RINKEBY_RPC_URL  --private-key $PRIVATE_KEY --broadcast --verify --etherscan-api-key $ETHERSCAN_KEY -vvvv
+
+source .env.local && forge script deploy --rpc-url https://rpc.ankr.com/polygon_mumbai --private-key $PRIVATE_KEY --broadcast --verify --etherscan-api-key $POLYGONSCAN_KEY --with-gas-price 1.5gwei -vvvv
+// source .env.local && forge script deploy --rpc-url https://rpc.ankr.com/polygon  --private-key $PRIVATE_KEY --broadcast --verify --etherscan-api-key $POLYGONSCAN_KEY --with-gas-price 30gwei -vvvv
 
 cp ~/git/eth/GangWar/out/MockGMC.sol/MockGMC.json ~/git/eth/gmc-website/data/abi
 cp ~/git/eth/GangWar/out/MockERC20.sol/MockERC20.json ~/git/eth/gmc-website/data/abi
@@ -36,53 +38,7 @@ cp ~/git/eth/GangWar/out/GangWar.sol/GangWar.json ~/git/eth/gmc-website/data/abi
 cp ~/git/eth/GangWar/out/Mice.sol/Mice.json ~/git/eth/gmc-website/data/abi
 */
 
-contract MockGangWar is GangWar {
-    constructor(
-        address coordinator,
-        bytes32 keyHash,
-        uint64 subscriptionId,
-        uint16 requestConfirmations,
-        uint32 callbackGasLimit
-    ) GangWar(coordinator, keyHash, subscriptionId, requestConfirmations, callbackGasLimit) {}
-
-    function setGangWarOutcome(
-        uint256 districtId,
-        uint256 roundId,
-        uint256 outcome
-    ) public {
-        s().gangWarOutcomes[districtId][roundId] = outcome;
-    }
-
-    function setAttackForce(
-        uint256 districtId,
-        uint256 roundId,
-        uint256 force
-    ) public {
-        s().districtAttackForces[districtId][roundId] = force;
-    }
-
-    function setDefenseForces(
-        uint256 districtId,
-        uint256 roundId,
-        uint256 force
-    ) public {
-        s().districtDefenseForces[districtId][roundId] = force;
-    }
-
-    function getDistrictConnections() external view returns (uint256) {
-        return s().districtConnections;
-    }
-
-    function setYield(
-        uint256 gang,
-        uint256 token,
-        uint256 yield
-    ) public {
-        _setYield(gang, token, yield);
-    }
-}
-
-contract Deploy is Script {
+contract deploy is Script {
     using futils for *;
 
     // contracts
@@ -100,39 +56,89 @@ contract Deploy is Script {
 
     MockERC20 gouda;
 
-    uint256 STAGING = (block.chainid == 31337) ? 0 : (block.chainid != 1 && block.chainid != 137) ? 1 : 2;
+    uint256 STAGING;
+
+    uint256 constant GANGSTER_YAKUZA_1 = 1;
+    uint256 constant GANGSTER_CARTEL_1 = 2;
+    uint256 constant GANGSTER_CYBERP_1 = 3;
+    uint256 constant GANGSTER_YAKUZA_2 = 4;
+    uint256 constant GANGSTER_CARTEL_2 = 5;
+    uint256 constant GANGSTER_CYBERP_2 = 6;
+
+    uint256 constant BARON_YAKUZA_1 = 10_001;
+    uint256 constant BARON_CARTEL_1 = 10_002;
+    uint256 constant BARON_CYBERP_1 = 10_003;
+    uint256 constant BARON_YAKUZA_2 = 10_004;
+    uint256 constant BARON_CARTEL_2 = 10_005;
+    uint256 constant BARON_CYBERP_2 = 10_006;
+
+    uint256 constant DISTRICT_YAKUZA_1 = 2;
+    uint256 constant DISTRICT_CARTEL_1 = 0;
+    uint256 constant DISTRICT_CYBERP_1 = 7;
+    uint256 constant DISTRICT_YAKUZA_2 = 3;
+    uint256 constant DISTRICT_CARTEL_2 = 10;
+    uint256 constant DISTRICT_CYBERP_2 = 4;
+
+    constructor() {
+        if (block.chainid == 31337) {
+            STAGING = 0;
+        } else if (block.chainid == 4 || block.chainid == 80_001) {
+            STAGING = 1;
+        } else if (block.chainid == 1 || block.chainid == 137) {
+            STAGING = 2;
+        } else {
+            revert(string.concat("unknown chainid", vm.toString(block.chainid)));
+        }
+
+        setupVars();
+    }
 
     function run() external {
+        console.log(MockGMC(0xf136637eB61eC245a694573a3e007D0cA94871D7).name());
+
         vm.startBroadcast();
+        // console.logAddress(msg.sender);
 
         deployAndSetupGangWar();
 
+        if (STAGING < 2) {
+            // testing
+            GangToken(tokens[0]).grantMintAuthority(msg.sender);
+            GangToken(tokens[1]).grantMintAuthority(msg.sender);
+            GangToken(tokens[2]).grantMintAuthority(msg.sender);
+            GangToken(badges).grantMintAuthority(msg.sender);
+
+            // VRFCoordinatorV2(coordinator).addConsumer(subId, address(game));
+
+            gmc.mintBatch(msg.sender);
+            gmc.mintBatch(0x2181838c46bEf020b8Beb756340ad385f5BD82a8);
+
+            // game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, BARON_YAKUZA_1, false);
+            // game.joinGangAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, [GANGSTER_YAKUZA_1].toMemory());
+
+            // game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, BARON_YAKUZA_2, false);
+            // game.joinGangAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, [GANGSTER_YAKUZA_2].toMemory());
+        }
+
+        console.log(uint8(game.getDistrictView(DISTRICT_CARTEL_1).state));
+
         vm.stopBroadcast();
 
-        // testing
-        GangToken(tokens[0]).grantMintAuthority(msg.sender);
-        GangToken(tokens[1]).grantMintAuthority(msg.sender);
-        GangToken(tokens[2]).grantMintAuthority(msg.sender);
+        // string[] memory inp = new string[](2);
+        // inp[0] = "echo";
+        // inp[1] = "hi";
+        // bytes memory res = vm.ffi(inp);
+        // vm.setEnv("hi", "there");
+        // console.log(res);
 
-        // VRFCoordinatorV2(coordinator).addConsumer(subId, address(game));
-
-        gmc.mintBatch(msg.sender);
-        gmc.mintBatch(0x2181838c46bEf020b8Beb756340ad385f5BD82a8);
-
-        game.baronDeclareAttack(2, 0, 10_001, false);
-        game.joinGangAttack(2, 0, [1].toMemory());
-
-        game.baronDeclareAttack(2, 10, 10_004, false);
-        game.joinGangAttack(2, 10, [4].toMemory());
-
-        console.log('gmc: "', address(gmc), '",');
-        console.log('mice: "', address(mice), '",');
-        console.log('tokenYakuza: "', address(tokens[0]), '",');
-        console.log('tokenCartel: "', address(tokens[1]), '",');
-        console.log('tokenCyberpunk: "', address(tokens[2]), '",');
-        console.log('badges: "', address(badges), '",');
-        console.log('game: "', address(game), '",');
-        console.log('mockVRF: "', address(coordinator), '",');
+        console.log('gmc: "%s"', address(gmc));
+        console.log('mice: "%s"', address(mice));
+        console.log('tokenYakuza: "%s"', address(tokens[0]));
+        console.log('tokenCartel: "%s"', address(tokens[1]));
+        console.log('tokenCyberpunk: "%s"', address(tokens[2]));
+        console.log('badges: "%s"', address(badges));
+        console.log('game: "%s"', address(game));
+        console.log('mockVRF: "%s"', address(coordinator));
     }
 
     function deployAndSetupGangWar() internal {
@@ -148,25 +154,48 @@ contract Deploy is Script {
 
         address gangTokenImpl = address(new GangToken());
 
-        tokens[0] = GangToken(address(new ERC1967Proxy(gangTokenImpl, abi.encodeWithSelector(GangToken.init.selector, "Yakuza Token", "YKZ")))); // prettier-ignore
-        tokens[1] = GangToken(address(new ERC1967Proxy(gangTokenImpl, abi.encodeWithSelector(GangToken.init.selector, "Cartel Token", "CTL")))); // prettier-ignore
-        tokens[2] = GangToken(address(new ERC1967Proxy(gangTokenImpl, abi.encodeWithSelector(GangToken.init.selector, "Cyberpunk Token", "CPK")))); // prettier-ignore
+        tokens[0] = GangToken(
+            address(new ERC1967Proxy(gangTokenImpl, abi.encodeWithSelector(GangToken.init.selector, "Yakuza Token", "YKZ")))
+        ); // prettier-ignore
+        tokens[1] = GangToken(
+            address(new ERC1967Proxy(gangTokenImpl, abi.encodeWithSelector(GangToken.init.selector, "Cartel Token", "CTL")))
+        ); // prettier-ignore
+        tokens[2] = GangToken(
+            address(new ERC1967Proxy(gangTokenImpl, abi.encodeWithSelector(GangToken.init.selector, "Cyberpunk Token", "CPK")))
+        ); // prettier-ignore
 
-        badges = GangToken(address(new ERC1967Proxy(gangTokenImpl, abi.encodeWithSelector(GangToken.init.selector, "Badges", "BADGE")))); // prettier-ignore
+        badges = GangToken(
+            address(new ERC1967Proxy(gangTokenImpl, abi.encodeWithSelector(GangToken.init.selector, "Badges", "BADGE")))
+        ); // prettier-ignore
 
-        mice = Mice(address(new ERC1967Proxy(address(new Mice(address(tokens[0]), address(tokens[1]), address(tokens[2]), address(badges))), abi.encodePacked(Mice.init.selector)))); // prettier-ignore
+        mice = Mice(
+            address(
+                new ERC1967Proxy(address(new Mice(address(tokens[0]), address(tokens[1]), address(tokens[2]), address(badges))), abi.encodePacked(Mice.init.selector))
+            )
+        ); // prettier-ignore
 
-        gangItems = GangWarItems(address(new ERC1967Proxy(address(new GangWarItems()), abi.encodeWithSelector(GangWarItems.init.selector, '', 5)))); // prettier-ignore
+        gangItems = GangWarItems(
+            address(new ERC1967Proxy(address(new GangWarItems()), abi.encodeWithSelector(GangWarItems.init.selector, '', 5)))
+        ); // prettier-ignore
 
-        if (STAGING == 0) {
-            game = MockGangWar(address(new ERC1967Proxy(address(new MockGangWar(address(coordinator), keyHash, subId, 3, 200_000)), GangWarInitCalldata()))); // prettier-ignore
+        if (STAGING < 2) {
+            game = MockGangWar(
+                address(
+                    new ERC1967Proxy(address(new MockGangWar(address(coordinator), keyHash, subId, 3, 200_000)), GangWarInitCalldata())
+                )
+            ); // prettier-ignore
         } else {
-            game = MockGangWar(address(new ERC1967Proxy(address(new GangWar(address(coordinator), keyHash, subId, 3, 200_000)), GangWarInitCalldata()))); // prettier-ignore
+            // game = MockGangWar(address(new ERC1967Proxy(address(new MockGangWar(address(coordinator), keyHash, subId, 3, 200_000)), GangWarInitCalldata()))); // prettier-ignore
+            game = MockGangWar(
+                address(new ERC1967Proxy(address(new GangWar(address(coordinator), keyHash, subId, 3, 200_000)), GangWarInitCalldata()))
+            ); // prettier-ignore
         }
 
-        // setup
+        // // setup
 
         gmc.setGangWar(address(game));
+
+        game.setBriberyFee(address(gouda), 2e18);
 
         GangToken(tokens[0]).grantMintAuthority(address(game));
         GangToken(tokens[1]).grantMintAuthority(address(game));
@@ -204,7 +233,9 @@ contract Deploy is Script {
             coordinator_ = COORDINATOR_RINKEBY;
             keyHash = KEYHASH_RINKEBY;
             subId = 6985;
-        } else revert("unknown chainid");
+        } else {
+            revert("unknown chainid");
+        }
     }
 
     // settings
@@ -212,7 +243,7 @@ contract Deploy is Script {
     uint256[22] yields;
     Gang[22] occupants;
 
-    constructor() {
+    function setupVars() private {
         connections[1][2] = true;
         connections[1][3] = true;
         connections[1][8] = true;
@@ -374,10 +405,58 @@ contract Deploy is Script {
             initialYields.slot := add(yields.slot, 1)
         }
 
-        bytes memory initCalldata = abi.encodeWithSelector(GangWar.init.selector, gmc, tokens, badges, connectionsPacked, initialOccupants, initialYields); // prettier-ignore
+        bytes memory initCalldata = abi.encodeWithSelector(
+            GangWar.init.selector, gmc, tokens, badges, connectionsPacked, initialOccupants, initialYields
+        ); // prettier-ignore
 
         return initCalldata;
     }
 
     function validateSetup() external {}
+}
+
+contract MockGangWar is GangWar {
+    constructor(
+        address coordinator,
+        bytes32 keyHash,
+        uint64 subscriptionId,
+        uint16 requestConfirmations,
+        uint32 callbackGasLimit
+    ) GangWar(coordinator, keyHash, subscriptionId, requestConfirmations, callbackGasLimit) {}
+
+    function setGangWarOutcome(
+        uint256 districtId,
+        uint256 roundId,
+        uint256 outcome
+    ) public {
+        s().gangWarOutcomes[districtId][roundId] = outcome;
+    }
+
+    function setAttackForce(
+        uint256 districtId,
+        uint256 roundId,
+        uint256 force
+    ) public {
+        s().districtAttackForces[districtId][roundId] = force;
+    }
+
+    function setDefenseForces(
+        uint256 districtId,
+        uint256 roundId,
+        uint256 force
+    ) public {
+        s().districtDefenseForces[districtId][roundId] = force;
+    }
+
+    function getDistrictConnections() external view returns (uint256) {
+        return s().districtConnections;
+    }
+
+    function setYield(
+        uint256 gang,
+        uint256 token,
+        uint256 yield
+    ) public {
+        _setYield(gang, token, yield);
+    }
 }
