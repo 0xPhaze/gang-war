@@ -401,9 +401,15 @@ abstract contract GangWarGameLogic is GangWarBase, GangWarReward(GANG_VAULT_FEE)
     }
 
     function _districtStateAndCountdown(District storage district) internal view returns (DISTRICT_STATE, int256) {
-        // int256 stateCountdown;
-
         int256 stateCountdown = int256(TIME_LOCKUP) - int256(block.timestamp - district.lockupTime);
+
+        // console.logInt(int256(TIME_LOCKUP));
+        // console.logInt(int256(block.timestamp));
+        // console.logInt(int256(district.lockupTime));
+        // console.logInt(int256(block.timestamp - district.lockupTime));
+        // console.logInt(int256(stateCountdown));
+        // console.log("----");
+
         if (stateCountdown > 0) return (DISTRICT_STATE.LOCKUP, stateCountdown);
 
         stateCountdown = int256(TIME_TRUCE) - int256(block.timestamp - district.lastOutcomeTime);

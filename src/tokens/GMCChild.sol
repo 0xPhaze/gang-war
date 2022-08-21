@@ -1,40 +1,90 @@
-// // SPDX-License-Identifier: MIT
-// pragma solidity ^0.8.0;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
 
-// import {ERC721UDS} from "UDS/tokens/ERC721UDS.sol";
-// import {OwnableUDS} from "UDS/auth/OwnableUDS.sol";
-// import {UUPSUpgrade} from "UDS/proxy/UUPSUpgrade.sol";
-// import {FxERC721SyncedChildUDS} from "fx-contracts/extensions/FxERC721SyncedChildUDS.sol";
+import {GangWar} from "../GangWar.sol";
 
-// import "./lib/LibString.sol";
+import {ERC721UDS} from "UDS/tokens/ERC721UDS.sol";
+import {OwnableUDS} from "UDS/auth/OwnableUDS.sol";
+import {UUPSUpgrade} from "UDS/proxy/UUPSUpgrade.sol";
+import {FxERC721EnumerableChildTunnelUDS} from "fx-contracts/extensions/FxERC721EnumerableChildTunnelUDS.sol";
 
-// error Disabled();
+import "./lib/LibString.sol";
 
-// contract GMCChild is UUPSUpgrade, OwnableUDS, FxERC721SyncedChildUDS {
-//     using LibString for uint256;
+error Disabled();
 
-//     string public constant override name = "Gangsta Mice City";
-//     string public constant override symbol = "GMC";
+contract GMCChild is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChildTunnelUDS {
+    using LibString for uint256;
 
-//     string private baseURI;
+    string public constant name = "Gangsta Mice City";
+    string public constant symbol = "GMC";
 
-//     constructor(address fxChild) FxERC721SyncedChildUDS(fxChild) {}
+    string private baseURI;
 
-//     function init() external initializer {
-//         __Ownable_init();
-//     }
+    address public gangWar;
 
-//     /* ------------- ERC721 ------------- */
+    constructor(address fxChild, address gangWar_) FxERC721EnumerableChildTunnelUDS(fxChild) {
+        gangWar = gangWar_;
+    }
 
-//     function tokenURI(uint256 id) public view override returns (string memory) {
-//         return string.concat(baseURI, id.toString());
-//     }
+    function init() external initializer {
+        __Ownable_init();
+    }
 
-//     /* ------------- owner ------------- */
+    function gmc() public view returns (address) {
+        return fxRootTunnel();
+    }
 
-//     function setBaseURI(string calldata _baseURI) external onlyOwner {
-//         baseURI = _baseURI;
-//     }
+    /* ------------- public ------------- */
 
-//     function _authorizeUpgrade() internal override onlyOwner {}
-// }
+    function ownerOf(uint256 id) public view returns (address) {
+        return rootOwnerOf(gmc(), id);
+    }
+
+    function balanceOf(address user) public view returns (uint256) {
+        return balanceOf(gmc(), user);
+    }
+
+    function getOwnedIds(address user) public view returns (uint256[] memory) {
+        return getOwnedIds(gmc(), user);
+    }
+
+    function tokenURI(uint256 id) public view returns (string memory) {
+        return string.concat(baseURI, id.toString());
+    }
+
+    /* ------------- owner ------------- */
+
+    function setGangWar(address gangWar_) external onlyOwner {
+        gangWar = gangWar_;
+    }
+
+    function setBaseURI(string calldata _baseURI) external onlyOwner {
+        baseURI = _baseURI;
+    }
+
+    function _authorizeUpgrade() internal override onlyOwner {}
+
+    function _authorizeTunnelController() internal override onlyOwner {}
+
+    /* ------------- hooks ------------- */
+
+    function _afterIdRegistered(
+        address collection,
+        address to,
+        uint256 id
+    ) internal override {
+        super._afterIdRegistered(collection, to, id);
+        GangWar(gangWar).enterGangWar(to, id);
+    }
+
+    function _afterIdDeregistered(
+        address collection,
+        address from,
+        uint256 id
+    ) internal override {
+        super._afterIdDeregistered(collection, from, id);
+        GangWar(gangWar).exitGangWar(from, id);
+    }
+
+    // TODO add resync option
+}

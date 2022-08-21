@@ -56,6 +56,8 @@ contract TestGangWar is Test, deploy {
     function setUp() public {
         deployAndSetupGangWar();
 
+        // console.log(block.chainid);
+
         gmc.mint(alice, GANGSTER_YAKUZA_1);
         gmc.mint(alice, GANGSTER_CARTEL_1);
         gmc.mint(alice, GANGSTER_CYBERP_1);
@@ -71,11 +73,12 @@ contract TestGangWar is Test, deploy {
         gmc.mint(bob, BARON_CYBERP_2);
 
         gouda.mint(bob, 100e18);
+
         vm.prank(bob);
         gouda.approve(address(game), type(uint256).max);
 
-        vm.warp(100000);
-        vm.roll(100000);
+        vm.warp(1660993892);
+        vm.roll(27702338);
     }
 
     function assertEq(Gang a, Gang b) internal {

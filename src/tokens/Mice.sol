@@ -12,12 +12,19 @@ contract Mice is GangToken {
     address immutable tokenCyberpunk;
     address immutable badges;
 
-    constructor(address tokenYakuza_, address tokenCartel_, address tokenCyberpunk_, address badges_) {
+    constructor(
+        address tokenYakuza_,
+        address tokenCartel_,
+        address tokenCyberpunk_,
+        address badges_
+    ) {
         tokenYakuza = tokenYakuza_;
         tokenCartel = tokenCartel_;
         tokenCyberpunk = tokenCyberpunk_;
         badges = badges_;
     }
+
+    /* ------------- owner ------------- */
 
     function init() external initializer {
         __Ownable_init();

@@ -3,7 +3,6 @@ pragma solidity ^0.8.0;
 
 import {OwnableUDS} from "UDS/auth/OwnableUDS.sol";
 import {UUPSUpgrade} from "UDS/proxy/UUPSUpgrade.sol";
-import {s as erc20ds} from "UDS/tokens/ERC20UDS.sol";
 import {ERC20BurnableUDS} from "UDS/tokens/extensions/ERC20BurnableUDS.sol";
 import {AccessControlUDS} from "UDS/auth/AccessControlUDS.sol";
 

@@ -30,6 +30,8 @@ function s() pure returns (GangMarketDS storage diamondStorage) {
     assembly { diamondStorage.slot := DIAMOND_STORAGE_GANG_MARKET } // prettier-ignore
 }
 
+import "forge-std/console.sol";
+
 // ------------- error
 
 error PrivateOffer();
