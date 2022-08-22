@@ -25,36 +25,11 @@ contract TestGangWar is Test, deploy {
     address alice = address(0xbabe);
     address tester = address(this);
 
-    // MockVRFCoordinator coordinator = new MockVRFCoordinator();
-    // GangWar impl = new GangWar(address(coordinator), 0, 0, 0, 0);
-    // GangWar game;
-    // MockERC721 gmc;
-
-    // bool[21][21] connections;
-
-    // uint256 constant GANGSTER_YAKUZA_1 = 1;
-    // uint256 constant GANGSTER_CARTEL_1 = 2;
-    // uint256 constant GANGSTER_CYBERP_1 = 3;
-    // uint256 constant GANGSTER_YAKUZA_2 = 4;
-    // uint256 constant GANGSTER_CARTEL_2 = 5;
-    // uint256 constant GANGSTER_CYBERP_2 = 6;
-
-    // uint256 constant BARON_YAKUZA_1 = 10_001;
-    // uint256 constant BARON_CARTEL_1 = 10_002;
-    // uint256 constant BARON_CYBERP_1 = 10_003;
-    // uint256 constant BARON_YAKUZA_2 = 10_004;
-    // uint256 constant BARON_CARTEL_2 = 10_005;
-    // uint256 constant BARON_CYBERP_2 = 10_006;
-
-    // uint256 constant DISTRICT_YAKUZA_1 = 2;
-    // uint256 constant DISTRICT_CARTEL_1 = 0;
-    // uint256 constant DISTRICT_CYBERP_1 = 7;
-    // uint256 constant DISTRICT_YAKUZA_2 = 3;
-    // uint256 constant DISTRICT_CARTEL_2 = 10;
-    // uint256 constant DISTRICT_CYBERP_2 = 4;
-
     function setUp() public {
-        deployAndSetupGangWar();
+        __DEPLOY_SCRIPTS_BYPASS = true;
+
+        setUpContracts();
+        initContractsTEST();
 
         // console.log(block.chainid);
 

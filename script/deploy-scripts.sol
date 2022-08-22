@@ -7,115 +7,109 @@ import {UUPSUpgrade} from "UDS/proxy/UUPSUpgrade.sol";
 import {ERC1967Proxy, ERC1967_PROXY_STORAGE_SLOT} from "UDS/proxy/ERC1967Proxy.sol";
 
 contract DeployScripts is Script {
+    bool public __DEPLOY_SCRIPTS_BYPASS = false;
+
     /* ------------- setUp ------------- */
 
     function setUpContract(
-        string memory envVar,
+        string memory key,
         string memory contractName,
         bytes memory creationCode
     ) internal returns (address implementation) {
-        return setUpContract(envVar, contractName, creationCode, false);
+        return setUpContract(key, contractName, creationCode, false);
     }
 
     function setUpContract(
-        string memory envVar,
+        string memory key,
         string memory contractName,
         bytes memory creationCode,
         bool keepExisting
     ) internal returns (address implementation) {
-        implementation = loadLatestDeployedAddress(envVar);
+        if (__DEPLOY_SCRIPTS_BYPASS) return deployCode(creationCode);
+
+        implementation = loadLatestDeployedAddress(key);
 
         bool deployNew;
 
         if (implementation != address(0)) {
             if (implementation.code.length == 0) {
-                console.log("Stored contract %s does not contain code.", label(contractName, implementation, envVar));
+                console.log("Stored contract %s does not contain code.", label(contractName, implementation, key));
                 console.log("Make sure '%s' contains all the latest deployments.", getDeploymentsPath("deploy-latest.json")); // prettier-ignore
 
                 revert("Invalid contract address.");
             }
 
             if (creationCodeHashMatches(implementation, keccak256(creationCode))) {
-                console.log("Stored contract %s up-to-date.", label(contractName, implementation, envVar));
+                console.log("Stored contract %s up-to-date.", label(contractName, implementation, key));
             } else {
-                console.log("Implementation for %s changed.", label(contractName, implementation, envVar));
+                console.log("Implementation for %s changed.", label(contractName, implementation, key));
 
-                if (keepExisting) console.log("Keeping existing contract.");
+                if (keepExisting) console.log("Keeping existing deployment.");
                 else deployNew = true;
             }
         } else {
-            console.log("Implementation for %s [%s] not found.", contractName, envVar);
+            console.log("Implementation for %s [%s] not found.", contractName, key);
             deployNew = true;
         }
 
         if (deployNew) {
-            implementation = confirmDeployCode(creationCode);
-
-            console.log("=> new %s.\n", label(contractName, implementation, envVar));
+            implementation = confirmDeployCode(creationCode, label(contractName, implementation, key));
 
             saveCreationCodeHash(implementation, keccak256(creationCode));
         }
 
-        registerContract(envVar, implementation);
+        registerContract(key, implementation);
     }
 
     function setUpProxy(
-        string memory envVar,
+        string memory key,
         string memory contractName,
         address implementation,
         bytes memory initCall
     ) internal returns (address) {
-        return setUpProxy(envVar, contractName, implementation, initCall, false);
+        return setUpProxy(key, contractName, implementation, initCall, false);
     }
 
     function setUpProxy(
-        string memory envVar,
+        string memory key,
         string memory contractName,
         address implementation,
         bytes memory initCall,
         bool keepExisting
     ) internal returns (address proxy) {
-        proxy = loadLatestDeployedAddress(envVar);
+        if (__DEPLOY_SCRIPTS_BYPASS) return deployProxy(implementation, initCall);
+
+        proxy = loadLatestDeployedAddress(key);
 
         if (proxy != address(0)) {
             address storedImplementation = loadProxyStoredImplementation(proxy);
 
             if (storedImplementation.codehash == implementation.codehash) {
-                console.log("Stored %s up-to-date.", proxyLabel(proxy, contractName, implementation, envVar));
+                console.log("Stored %s up-to-date.", proxyLabel(proxy, contractName, implementation, key));
             } else {
-                console.log(
-                    "Existing %s needs upgrade.",
-                    proxyLabel(proxy, contractName, storedImplementation, envVar)
-                );
+                console.log("Existing %s needs upgrade.", proxyLabel(proxy, contractName, storedImplementation, key)); // prettier-ignore
 
                 if (keepExisting) {
-                    console.log("Keeping existing contract.");
+                    console.log("Keeping existing implementation.");
                 } else {
                     upgradeSafetyChecks(contractName, storedImplementation, implementation);
 
-                    console.log("Upgrading %s.\n", proxyLabel(proxy, contractName, implementation, envVar));
+                    console.log("Upgrading %s.\n", proxyLabel(proxy, contractName, implementation, key));
 
-                    if (!isTestnet()) requireConfirmation("CONFIRM_UPGRADE");
+                    requireConfirmation("CONFIRM_UPGRADE");
 
                     UUPSUpgrade(proxy).upgradeToAndCall(implementation, "");
                 }
             }
         } else {
-            console.log("Existing Proxy::%s [%s] not found.", contractName, envVar);
+            console.log("Existing Proxy::%s [%s] not found.", contractName, key);
 
-            bytes memory creationCode = abi.encodePacked(
-                type(ERC1967Proxy).creationCode,
-                abi.encode(implementation, initCall)
-            );
-
-            proxy = confirmDeployCode(creationCode);
-
-            console.log("=> new %s", proxyLabel(proxy, contractName, implementation, envVar));
+            proxy = confirmDeployProxy(implementation, initCall, proxyLabel(proxy, contractName, implementation, key));
 
             generateStorageLayoutFile(contractName, implementation);
         }
 
-        registerContract(envVar, proxy);
+        registerContract(key, proxy);
     }
 
     /* ------------- snippets ------------- */
@@ -169,11 +163,12 @@ contract DeployScripts is Script {
 
     mapping(address => mapping(address => bool)) isUpgradeSafe;
     mapping(address => bool) storageLayoutGenerated;
+    mapping(address => bool) firstTimeDeployed;
 
     function generateStorageLayoutFile(string memory contractName, address implementation) internal {
         if (storageLayoutGenerated[implementation]) return;
 
-        console.log("Generating storage layout mapping for %s(%s).", contractName, implementation);
+        console.log("Generating storage layout mapping for %s.", label(contractName, implementation));
 
         string[] memory script = new string[](4);
         script[0] = "forge";
@@ -311,12 +306,12 @@ contract DeployScripts is Script {
         return keccak256(bytes(a)) == keccak256(bytes(b));
     }
 
-    function tryLoadEnvString(string memory envVar) internal returns (string memory) {
-        return tryLoadEnvString(envVar, "");
+    function tryLoadEnvString(string memory key) internal returns (string memory) {
+        return tryLoadEnvString(key, "");
     }
 
-    function tryLoadEnvString(string memory envVar, string memory defaultValue) internal returns (string memory) {
-        try vm.envString(envVar) returns (string memory value) {
+    function tryLoadEnvString(string memory key, string memory defaultValue) internal returns (string memory) {
+        try vm.envString(key) returns (string memory value) {
             return value;
         } catch {
             return defaultValue;
@@ -332,6 +327,10 @@ contract DeployScripts is Script {
         vm.ffi(mkdirScript);
     }
 
+    function deployProxy(address implementation, bytes memory initCall) internal returns (address) {
+        return deployCode(abi.encodePacked(type(ERC1967Proxy).creationCode, abi.encode(implementation, initCall)));
+    }
+
     function deployCode(bytes memory code) internal returns (address addr) {
         assembly {
             addr := create(0, add(code, 0x20), mload(code))
@@ -339,19 +338,38 @@ contract DeployScripts is Script {
         require(addr.code.length != 0, "Failed to deploy code.");
     }
 
-    function confirmDeployCode(bytes memory code) internal returns (address addr) {
-        if (!isTestnet()) requireConfirmation("CONFIRM_DEPLOYMENT");
+    function confirmDeployProxy(
+        address implementation,
+        bytes memory initCall,
+        string memory label_
+    ) internal returns (address) {
+        return
+            confirmDeployCode(
+                abi.encodePacked(type(ERC1967Proxy).creationCode, abi.encode(implementation, initCall)),
+                label_
+            );
+    }
 
-        return deployCode(code);
+    function confirmDeployCode(bytes memory code, string memory label_) internal returns (address addr) {
+        requireConfirmation("CONFIRM_DEPLOYMENT");
+
+        console.log("=> new %s.\n", label_);
+
+        addr = deployCode(code);
+
+        firstTimeDeployed[addr] = true;
     }
 
     function requireConfirmation(string memory variable) internal {
-        bool confirmed;
-        try vm.envBool(variable) returns (bool confirmed_) {
-            confirmed = confirmed_;
+        if (isTestnet()) return;
+
+        try vm.envBool(variable) returns (bool confirmed) {
+            if (!confirmed) {
+                console.log("WARNING: `%s=true` must be set", variable);
+                console.log("Disabling broadcasting transactions.");
+                vm.stopBroadcast();
+            }
         } catch {}
-        if (!confirmed) console.log("`%s=true` must be set", variable);
-        require(confirmed, "Deployments/Upgrades require confirmation.");
     }
 
     function hasCode(address addr) internal view returns (bool hasCode_) {
@@ -372,6 +390,10 @@ contract DeployScripts is Script {
     function title(string memory name) internal view {
         console.log("\n==========================");
         console.log("%s:\n", name);
+    }
+
+    function label(string memory contractName, address addr) internal returns (string memory) {
+        return label(contractName, addr, "");
     }
 
     function label(

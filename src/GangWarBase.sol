@@ -8,11 +8,18 @@ import {PackedMap} from "./lib/PackedMap.sol";
 
 // ------------- Constants
 
-uint256 constant TIME_TRUCE = 4 hours;
-uint256 constant TIME_LOCKUP = 12 hours;
-uint256 constant TIME_GANG_WAR = 3 hours;
-uint256 constant TIME_RECOVERY = 12 hours;
-uint256 constant TIME_REINFORCEMENTS = 5 hours;
+// TODO
+// XXX
+// uint256 constant TIME_TRUCE = 4 hours;
+// uint256 constant TIME_LOCKUP = 12 hours;
+// uint256 constant TIME_GANG_WAR = 3 hours;
+// uint256 constant TIME_RECOVERY = 12 hours;
+// uint256 constant TIME_REINFORCEMENTS = 5 hours;
+uint256 constant TIME_TRUCE = 10 minutes;
+uint256 constant TIME_LOCKUP = 10 minutes;
+uint256 constant TIME_GANG_WAR = 10 minutes;
+uint256 constant TIME_RECOVERY = 10 minutes;
+uint256 constant TIME_REINFORCEMENTS = 10 minutes;
 
 uint256 constant DEFENSE_FAVOR_LIM = 150;
 uint256 constant BARON_DEFENSE_FORCE = 50;
