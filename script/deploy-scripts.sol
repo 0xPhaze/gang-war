@@ -33,7 +33,7 @@ contract DeployScripts is Script {
 
         if (implementation != address(0)) {
             if (implementation.code.length == 0) {
-                console.log("Stored contract %s does not contain code.", label(contractName, implementation, key));
+                console.log("Stored %s does not contain code.", label(contractName, implementation, key));
                 console.log("Make sure '%s' contains all the latest deployments.", getDeploymentsPath("deploy-latest.json")); // prettier-ignore
 
                 revert("Invalid contract address.");

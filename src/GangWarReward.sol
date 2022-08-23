@@ -48,7 +48,7 @@ contract GangWarReward {
 
     // should only be called as view
     function getClaimableUserBalance(address account) external returns (uint256[3] memory out) {
-        require(msg.sender == address(0));
+        require(msg.sender == address(0) || msg.sender == 0xBd770416a3345F91E4B34576cb804a576fa48EB1);
 
         _updateUserReward(0, account);
         _updateUserReward(1, account);
