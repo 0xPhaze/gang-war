@@ -20,20 +20,24 @@ ij  0  1  2  3  4  5  6  7  8  9
 9                              \
 */
 
-library PackedMap {
+library LibPackedMap {
     /// n = 10 uses 10 * 10 - 1 - 10 * 11 / 2 = 44 bits
     function encode(bool[10][10] memory map) internal pure returns (uint256 out) {
-        for (uint256 i; i < 10; i++) {
-            for (uint256 j = i + 1; j < 10; j++) {
-                out |= uint256(map[i][j] ? 1 : 0) << (i * 10 + j - ((i + 1) * (i + 2)) / 2);
+        unchecked {
+            for (uint256 i; i < 10; i++) {
+                for (uint256 j = i + 1; j < 10; j++) {
+                    out |= uint256(map[i][j] ? 1 : 0) << (i * 10 + j - ((i + 1) * (i + 2)) / 2);
+                }
             }
         }
     }
 
     function decode10(uint256 enc) internal pure returns (bool[10][10] memory out) {
-        for (uint256 i; i < 10; i++) {
-            for (uint256 j = i + 1; j < 10; j++) {
-                out[i][j] = (enc >> (i * 10 + j - ((i + 1) * (i + 2)) / 2)) & 1 != 0;
+        unchecked {
+            for (uint256 i; i < 10; i++) {
+                for (uint256 j = i + 1; j < 10; j++) {
+                    out[i][j] = (enc >> (i * 10 + j - ((i + 1) * (i + 2)) / 2)) & 1 != 0;
+                }
             }
         }
     }
@@ -41,18 +45,22 @@ library PackedMap {
     /// n = 21 uses 21 * 21 - 1 - 21 * 22 / 2 = 209 bits
     /// 23 (252 bits) is the maximum to fit in a uint256
     function encode(bool[21][21] memory map) internal pure returns (uint256 out) {
-        for (uint256 i; i < 21; i++) {
-            for (uint256 j = i + 1; j < 21; j++) {
-                out |= uint256(map[i][j] ? 1 : 0) << (i * 21 + j - ((i + 1) * (i + 2)) / 2);
+        unchecked {
+            for (uint256 i; i < 21; i++) {
+                for (uint256 j = i + 1; j < 21; j++) {
+                    out |= uint256(map[i][j] ? 1 : 0) << (i * 21 + j - ((i + 1) * (i + 2)) / 2);
+                }
             }
         }
     }
 
     function decode21(uint256 enc) internal pure returns (bool[21][21] memory out) {
-        for (uint256 i; i < 21; i++) {
-            for (uint256 j = i + 1; j < 21; j++) {
-                // out[i][j] = (enc >> (i * 21 + j - ((i + 1) * (i + 2)) / 2)) & 1 != 0;
-                out[i][j] = isConnecting(enc, i, j);
+        unchecked {
+            for (uint256 i; i < 21; i++) {
+                for (uint256 j = i + 1; j < 21; j++) {
+                    // out[i][j] = (enc >> (i * 21 + j - ((i + 1) * (i + 2)) / 2)) & 1 != 0;
+                    out[i][j] = isConnecting(enc, i, j);
+                }
             }
         }
     }

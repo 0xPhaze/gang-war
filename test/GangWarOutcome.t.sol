@@ -45,7 +45,7 @@
 
 //         string[] memory inputs = new string[](8);
 //         inputs[0] = "python3";
-//         inputs[1] = "contracts/test/gang_war_outcome.py";
+//         inputs[1] = "src/test/external/gang_war_outcome.py";
 //         inputs[2] = "--attack_force";
 //         inputs[3] = attackForce.toString();
 //         inputs[4] = "--defense_force";

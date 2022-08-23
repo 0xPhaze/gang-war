@@ -356,7 +356,7 @@ contract GangWarSetup is DeployScripts {
             }
         }
 
-        uint256 connectionsPacked = PackedMap.encode(connectionsNormalized);
+        uint256 connectionsPacked = LibPackedMap.encode(connectionsNormalized);
 
         Gang[22] memory occ;
         occ = occupants;

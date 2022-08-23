@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import {ERC721UDS} from "UDS/tokens/ERC721UDS.sol";
 import {OwnableUDS} from "UDS/auth/OwnableUDS.sol";
 import {IERC721} from "./interfaces/IERC721.sol";
-import {PackedMap} from "./lib/PackedMap.sol";
+import {LibPackedMap} from "./lib/LibPackedMap.sol";
 
 // ------------- Constants
 
@@ -173,7 +173,7 @@ abstract contract GangWarBase is OwnableUDS {
     function _verifyAuthorized(address owner, uint256 tokenId) internal view virtual;
 
     function isConnecting(uint256 districtA, uint256 districtB) internal view returns (bool) {
-        return PackedMap.isConnecting(s().districtConnections, districtA, districtB);
+        return LibPackedMap.isConnecting(s().districtConnections, districtA, districtB);
     }
 
     /* ------------- view ------------- */

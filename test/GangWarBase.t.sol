@@ -11,7 +11,7 @@ import {deploy} from "../script/deploy.s.sol";
 
 // utils
 import "futils/futils.sol";
-import "/lib/PackedMap.sol";
+import "/lib/LibPackedMap.sol";
 import "./utils.sol";
 
 // mock
@@ -74,7 +74,7 @@ contract TestGangWar is Test, deploy {
         for (uint256 i; i < 21; i++) {
             for (uint256 j; j < 21; j++) {
                 (uint256 a, uint256 b) = (i < j) ? (i, j) : (j, i);
-                assertEq(connections[a + 1][b + 1], PackedMap.isConnecting(packedConnections, i, j));
+                assertEq(connections[a + 1][b + 1], LibPackedMap.isConnecting(packedConnections, i, j));
             }
         }
 

@@ -6,6 +6,12 @@ import "forge-std/Script.sol";
 import {UUPSUpgrade} from "UDS/proxy/UUPSUpgrade.sol";
 import {ERC1967Proxy, ERC1967_PROXY_STORAGE_SLOT} from "UDS/proxy/ERC1967Proxy.sol";
 
+interface VmParseJson {
+    function parseJson(string calldata, string calldata) external returns (bytes memory);
+
+    function parseJson(string calldata) external returns (bytes memory);
+}
+
 contract DeployScripts is Script {
     bool public __DEPLOY_SCRIPTS_BYPASS = false;
 
@@ -116,7 +122,8 @@ contract DeployScripts is Script {
 
     function loadLatestDeployedAddress(string memory key) internal returns (address addr) {
         try vm.readFile(getDeploymentsPath("deploy-latest.json")) returns (string memory json) {
-            try vm.parseJson(json, string.concat(".", key)) returns (bytes memory data) {
+            // try vm.parseJson(json, string.concat(".", key)) returns (bytes memory data) {
+            try VmParseJson(address(vm)).parseJson(json, string.concat(".", key)) returns (bytes memory data) {
                 if (data.length == 32) return abi.decode(data, (address));
             } catch {}
         } catch {}
