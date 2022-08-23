@@ -13,6 +13,7 @@
 - market listing
 
 # Test
+- test performUpkeep on all districts (gas)
 - test useGangWarItems (make sure sewers isn't usable directly)
 - test purchaseItems (add delay for barons?)
 - test badges rewards

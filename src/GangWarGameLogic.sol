@@ -35,6 +35,7 @@ error CannotAttackDistrictOwnedByGang();
 error DistrictNotOwnedByGang();
 error InvalidToken();
 
+error InvalidUpkeep();
 error InvalidVRFRequest();
 
 function gangWarWonProb(
@@ -310,32 +311,20 @@ abstract contract GangWarGameLogic is GangWarBase, GangWarReward(GANG_VAULT_FEE)
 
     /* ------------- internal ------------- */
 
-    function getGangsterView(uint256 tokenId) external view returns (GangsterView memory gangster) {
-        Gangster storage gangsterStore = s().gangsters[tokenId];
-
-        (gangster.state, gangster.stateCountdown) = _gangsterStateAndCountdown(tokenId);
+    function getGangster(uint256 tokenId) external view returns (Gangster memory gangster) {
+        gangster = s().gangsters[tokenId];
 
         gangster.gang = gangOf(tokenId);
-        gangster.roundId = gangsterStore.roundId;
-        gangster.location = gangsterStore.location;
+
+        (gangster.state, gangster.stateCountdown) = _gangsterStateAndCountdown(tokenId);
     }
 
-    function getDistrictView(uint256 districtId) external view returns (DistrictView memory district) {
+    function getDistrict(uint256 districtId) external view returns (District memory district) {
         District storage sDistrict = s().districts[districtId];
 
-        (district.state, district.stateCountdown) = _districtStateAndCountdown(sDistrict);
+        district = sDistrict;
 
-        district.occupants = sDistrict.occupants;
-        district.attackers = sDistrict.attackers;
-        district.token = sDistrict.token;
-        district.roundId = sDistrict.roundId;
-        district.attackDeclarationTime = sDistrict.attackDeclarationTime;
-        district.baronAttackId = sDistrict.baronAttackId;
-        district.baronDefenseId = sDistrict.baronDefenseId;
-        district.lastUpkeepTime = sDistrict.lastUpkeepTime;
-        district.lastOutcomeTime = sDistrict.lastOutcomeTime;
-        district.lockupTime = sDistrict.lockupTime;
-        district.yield = sDistrict.yield;
+        (district.state, district.stateCountdown) = _districtStateAndCountdown(sDistrict);
 
         district.attackForces = s().districtAttackForces[districtId][district.roundId];
         district.defenseForces = s().districtDefenseForces[districtId][district.roundId];
@@ -487,32 +476,36 @@ abstract contract GangWarGameLogic is GangWarBase, GangWarReward(GANG_VAULT_FEE)
         uint256 rand = randomWords[0];
         District storage district;
 
-        // @note we want to only allow a lockup if the call was
-        // truly valid. For that we need to check state of all
-        // upkeep districts
-
-        // possible lockup
+        // possible lockup, need to know attackers/defenders
+        // before state update. Though the lockup effect will
+        // happen afterwards, just to be sure that the VRF request
+        // was valid
         bool lockup = rand % 100 < LOCKUP_CHANCE;
         uint256 lockupDistrictId = rand % 21;
+
+        bool upkeepTriggered;
 
         if (lockup) {
             district = s().districts[lockupDistrictId];
 
             Gang token = district.token;
 
-            uint256 amount_0;
-            uint256 amount_1;
-            uint256 amount_2;
+            uint256 lockupAmount_0;
+            uint256 lockupAmount_1;
+            uint256 lockupAmount_2;
 
-            if (token == Gang.YAKUZA) amount_0 = LOCKUP_FINE;
-            if (token == Gang.CARTEL) amount_1 = LOCKUP_FINE;
-            if (token == Gang.CYBERP) amount_2 = LOCKUP_FINE;
+            if (token == Gang.YAKUZA) lockupAmount_0 = LOCKUP_FINE;
+            else if (token == Gang.CARTEL) lockupAmount_1 = LOCKUP_FINE;
+            else if (token == Gang.CYBERP) lockupAmount_2 = LOCKUP_FINE;
 
-            _spendGangVaultBalance(uint256(district.occupants), amount_0, amount_1, amount_2, false);
+            uint256 lockupOccupants = uint256(district.occupants);
+            uint256 lockupAttackers = uint256(district.attackDeclarationTime != 0 ? district.attackers : Gang.NONE);
+
+            _spendGangVaultBalance(lockupOccupants, lockupAmount_0, lockupAmount_1, lockupAmount_2, false);
 
             // if attackers are present
-            if (district.attackDeclarationTime != 0) {
-                _spendGangVaultBalance(uint256(district.attackers), amount_0, amount_1, amount_2, false);
+            if (lockupAttackers != uint256(Gang.NONE)) {
+                _spendGangVaultBalance(lockupAttackers, lockupAmount_0, lockupAmount_1, lockupAmount_2, false);
             }
         }
 
@@ -549,12 +542,16 @@ abstract contract GangWarGameLogic is GangWarBase, GangWarReward(GANG_VAULT_FEE)
                     district.baronAttackId = 0;
                     district.baronDefenseId = 0;
                 }
+
+                upkeepTriggered = true;
             }
 
             unchecked {
                 ++id;
             }
         }
+
+        if (!upkeepTriggered) revert InvalidUpkeep();
 
         if (lockup) {
             // only set state after processing

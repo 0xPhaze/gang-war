@@ -84,15 +84,21 @@ struct Gangster {
     uint256 bribery;
     uint256 recovery;
     bool attack;
-}
-
-struct GangsterView {
-    uint256 roundId;
-    uint256 location;
+    // variables from here on are not explicitly set
+    // but only written to in the view functions for getters
+    // don't read these directly in the contract!
     Gang gang;
     PLAYER_STATE state;
     int256 stateCountdown;
 }
+
+// struct Gangster {
+//     uint256 roundId;
+//     uint256 location;
+//     Gang gang;
+//     PLAYER_STATE state;
+//     int256 stateCountdown;
+// }
 
 struct District {
     Gang occupants;
@@ -102,31 +108,38 @@ struct District {
     uint256 attackDeclarationTime;
     uint256 baronAttackId;
     uint256 baronDefenseId;
-    uint256 lastUpkeepTime; // set when upkeep is triggered
-    uint256 lastOutcomeTime; // set when vrf result is in
+    uint256 lastUpkeepTime; // time when upkeep is last triggered
+    uint256 lastOutcomeTime; // time when vrf result is in
     uint256 lockupTime;
     uint256 yield;
     uint256 activeItems;
-}
-
-struct DistrictView {
-    Gang occupants;
-    Gang attackers;
-    Gang token;
-    uint256 roundId;
-    uint256 attackDeclarationTime;
-    uint256 baronAttackId;
-    uint256 baronDefenseId;
-    uint256 lastUpkeepTime; // set when upkeep is triggered
-    uint256 lastOutcomeTime; // set when vrf result is in
-    uint256 lockupTime;
-    uint256 yield;
-    uint256[] activeItems;
+    // variables from here on are not explicitly set
+    // but only written to in the view functions for getters
+    // don't read these directly in the contract!
     DISTRICT_STATE state;
     int256 stateCountdown;
     uint256 attackForces;
     uint256 defenseForces;
 }
+
+// struct District {
+//     Gang occupants;
+//     Gang attackers;
+//     Gang token;
+//     uint256 roundId;
+//     uint256 attackDeclarationTime;
+//     uint256 baronAttackId;
+//     uint256 baronDefenseId;
+//     uint256 lastUpkeepTime; // set when upkeep is triggered
+//     uint256 lastOutcomeTime; // set when vrf result is in
+//     uint256 lockupTime;
+//     uint256 yield;
+//     uint256[] activeItems;
+//     DISTRICT_STATE state;
+//     int256 stateCountdown;
+//     uint256 attackForces;
+//     uint256 defenseForces;
+// }
 
 struct GangWarDS {
     address gmc;

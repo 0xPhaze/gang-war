@@ -51,9 +51,6 @@ contract TestGangWar is Test, deploy {
 
         vm.prank(bob);
         gouda.approve(address(game), type(uint256).max);
-
-        vm.warp(1660993892);
-        vm.roll(27702338);
     }
 
     function assertEq(Gang a, Gang b) internal {
@@ -79,7 +76,7 @@ contract TestGangWar is Test, deploy {
         }
 
         for (uint256 i; i < 21; i++) {
-            DistrictView memory district = game.getDistrictView(i);
+            District memory district = game.getDistrict(i);
 
             // assertEq(district.occupants, Gang((i + 2) % 3));
             assertEq(district.roundId, 1);

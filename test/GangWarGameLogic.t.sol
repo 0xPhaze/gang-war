@@ -13,17 +13,17 @@ contract TestGangWarGameLogic is TestGangWar {
 
     /// district cycles along with baron + gangster states
     function test_districtState() public {
-        assertEq(game.getDistrictView(DISTRICT_CARTEL_2).state, DISTRICT_STATE.IDLE);
-        assertEq(game.getDistrictView(DISTRICT_CARTEL_2).stateCountdown, 0);
+        assertEq(game.getDistrict(DISTRICT_CARTEL_2).state, DISTRICT_STATE.IDLE);
+        assertEq(game.getDistrict(DISTRICT_CARTEL_2).stateCountdown, 0);
 
-        assertEq(game.getGangsterView(GANGSTER_YAKUZA_1).state, PLAYER_STATE.IDLE);
-        assertEq(game.getGangsterView(GANGSTER_YAKUZA_1).stateCountdown, 0);
+        assertEq(game.getGangster(GANGSTER_YAKUZA_1).state, PLAYER_STATE.IDLE);
+        assertEq(game.getGangster(GANGSTER_YAKUZA_1).stateCountdown, 0);
 
-        assertEq(game.getGangsterView(GANGSTER_CARTEL_1).state, PLAYER_STATE.IDLE);
-        assertEq(game.getGangsterView(GANGSTER_CARTEL_1).stateCountdown, 0);
+        assertEq(game.getGangster(GANGSTER_CARTEL_1).state, PLAYER_STATE.IDLE);
+        assertEq(game.getGangster(GANGSTER_CARTEL_1).stateCountdown, 0);
 
-        assertEq(game.getGangsterView(BARON_YAKUZA_1).state, PLAYER_STATE.IDLE);
-        assertEq(game.getGangsterView(BARON_YAKUZA_1).stateCountdown, 0);
+        assertEq(game.getGangster(BARON_YAKUZA_1).state, PLAYER_STATE.IDLE);
+        assertEq(game.getGangster(BARON_YAKUZA_1).stateCountdown, 0);
 
         // REINFORCEMENT
         vm.prank(bob);
@@ -32,43 +32,43 @@ contract TestGangWarGameLogic is TestGangWar {
         vm.prank(alice);
         game.joinGangAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, [GANGSTER_YAKUZA_1].toMemory());
 
-        assertEq(game.getDistrictView(DISTRICT_CARTEL_1).state, DISTRICT_STATE.REINFORCEMENT);
-        assertEq(game.getDistrictView(DISTRICT_CARTEL_1).stateCountdown, int256(TIME_REINFORCEMENTS));
+        assertEq(game.getDistrict(DISTRICT_CARTEL_1).state, DISTRICT_STATE.REINFORCEMENT);
+        assertEq(game.getDistrict(DISTRICT_CARTEL_1).stateCountdown, int256(TIME_REINFORCEMENTS));
 
-        assertEq(game.getGangsterView(BARON_YAKUZA_1).state, PLAYER_STATE.ATTACK);
-        assertEq(game.getGangsterView(BARON_YAKUZA_1).stateCountdown, int256(TIME_REINFORCEMENTS));
-        assertEq(game.getGangsterView(GANGSTER_YAKUZA_1).state, PLAYER_STATE.ATTACK);
-        assertEq(game.getGangsterView(GANGSTER_YAKUZA_1).stateCountdown, int256(TIME_REINFORCEMENTS));
+        assertEq(game.getGangster(BARON_YAKUZA_1).state, PLAYER_STATE.ATTACK);
+        assertEq(game.getGangster(BARON_YAKUZA_1).stateCountdown, int256(TIME_REINFORCEMENTS));
+        assertEq(game.getGangster(GANGSTER_YAKUZA_1).state, PLAYER_STATE.ATTACK);
+        assertEq(game.getGangster(GANGSTER_YAKUZA_1).stateCountdown, int256(TIME_REINFORCEMENTS));
 
         // GANG_WAR
         skip(TIME_REINFORCEMENTS);
 
-        assertEq(game.getDistrictView(DISTRICT_CARTEL_1).state, DISTRICT_STATE.GANG_WAR);
-        assertEq(game.getGangsterView(BARON_YAKUZA_1).state, PLAYER_STATE.ATTACK_LOCKED);
-        assertEq(game.getGangsterView(GANGSTER_YAKUZA_1).state, PLAYER_STATE.ATTACK_LOCKED);
+        assertEq(game.getDistrict(DISTRICT_CARTEL_1).state, DISTRICT_STATE.GANG_WAR);
+        assertEq(game.getGangster(BARON_YAKUZA_1).state, PLAYER_STATE.ATTACK_LOCKED);
+        assertEq(game.getGangster(GANGSTER_YAKUZA_1).state, PLAYER_STATE.ATTACK_LOCKED);
 
-        assertEq(game.getDistrictView(DISTRICT_CARTEL_1).stateCountdown, int256(TIME_GANG_WAR));
-        assertEq(game.getGangsterView(GANGSTER_YAKUZA_1).stateCountdown, int256(TIME_GANG_WAR));
-        assertEq(game.getGangsterView(BARON_YAKUZA_1).stateCountdown, int256(TIME_GANG_WAR));
+        assertEq(game.getDistrict(DISTRICT_CARTEL_1).stateCountdown, int256(TIME_GANG_WAR));
+        assertEq(game.getGangster(GANGSTER_YAKUZA_1).stateCountdown, int256(TIME_GANG_WAR));
+        assertEq(game.getGangster(BARON_YAKUZA_1).stateCountdown, int256(TIME_GANG_WAR));
 
         // POST_GANG_WAR
         skip(TIME_GANG_WAR);
 
-        assertEq(game.getDistrictView(DISTRICT_CARTEL_1).state, DISTRICT_STATE.POST_GANG_WAR);
-        assertEq(game.getGangsterView(BARON_YAKUZA_1).state, PLAYER_STATE.ATTACK_LOCKED);
-        assertEq(game.getGangsterView(GANGSTER_YAKUZA_1).state, PLAYER_STATE.ATTACK_LOCKED);
-        assertEq(game.getGangsterView(0).state, PLAYER_STATE.IDLE);
+        assertEq(game.getDistrict(DISTRICT_CARTEL_1).state, DISTRICT_STATE.POST_GANG_WAR);
+        assertEq(game.getGangster(BARON_YAKUZA_1).state, PLAYER_STATE.ATTACK_LOCKED);
+        assertEq(game.getGangster(GANGSTER_YAKUZA_1).state, PLAYER_STATE.ATTACK_LOCKED);
+        assertEq(game.getGangster(0).state, PLAYER_STATE.IDLE);
 
-        assertEq(game.getDistrictView(DISTRICT_CARTEL_1).stateCountdown, 0);
-        assertEq(game.getGangsterView(GANGSTER_YAKUZA_1).stateCountdown, 0);
-        assertEq(game.getGangsterView(BARON_YAKUZA_1).stateCountdown, 0);
+        assertEq(game.getDistrict(DISTRICT_CARTEL_1).stateCountdown, 0);
+        assertEq(game.getGangster(GANGSTER_YAKUZA_1).stateCountdown, 0);
+        assertEq(game.getGangster(BARON_YAKUZA_1).stateCountdown, 0);
 
         // skipping time won't change phase
         skip(10000000000);
 
-        assertEq(game.getDistrictView(DISTRICT_CARTEL_1).state, DISTRICT_STATE.POST_GANG_WAR);
-        assertEq(game.getGangsterView(BARON_YAKUZA_1).state, PLAYER_STATE.ATTACK_LOCKED);
-        assertEq(game.getGangsterView(GANGSTER_YAKUZA_1).state, PLAYER_STATE.ATTACK_LOCKED);
+        assertEq(game.getDistrict(DISTRICT_CARTEL_1).state, DISTRICT_STATE.POST_GANG_WAR);
+        assertEq(game.getGangster(BARON_YAKUZA_1).state, PLAYER_STATE.ATTACK_LOCKED);
+        assertEq(game.getGangster(GANGSTER_YAKUZA_1).state, PLAYER_STATE.ATTACK_LOCKED);
 
         // TRUCE - perform upkeep
         (, bytes memory data) = game.checkUpkeep("");
@@ -76,15 +76,15 @@ contract TestGangWarGameLogic is TestGangWar {
 
         MockVRFCoordinator(coordinator).fulfillLatestRequest();
 
-        assertEq(game.getDistrictView(DISTRICT_CARTEL_1).state, DISTRICT_STATE.TRUCE);
-        // assertEq(game.getGangsterView(GANGSTER_YAKUZA_1).state, PLAYER_STATE.ATTACK_LOCKED);
-        // assertEq(game.getGangsterView(BARON_YAKUZA_1).state, PLAYER_STATE.IDLE); // xxx this could be injured
+        assertEq(game.getDistrict(DISTRICT_CARTEL_1).state, DISTRICT_STATE.TRUCE);
+        // assertEq(game.getGangster(GANGSTER_YAKUZA_1).state, PLAYER_STATE.ATTACK_LOCKED);
+        // assertEq(game.getGangster(BARON_YAKUZA_1).state, PLAYER_STATE.IDLE); // xxx this could be injured
 
         // IDLE
         skip(TIME_TRUCE);
 
-        assertEq(game.getDistrictView(DISTRICT_CARTEL_1).state, DISTRICT_STATE.IDLE);
-        assertEq(game.getGangsterView(BARON_YAKUZA_1).state, PLAYER_STATE.IDLE);
+        assertEq(game.getDistrict(DISTRICT_CARTEL_1).state, DISTRICT_STATE.IDLE);
+        assertEq(game.getGangster(BARON_YAKUZA_1).state, PLAYER_STATE.IDLE);
     }
 
     /* ------------- baronDeclareAttack() ------------- */
@@ -93,23 +93,23 @@ contract TestGangWarGameLogic is TestGangWar {
         vm.prank(bob);
         game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, BARON_YAKUZA_1, false);
 
-        DistrictView memory district = game.getDistrictView(DISTRICT_CARTEL_1);
+        District memory district = game.getDistrict(DISTRICT_CARTEL_1);
 
         assertEq(district.attackers, Gang.YAKUZA);
         assertEq(district.attackDeclarationTime, block.timestamp);
         assertEq(district.baronAttackId, BARON_YAKUZA_1);
 
-        GangsterView memory baron = game.getGangsterView(BARON_YAKUZA_1);
+        Gangster memory baron = game.getGangster(BARON_YAKUZA_1);
 
         assertEq(baron.state, PLAYER_STATE.ATTACK);
         assertEq(baron.location, DISTRICT_CARTEL_1);
-        assertEq(baron.roundId, game.getDistrictView(DISTRICT_CARTEL_1).roundId);
+        assertEq(baron.roundId, game.getDistrict(DISTRICT_CARTEL_1).roundId);
         assertEq(uint256(baron.stateCountdown), TIME_REINFORCEMENTS);
 
         // skip after reinforcement time
         skip(TIME_REINFORCEMENTS);
 
-        baron = game.getGangsterView(BARON_YAKUZA_1);
+        baron = game.getGangster(BARON_YAKUZA_1);
 
         assertEq(baron.state, PLAYER_STATE.ATTACK_LOCKED);
         assertEq(uint256(baron.stateCountdown), TIME_GANG_WAR);
@@ -178,14 +178,14 @@ contract TestGangWarGameLogic is TestGangWar {
         vm.prank(alice);
         game.joinGangAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, [GANGSTER_YAKUZA_1].toMemory());
 
-        GangsterView memory gangster = game.getGangsterView(GANGSTER_YAKUZA_1);
+        Gangster memory gangster = game.getGangster(GANGSTER_YAKUZA_1);
 
         assertEq(gangster.roundId, 1);
         assertEq(gangster.location, DISTRICT_CARTEL_1);
         assertEq(gangster.state, PLAYER_STATE.ATTACK);
         assertEq(gangster.stateCountdown, int256(TIME_REINFORCEMENTS));
 
-        DistrictView memory district = game.getDistrictView(DISTRICT_CARTEL_1);
+        District memory district = game.getDistrict(DISTRICT_CARTEL_1);
 
         assertEq(district.roundId, 1);
         assertEq(district.attackers, Gang.YAKUZA);
@@ -204,21 +204,21 @@ contract TestGangWarGameLogic is TestGangWar {
         vm.prank(alice);
         game.joinGangAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_2, [GANGSTER_YAKUZA_2].toMemory());
 
-        GangsterView memory gangster = game.getGangsterView(GANGSTER_YAKUZA_2);
+        Gangster memory gangster = game.getGangster(GANGSTER_YAKUZA_2);
 
         assertEq(gangster.roundId, 1);
         assertEq(gangster.location, DISTRICT_CARTEL_2);
         assertEq(gangster.state, PLAYER_STATE.ATTACK);
         assertEq(gangster.stateCountdown, int256(TIME_REINFORCEMENTS));
 
-        GangsterView memory baron = game.getGangsterView(BARON_YAKUZA_2);
+        Gangster memory baron = game.getGangster(BARON_YAKUZA_2);
 
         assertEq(baron.roundId, 1);
         assertEq(baron.location, DISTRICT_CARTEL_2);
         assertEq(baron.state, PLAYER_STATE.ATTACK);
         assertEq(baron.stateCountdown, int256(TIME_REINFORCEMENTS));
 
-        DistrictView memory district = game.getDistrictView(DISTRICT_CARTEL_2);
+        District memory district = game.getDistrict(DISTRICT_CARTEL_2);
 
         assertEq(district.roundId, 1);
         assertEq(district.attackers, Gang.YAKUZA);
@@ -248,7 +248,7 @@ contract TestGangWarGameLogic is TestGangWar {
         vm.prank(alice);
         game.joinGangAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_2, [GANGSTER_YAKUZA_1].toMemory());
 
-        GangsterView memory gangster = game.getGangsterView(GANGSTER_YAKUZA_1);
+        Gangster memory gangster = game.getGangster(GANGSTER_YAKUZA_1);
 
         assertEq(gangster.roundId, 1);
         assertEq(gangster.location, DISTRICT_CARTEL_2);
@@ -270,15 +270,15 @@ contract TestGangWarGameLogic is TestGangWar {
         vm.prank(alice);
         game.joinGangAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_2, [GANGSTER_YAKUZA_1].toMemory());
 
-        GangsterView memory gangster = game.getGangsterView(GANGSTER_YAKUZA_1);
+        Gangster memory gangster = game.getGangster(GANGSTER_YAKUZA_1);
 
         assertEq(gangster.roundId, 1);
         assertEq(gangster.location, DISTRICT_CARTEL_2);
         assertEq(gangster.state, PLAYER_STATE.ATTACK);
         assertEq(gangster.stateCountdown, int256(TIME_REINFORCEMENTS));
 
-        assertEq(game.getDistrictView(DISTRICT_CARTEL_1).attackForces, 0);
-        assertEq(game.getDistrictView(DISTRICT_CARTEL_2).attackForces, 1);
+        assertEq(game.getDistrict(DISTRICT_CARTEL_1).attackForces, 0);
+        assertEq(game.getDistrict(DISTRICT_CARTEL_2).attackForces, 1);
     }
 
     /// Exit from gang war
@@ -291,14 +291,14 @@ contract TestGangWarGameLogic is TestGangWar {
         vm.prank(alice);
         game.exitGangWar([GANGSTER_YAKUZA_1].toMemory());
 
-        GangsterView memory gangster = game.getGangsterView(GANGSTER_YAKUZA_1);
+        Gangster memory gangster = game.getGangster(GANGSTER_YAKUZA_1);
 
         assertEq(gangster.roundId, 0);
         assertEq(gangster.location, 0);
         assertEq(gangster.state, PLAYER_STATE.IDLE);
         assertEq(gangster.stateCountdown, 0);
 
-        assertEq(game.getDistrictView(DISTRICT_CARTEL_1).attackForces, 0);
+        assertEq(game.getDistrict(DISTRICT_CARTEL_1).attackForces, 0);
     }
 
     /// Add testfail
@@ -407,11 +407,11 @@ contract TestGangWarGameLogic is TestGangWar {
 
         skip(TIME_REINFORCEMENTS);
 
-        GangsterView memory gangster = game.getGangsterView(GANGSTER_YAKUZA_1);
+        Gangster memory gangster = game.getGangster(GANGSTER_YAKUZA_1);
 
         assertEq(gangster.location, DISTRICT_CARTEL_1);
         assertEq(gangster.state, PLAYER_STATE.ATTACK_LOCKED);
-        assertEq(gangster.roundId, game.getDistrictView(0).roundId);
+        assertEq(gangster.roundId, game.getDistrict(0).roundId);
         assertEq(gangster.stateCountdown, int256(TIME_GANG_WAR));
 
         // try attacking while locked
@@ -441,11 +441,11 @@ contract TestGangWarGameLogic is TestGangWar {
         vm.prank(alice);
         game.joinGangDefense(DISTRICT_CARTEL_1, [GANGSTER_CARTEL_1].toMemory());
 
-        GangsterView memory gangster = game.getGangsterView(GANGSTER_CARTEL_1);
+        Gangster memory gangster = game.getGangster(GANGSTER_CARTEL_1);
 
         assertEq(gangster.location, DISTRICT_CARTEL_1);
         assertEq(gangster.state, PLAYER_STATE.DEFEND);
-        assertEq(gangster.roundId, game.getDistrictView(0).roundId);
+        assertEq(gangster.roundId, game.getDistrict(0).roundId);
         assertEq(gangster.stateCountdown, int256(TIME_REINFORCEMENTS));
     }
 
@@ -457,25 +457,25 @@ contract TestGangWarGameLogic is TestGangWar {
         bool upkeepNeeded;
         bytes memory data;
 
-        (upkeepNeeded,) = game.checkUpkeep("");
+        (upkeepNeeded, ) = game.checkUpkeep("");
         assertFalse(upkeepNeeded);
 
         skip(100 days);
 
-        (upkeepNeeded,) = game.checkUpkeep("");
+        (upkeepNeeded, ) = game.checkUpkeep("");
         assertFalse(upkeepNeeded);
 
         // first district that will need upkeep
         vm.prank(bob);
         game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, BARON_YAKUZA_1, false);
 
-        (upkeepNeeded,) = game.checkUpkeep("");
+        (upkeepNeeded, ) = game.checkUpkeep("");
         assertFalse(upkeepNeeded);
 
         // upkeep is needed after time passage
         skip(TIME_REINFORCEMENTS);
 
-        (upkeepNeeded,) = game.checkUpkeep("");
+        (upkeepNeeded, ) = game.checkUpkeep("");
         assertFalse(upkeepNeeded);
 
         // upkeep is needed after gang war
@@ -567,11 +567,11 @@ contract TestGangWarGameLogic is TestGangWar {
         game.performUpkeep(data);
 
         // assertions
-        DistrictView memory district1;
-        DistrictView memory district2;
+        District memory district1;
+        District memory district2;
 
-        district1 = game.getDistrictView(DISTRICT_CARTEL_1);
-        district2 = game.getDistrictView(DISTRICT_CARTEL_2);
+        district1 = game.getDistrict(DISTRICT_CARTEL_1);
+        district2 = game.getDistrict(DISTRICT_CARTEL_2);
 
         assertEq(district1.state, DISTRICT_STATE.POST_GANG_WAR);
         assertEq(district2.state, DISTRICT_STATE.POST_GANG_WAR);
@@ -593,8 +593,8 @@ contract TestGangWarGameLogic is TestGangWar {
 
         MockVRFCoordinator(coordinator).fulfillLatestRequest();
 
-        district1 = game.getDistrictView(DISTRICT_CARTEL_1);
-        district2 = game.getDistrictView(DISTRICT_CARTEL_2);
+        district1 = game.getDistrict(DISTRICT_CARTEL_1);
+        district2 = game.getDistrict(DISTRICT_CARTEL_2);
 
         assertEq(district1.state, DISTRICT_STATE.TRUCE);
         assertEq(district2.state, DISTRICT_STATE.TRUCE);
@@ -633,7 +633,7 @@ contract TestGangWarGameLogic is TestGangWar {
 
         MockVRFCoordinator(coordinator).fulfillLatestRequest();
 
-        DistrictView memory district = game.getDistrictView(DISTRICT_CARTEL_1);
+        District memory district = game.getDistrict(DISTRICT_CARTEL_1);
 
         assertEq(district.roundId, 2);
         assertEq(district.state, DISTRICT_STATE.TRUCE);
@@ -642,8 +642,8 @@ contract TestGangWarGameLogic is TestGangWar {
         game.setGangWarOutcome(DISTRICT_CARTEL_1, district.roundId, 1333);
         game.setDefenseForces(DISTRICT_CARTEL_1, district.roundId, 1e18);
 
-        assertEq(game.getGangsterView(GANGSTER_YAKUZA_1).state, PLAYER_STATE.INJURED);
-        assertEq(game.getGangsterView(GANGSTER_YAKUZA_1).stateCountdown, int256(TIME_RECOVERY));
+        assertEq(game.getGangster(GANGSTER_YAKUZA_1).state, PLAYER_STATE.INJURED);
+        assertEq(game.getGangster(GANGSTER_YAKUZA_1).stateCountdown, int256(TIME_RECOVERY));
     }
 
     function test_recovery() public {
@@ -658,17 +658,17 @@ contract TestGangWarGameLogic is TestGangWar {
         game.bribery([GANGSTER_YAKUZA_1].toMemory(), address(gouda), false);
 
         assertEq(address(gouda).balanceDiff(bob), -100);
-        assertEq(game.getGangsterView(GANGSTER_YAKUZA_1).stateCountdown, int256(TIME_RECOVERY) / 2);
+        assertEq(game.getGangster(GANGSTER_YAKUZA_1).stateCountdown, int256(TIME_RECOVERY) / 2);
 
         game.bribery([GANGSTER_YAKUZA_1].toMemory(), address(gouda), false);
 
         assertEq(address(gouda).balanceDiff(bob), -100);
-        assertEq(game.getGangsterView(GANGSTER_YAKUZA_1).stateCountdown, int256(TIME_RECOVERY) / 4);
+        assertEq(game.getGangster(GANGSTER_YAKUZA_1).stateCountdown, int256(TIME_RECOVERY) / 4);
 
         game.bribery([GANGSTER_YAKUZA_1].toMemory(), address(gouda), false);
 
         assertEq(address(gouda).balanceDiff(bob), -100);
-        assertEq(game.getGangsterView(GANGSTER_YAKUZA_1).stateCountdown, int256(TIME_RECOVERY) / 8);
+        assertEq(game.getGangster(GANGSTER_YAKUZA_1).stateCountdown, int256(TIME_RECOVERY) / 8);
     }
 
     function test_recovery_InvalidToken() public {
@@ -678,7 +678,7 @@ contract TestGangWarGameLogic is TestGangWar {
 
         game.bribery([GANGSTER_YAKUZA_1].toMemory(), address(0x1337), false);
 
-        assertEq(game.getGangsterView(GANGSTER_YAKUZA_1).stateCountdown, int256(TIME_RECOVERY));
+        assertEq(game.getGangster(GANGSTER_YAKUZA_1).stateCountdown, int256(TIME_RECOVERY));
     }
 
     function test_lockup() public {
@@ -696,7 +696,7 @@ contract TestGangWarGameLogic is TestGangWar {
 
         MockVRFCoordinator(coordinator).fulfillLatestRequest(DISTRICT_CARTEL_1);
 
-        DistrictView memory district = game.getDistrictView(DISTRICT_CARTEL_1);
+        District memory district = game.getDistrict(DISTRICT_CARTEL_1);
 
         assertEq(district.roundId, 2);
         assertEq(district.state, DISTRICT_STATE.LOCKUP);
@@ -715,17 +715,45 @@ contract TestGangWarGameLogic is TestGangWar {
         game.bribery([GANGSTER_YAKUZA_1].toMemory(), address(gouda), true);
 
         assertEq(address(gouda).balanceDiff(bob), -100);
-        assertEq(game.getGangsterView(GANGSTER_YAKUZA_1).stateCountdown, int256(TIME_LOCKUP) / 2);
+        assertEq(game.getGangster(GANGSTER_YAKUZA_1).stateCountdown, int256(TIME_LOCKUP) / 2);
 
         game.bribery([GANGSTER_YAKUZA_1].toMemory(), address(gouda), true);
 
         assertEq(address(gouda).balanceDiff(bob), -100);
-        assertEq(game.getGangsterView(GANGSTER_YAKUZA_1).stateCountdown, int256(TIME_LOCKUP) / 4);
+        assertEq(game.getGangster(GANGSTER_YAKUZA_1).stateCountdown, int256(TIME_LOCKUP) / 4);
 
         game.bribery([GANGSTER_YAKUZA_1].toMemory(), address(gouda), true);
 
         assertEq(address(gouda).balanceDiff(bob), -100);
-        assertEq(game.getGangsterView(GANGSTER_YAKUZA_1).stateCountdown, int256(TIME_LOCKUP) / 8);
+        assertEq(game.getGangster(GANGSTER_YAKUZA_1).stateCountdown, int256(TIME_LOCKUP) / 8);
     }
+
     // @notice test with all roundId mismatch combinations
+
+    function test_upkeepGas() public {
+        // for (uint256 i; i < 21; i++) {
+        //     try gmc.mint(bob, i) {} catch {}
+        // }
+        // string[] memory ff = new string[](2);
+        // ff[0] = "echo";
+        // ff[1] = "hi";
+        // try vm.ffi(ff) {
+        //     console.log("yay");
+        // } catch {
+        //     console.log("nay");
+        // }
+        // if (
+        //     uint8(game.getGangster(BARON_YAKUZA_1).state) == 0 && uint8(game.getDistrict(DISTRICT_CARTEL_1).state) == 0
+        // ) {
+        //     vm.prank(bob);
+        //     game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, BARON_YAKUZA_1, false);
+        //     vm.prank(alice);
+        //     game.joinGangAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, [GANGSTER_YAKUZA_1].toMemory());
+        // }
+        // // prettier-ignore
+        // if (uint8(game.getGangster(BARON_YAKUZA_2).state) == 0 && uint8(game.getDistrict(DISTRICT_CARTEL_2).state) == 0) {
+        //     game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_2, BARON_YAKUZA_2, false);
+        //     game.joinGangAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_2, [GANGSTER_YAKUZA_2].toMemory());
+        // }
+    }
 }

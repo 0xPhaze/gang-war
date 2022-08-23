@@ -56,6 +56,11 @@ contract GangWarSetup is DeployScripts {
     uint256 constant DISTRICT_CYBERP_2 = 4;
 
     constructor() {
+        if (block.chainid == 31337) {
+            vm.warp(1660993892);
+            vm.roll(27702338);
+        }
+
         setUpGangWarConstants();
     }
 
@@ -148,9 +153,6 @@ contract GangWarSetup is DeployScripts {
 
         // mint tokens for testing
         if (firstTimeDeployed[address(game)]) {
-            gmc.mintBatch(msg.sender);
-            gmc.mintBatch(lumy);
-
             GangToken(tokens[0]).mint(msg.sender, 100_000e18);
             GangToken(tokens[1]).mint(msg.sender, 100_000e18);
             GangToken(tokens[2]).mint(msg.sender, 100_000e18);
@@ -160,18 +162,33 @@ contract GangWarSetup is DeployScripts {
             GangToken(tokens[1]).mint(lumy, 100_000e18);
             GangToken(tokens[2]).mint(lumy, 100_000e18);
             GangToken(badges).mint(lumy, 100_000e18);
+
+            gmc.mintBatch(msg.sender);
+            gmc.mintBatch(lumy);
         }
 
+        // console.log(block.chainid);
+        // console.log(block.timestamp);
+
         // setup a test attack
-        if (uint8(game.getGangsterView(BARON_YAKUZA_1).state) == 0) {
+        // prettier-ignore
+        if (uint8(game.getGangster(BARON_YAKUZA_1).state) == 0 && uint8(game.getDistrict(DISTRICT_CARTEL_1).state) == 0) {
             game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, BARON_YAKUZA_1, false);
             game.joinGangAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, [GANGSTER_YAKUZA_1].toMemory());
         }
 
-        if (uint8(game.getGangsterView(BARON_YAKUZA_2).state) == 0) {
+        // prettier-ignore
+        if (uint8(game.getGangster(BARON_YAKUZA_2).state) == 0 && uint8(game.getDistrict(DISTRICT_CARTEL_2).state) == 0) {
             game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_2, BARON_YAKUZA_2, false);
             game.joinGangAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_2, [GANGSTER_YAKUZA_2].toMemory());
         }
+
+        // // setup a test attack
+        // try game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, BARON_YAKUZA_1, false) {} catch {}
+        // try game.joinGangAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, [GANGSTER_YAKUZA_1].toMemory()) {} catch {}
+
+        // try game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_2, BARON_YAKUZA_2, false) {} catch {}
+        // try game.joinGangAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_2, [GANGSTER_YAKUZA_2].toMemory()) {} catch {}
     }
 
     function getChainlinkParams()

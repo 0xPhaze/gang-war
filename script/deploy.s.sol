@@ -7,15 +7,10 @@ import {ERC1967Proxy} from "UDS/proxy/ERC1967Proxy.sol";
 import {GangWarSetup} from "./GangWarSetup.sol";
 
 // import "chainlink/contracts/src/v0.8/VRFCoordinatorV2.sol";
-
 // function addConsumer(uint64 subId, address consumer) external override onlySubOwner(subId) nonReentrant {
 
-// interface IVRFCoordinator
-
 /* 
-source .env && forge script deploy --rpc-url $RINKEBY_RPC_URL  --private-key $PRIVATE_KEY --broadcast --verify --etherscan-api-key $ETHERSCAN_KEY -vvvv
-
-source .env && forge script deploy --rpc-url $RPC_MUMBAI --private-key $PRIVATE_KEY --ffi --broadcast --verify --etherscan-api-key $POLYGONSCAN_KEY --with-gas-price 38gwei -vvvv
+source .env && forge script deploy --rpc-url $RPC_MUMBAI --private-key $PRIVATE_KEY --verify --etherscan-api-key $POLYGONSCAN_KEY --with-gas-price 38gwei -vvvv --ffi --broadcast 
 
 cp ~/git/eth/GangWar/out/MockGMC.sol/MockGMC.json ~/git/eth/gmc-website/data/abi
 cp ~/git/eth/GangWar/out/MockERC20.sol/MockERC20.json ~/git/eth/gmc-website/data/abi
@@ -26,21 +21,33 @@ cp ~/git/eth/GangWar/deployments/80001/deploy-latest.json ~/git/eth/gmc-website/
 */
 
 contract deploy is GangWarSetup {
-    // using futils for *;
+    function isFFIEnabled() internal returns (bool) {
+        string[] memory script = new string[](1);
+        script[0] = "echo";
+        try vm.ffi(script) {
+            return true;
+        } catch {
+            return false;
+        }
+    }
 
-    // function setUpEnv() internal {
-    //     string memory profile = tryLoadEnvString("FOUNDRY_PROFILE");
+    function startBroadcastIfFFIEnabled() internal {
+        if (isFFIEnabled()) {
+            vm.startBroadcast();
+        } else {
+            console.log('FFI disabled: run again with `--ffi` to save deployments and run storage compatibility checks.'); // prettier-ignore
+            console.log('Disabling `broadcast`, continuing as a "dry-run".\n');
 
-    //     if (eq(profile, "")) {
-    //         vm.warp(1660993892);
-    //         vm.roll(27702338);
-    //     } else if (eq(profile, "mumbai")) {
-    //         vm.selectFork(vm.createFork("mumbai"));
-    //     }
-    // }
+            __DEPLOY_SCRIPTS_DRY_RUN = true;
+
+            // need to start prank instead now to be consistent in "dry-run"
+            vm.stopBroadcast();
+            vm.startPrank(msg.sender);
+        }
+    }
 
     function run() external {
-        vm.startBroadcast();
+        startBroadcastIfFFIEnabled();
 
         setUpContracts();
 
@@ -50,7 +57,12 @@ contract deploy is GangWarSetup {
         vm.stopBroadcast();
 
         logRegisteredContracts();
-    }
 
-    function validateSetup() external {}
+        if (!__DEPLOY_SCRIPTS_DRY_RUN) {
+            string memory json = getRegisteredContractsJson();
+
+            vm.writeFile(getDeploymentsPath(string.concat("deploy-latest.json")), json);
+            vm.writeFile(getDeploymentsPath(string.concat("deploy-", vm.toString(block.timestamp), ".json")), json);
+        }
+    }
 }
