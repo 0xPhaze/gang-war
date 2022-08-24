@@ -500,9 +500,10 @@ contract TestGangWarGameLogic is TestGangWar {
         assertTrue(upkeepNeeded);
         assertEq(abi.decode(data, (uint256)), 1 << DISTRICT_CARTEL_1);
 
-        // performing upkeep does not do anything
+        // performing upkeep does not do anything (all true except for district cartel 1)
         vm.record();
 
+        // vm.expectRevert(InvalidUpkeep.selector);
         game.performUpkeep(abi.encode(~uint256(1 << DISTRICT_CARTEL_1)));
 
         (, writes) = vm.accesses(address(game));

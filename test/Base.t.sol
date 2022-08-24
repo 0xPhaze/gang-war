@@ -25,10 +25,10 @@ contract TestGangWar is Test, deploy {
     address alice = address(0xbabe);
     address tester = address(this);
 
-    function setUp() public {
+    function setUp() public virtual {
         __DEPLOY_SCRIPTS_BYPASS = true;
 
-        setUpContracts();
+        setUpContractsTEST();
         initContractsTEST();
 
         // console.log(block.chainid);
@@ -67,7 +67,7 @@ contract TestGangWar is Test, deploy {
         assertEq(uint8(a), uint8(b));
     }
 
-    function test_setUp() public {
+    function test_setUp() public virtual {
         uint256 packedConnections = game.getDistrictConnections();
 
         for (uint256 i; i < 21; i++) {

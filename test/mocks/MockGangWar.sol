@@ -56,6 +56,36 @@ contract MockGangWar is GangWar {
         _setYield(gang, 2, rates[2]);
     }
 
+    function addShares(uint256 gang, uint40 amount) public {
+        _addShares(msg.sender, gang, amount);
+    }
+
+    function removeShares(uint256 gang, uint40 amount) public {
+        _removeShares(msg.sender, gang, amount);
+    }
+
+    function spendGangVaultBalance(
+        uint256 gang,
+        uint256 amount_0,
+        uint256 amount_1,
+        uint256 amount_2
+    ) public {
+        _spendGangVaultBalance(gang, amount_0, amount_1, amount_2, true);
+    }
+
+    function claimUserBalance() public {
+        _claimUserBalance(msg.sender);
+    }
+
+    function transferYield(
+        uint256 gangFrom,
+        uint256 gangTo,
+        uint256 token,
+        uint256 yield
+    ) public {
+        _transferYield(gangFrom, gangTo, token, yield);
+    }
+
     function scrambleStorage() public {
         utils.scrambleStorage(0, 100);
     }

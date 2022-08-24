@@ -62,7 +62,7 @@ contract GangWarSetup is DeployScripts {
         setUpGangWarConstants();
     }
 
-    function setUpContracts() internal {
+    function setUpContractsCommon() internal {
         address gangTokenImpl = setUpContract("GANG_TOKEN_IMPLEMENTATION", "GangToken", type(GangToken).creationCode); // prettier-ignore
 
         bytes memory yakuzaInitCall = abi.encodeWithSelector(GangToken.init.selector, "Yakuza Token", "YKZ");
@@ -78,6 +78,10 @@ contract GangWarSetup is DeployScripts {
         bytes memory miceCreationCode = abi.encodePacked(type(Mice).creationCode, abi.encode(tokens[0], tokens[1], tokens[2], badges)); // prettier-ignore
         address miceImpl = setUpContract("MICE_IMPLEMENTATION", "Mice", miceCreationCode);
         mice = Mice(setUpProxy("MICE", "Mice", miceImpl, abi.encodePacked(Mice.init.selector)));
+    }
+
+    function setUpContractsTEST() internal {
+        setUpContractsCommon();
 
         bytes memory goudaCreationCode = abi.encodePacked(type(MockERC20).creationCode, abi.encode("Gouda", "GOUDA", 18)); // prettier-ignore
 
@@ -85,12 +89,42 @@ contract GangWarSetup is DeployScripts {
         gmc = MockGMC(setUpContract("MOCK_GMC", "MockGMC", type(MockGMC).creationCode)); // prettier-ignore
         gouda = MockERC20(setUpContract("GOUDA", "MockERC20", goudaCreationCode)); // prettier-ignore
 
-        (, bytes32 keyHash, uint64 subId) = getChainlinkParams();
-
-        bytes memory gangWarInitCall = gangWarInitCalldata();
-        bytes memory gangWarCreationCode = abi.encodePacked(type(MockGangWar).creationCode, abi.encode(coordinator, keyHash, subId, 3, 200_000)); // prettier-ignore
+        bytes memory gangWarCreationCode = abi.encodePacked(type(MockGangWar).creationCode, abi.encode(coordinator, 0, 0, 0, 0)); // prettier-ignore
         address gangWarImpl = setUpContract("GANG_WAR_IMPLEMENTATION", "GangWar", gangWarCreationCode); // prettier-ignore
-        game = MockGangWar(setUpProxy("GANG_WAR", "GangWar", gangWarImpl, gangWarInitCall)); // prettier-ignore
+        game = MockGangWar(setUpProxy("GANG_WAR", "GangWar", gangWarImpl, gangWarInitCalldata())); // prettier-ignore
+    }
+
+    function setUpContractsTestnet() internal {
+        setUpContractsCommon();
+
+        bytes memory goudaCreationCode = abi.encodePacked(type(MockERC20).creationCode, abi.encode("Gouda", "GOUDA", 18)); // prettier-ignore
+
+        coordinator = MockVRFCoordinator(setUpContract("MOCK_VRF_COORDINATOR", "MockVRFCoordinator", type(MockVRFCoordinator).creationCode)); // prettier-ignore
+        gmc = MockGMC(setUpContract("MOCK_GMC", "MockGMC", type(MockGMC).creationCode)); // prettier-ignore
+        gouda = MockERC20(setUpContract("GOUDA", "MockERC20", goudaCreationCode)); // prettier-ignore
+
+        (
+            ,
+            /* coordinator */
+            bytes32 keyHash,
+            uint64 subId
+        ) = getChainlinkParams();
+
+        bytes memory gangWarCreationCode = abi.encodePacked(type(GangWar).creationCode, abi.encode(coordinator, keyHash, subId, 3, 200_000)); // prettier-ignore
+        address gangWarImpl = setUpContract("GANG_WAR_IMPLEMENTATION", "GangWar", gangWarCreationCode); // prettier-ignore
+        game = MockGangWar(setUpProxy("GANG_WAR", "GangWar", gangWarImpl, gangWarInitCalldata())); // prettier-ignore
+    }
+
+    function setUpContracts() internal {
+        // setUpContractsCommon();
+        // (
+        //     ,
+        //     /* coordinator */
+        //     bytes32 keyHash,
+        //     uint64 subId
+        // ) = getChainlinkParams();
+        // revert();
+        // need to attach / create gouda child, gmc child
     }
 
     function initContracts() internal {
@@ -104,15 +138,15 @@ contract GangWarSetup is DeployScripts {
 
         game.setBriberyFee(address(gouda), 2e18);
 
-        GangToken(tokens[0]).grantMintAuthority(address(game));
-        GangToken(tokens[1]).grantMintAuthority(address(game));
-        GangToken(tokens[2]).grantMintAuthority(address(game));
-        GangToken(badges).grantMintAuthority(address(game));
+        tokens[0].grantMintAuthority(address(game));
+        tokens[1].grantMintAuthority(address(game));
+        tokens[2].grantMintAuthority(address(game));
+        badges.grantMintAuthority(address(game));
 
-        GangToken(tokens[0]).grantBurnAuthority(address(mice));
-        GangToken(tokens[1]).grantBurnAuthority(address(mice));
-        GangToken(tokens[2]).grantBurnAuthority(address(mice));
-        GangToken(badges).grantBurnAuthority(address(mice));
+        tokens[0].grantBurnAuthority(address(mice));
+        tokens[1].grantBurnAuthority(address(mice));
+        tokens[2].grantBurnAuthority(address(mice));
+        badges.grantBurnAuthority(address(mice));
     }
 
     function initContractsTEST() internal {
@@ -124,55 +158,35 @@ contract GangWarSetup is DeployScripts {
 
     function initContractsCI() internal {
         if (firstTimeDeployed[address(game)]) initContracts();
-
-        // // don't re-send transactions unnecessarily
-        // if (!tokens[0].hasRole(MINT_AUTHORITY, address(game))) GangToken(tokens[0]).grantMintAuthority(address(game));
-        // if (!tokens[1].hasRole(MINT_AUTHORITY, address(game))) GangToken(tokens[1]).grantMintAuthority(address(game));
-        // if (!tokens[2].hasRole(MINT_AUTHORITY, address(game))) GangToken(tokens[2]).grantMintAuthority(address(game));
-        // if (!badges.hasRole(MINT_AUTHORITY, address(game))) GangToken(badges).grantMintAuthority(address(game));
-
-        // if (!tokens[0].hasRole(BURN_AUTHORITY, address(mice))) GangToken(tokens[0]).grantBurnAuthority(address(mice));
-        // if (!tokens[1].hasRole(BURN_AUTHORITY, address(mice))) GangToken(tokens[1]).grantBurnAuthority(address(mice));
-        // if (!tokens[2].hasRole(BURN_AUTHORITY, address(mice))) GangToken(tokens[2]).grantBurnAuthority(address(mice));
-        // if (!badges.hasRole(BURN_AUTHORITY, address(mice))) GangToken(badges).grantBurnAuthority(address(mice));
-
-        // // TODO take out (only 1st deployments)
-        // game.setBaronItemCost(ITEM_SEWER, 3_000_000e18);
-        // game.setBaronItemCost(ITEM_BLITZ, 3_000_000e18);
-        // game.setBaronItemCost(ITEM_BARRICADES, 2_250_000e18);
-        // game.setBaronItemCost(ITEM_SMOKE, 2_250_000e18);
-        // game.setBaronItemCost(ITEM_911, 1_500_000e18);
-
-        // game.setBriberyFee(address(gouda), 2e18);
     }
 
-    function initContractsCITEST() internal {
+    function initContractsCITestnet() internal {
         initContractsCI();
 
         address lumy = 0x2181838c46bEf020b8Beb756340ad385f5BD82a8;
 
         // grant mint authority for test purposes
-        if (!tokens[0].hasRole(MINT_AUTHORITY, msg.sender)) GangToken(tokens[0]).grantMintAuthority(msg.sender);
-        if (!tokens[1].hasRole(MINT_AUTHORITY, msg.sender)) GangToken(tokens[1]).grantMintAuthority(msg.sender);
-        if (!tokens[2].hasRole(MINT_AUTHORITY, msg.sender)) GangToken(tokens[2]).grantMintAuthority(msg.sender);
-        if (!badges.hasRole(MINT_AUTHORITY, msg.sender)) GangToken(badges).grantMintAuthority(msg.sender);
+        if (!tokens[0].hasRole(MINT_AUTHORITY, msg.sender)) tokens[0].grantMintAuthority(msg.sender);
+        if (!tokens[1].hasRole(MINT_AUTHORITY, msg.sender)) tokens[1].grantMintAuthority(msg.sender);
+        if (!tokens[2].hasRole(MINT_AUTHORITY, msg.sender)) tokens[2].grantMintAuthority(msg.sender);
+        if (!badges.hasRole(MINT_AUTHORITY, msg.sender)) badges.grantMintAuthority(msg.sender);
 
-        if (!tokens[0].hasRole(MINT_AUTHORITY, lumy)) GangToken(tokens[0]).grantMintAuthority(lumy);
-        if (!tokens[1].hasRole(MINT_AUTHORITY, lumy)) GangToken(tokens[1]).grantMintAuthority(lumy);
-        if (!tokens[2].hasRole(MINT_AUTHORITY, lumy)) GangToken(tokens[2]).grantMintAuthority(lumy);
-        if (!badges.hasRole(MINT_AUTHORITY, lumy)) GangToken(badges).grantMintAuthority(lumy);
+        if (!tokens[0].hasRole(MINT_AUTHORITY, lumy)) tokens[0].grantMintAuthority(lumy);
+        if (!tokens[1].hasRole(MINT_AUTHORITY, lumy)) tokens[1].grantMintAuthority(lumy);
+        if (!tokens[2].hasRole(MINT_AUTHORITY, lumy)) tokens[2].grantMintAuthority(lumy);
+        if (!badges.hasRole(MINT_AUTHORITY, lumy)) badges.grantMintAuthority(lumy);
 
         // mint tokens for testing
         if (firstTimeDeployed[address(game)]) {
-            GangToken(tokens[0]).mint(msg.sender, 100_000e18);
-            GangToken(tokens[1]).mint(msg.sender, 100_000e18);
-            GangToken(tokens[2]).mint(msg.sender, 100_000e18);
-            GangToken(badges).mint(msg.sender, 100_000e18);
+            tokens[0].mint(msg.sender, 100_000e18);
+            tokens[1].mint(msg.sender, 100_000e18);
+            tokens[2].mint(msg.sender, 100_000e18);
+            badges.mint(msg.sender, 100_000e18);
 
-            GangToken(tokens[0]).mint(lumy, 100_000e18);
-            GangToken(tokens[1]).mint(lumy, 100_000e18);
-            GangToken(tokens[2]).mint(lumy, 100_000e18);
-            GangToken(badges).mint(lumy, 100_000e18);
+            tokens[0].mint(lumy, 100_000e18);
+            tokens[1].mint(lumy, 100_000e18);
+            tokens[2].mint(lumy, 100_000e18);
+            badges.mint(lumy, 100_000e18);
 
             gmc.mintBatch(msg.sender);
             gmc.mintBatch(lumy);

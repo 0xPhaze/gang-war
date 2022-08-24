@@ -462,10 +462,10 @@ abstract contract GangWarGameLogic is GangWarBase, GangWarReward(GANG_VAULT_FEE)
             }
         }
 
-        if (upkeepIds == 0) revert InvalidUpkeep();
-
-        uint256 requestId = requestRandomWords(1);
-        s().requestIdToDistrictIds[requestId] = upkeepIds;
+        if (upkeepIds != 0) {
+            uint256 requestId = requestRandomWords(1);
+            s().requestIdToDistrictIds[requestId] = upkeepIds;
+        }
     }
 
     function fulfillRandomWords(uint256 requestId, uint256[] calldata randomWords) internal override {

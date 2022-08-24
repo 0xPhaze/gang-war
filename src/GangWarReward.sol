@@ -47,7 +47,7 @@ contract GangWarReward {
         assembly { out := yield } //prettier-ignore
     }
 
-    // should only be called as view
+    // should only be called as view by address(0) or address(0)'s next deployed contract address
     function getClaimableUserBalance(address account) external returns (uint256[3] memory out) {
         require(msg.sender == address(0) || msg.sender == 0xBd770416a3345F91E4B34576cb804a576fa48EB1);
 
@@ -61,7 +61,7 @@ contract GangWarReward {
     }
 
     function getGangVaultBalance(uint256 gang) external returns (uint256[3] memory out) {
-        require(msg.sender == address(0));
+        require(msg.sender == address(0) || msg.sender == 0xBd770416a3345F91E4B34576cb804a576fa48EB1);
 
         // gang vault balances are stuck in user balances under address 13370, 13371, 13372.
         address gangVault = address(uint160(13370 + gang));

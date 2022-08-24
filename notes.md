@@ -22,10 +22,9 @@
 - test purchaseItems (add delay for barons?)
 - test badges rewards
 - test exchange
-- test outcome stats
-- test GangWarReward on actual GangWar
-- add scramble
+- test outcome statistics fuzz
 
+- test all items usage
 - test clean activeItems on state change
 
 - recovery/bribery countdown reduction half of remaining time (disable for barons?)

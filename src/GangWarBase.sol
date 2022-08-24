@@ -26,7 +26,7 @@ uint256 constant BARON_DEFENSE_FORCE = 50;
 uint256 constant ATTACK_FAVOR = 65;
 uint256 constant DEFENSE_FAVOR = 200;
 
-uint256 constant LOCKUP_CHANCE = 30;
+uint256 constant LOCKUP_CHANCE = 20;
 uint256 constant LOCKUP_FINE = 50e18;
 
 uint256 constant INJURED_WON_FACTOR = 35;

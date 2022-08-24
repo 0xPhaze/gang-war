@@ -64,14 +64,18 @@ library utils {
         }
     }
 
-    function mstore(uint256 offset, bytes32 val, uint256 bytesLen) internal pure {
+    function mstore(
+        uint256 offset,
+        bytes32 val,
+        uint256 bytesLen
+    ) internal pure {
         assembly {
             let mask := shr(mul(bytesLen, 8), sub(0, 1))
             mstore(offset, or(and(val, not(mask)), and(mload(offset), mask)))
         }
     }
 
-    function scrambleStorage(uint256 offset, uint256 numSlots) public {
+    function scrambleStorage(uint256 offset, uint256 numSlots) internal {
         bytes32 rand;
         for (uint256 slot; slot < numSlots; slot++) {
             rand = keccak256(abi.encodePacked(offset + slot));

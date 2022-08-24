@@ -147,8 +147,9 @@ contract ContractRegistryScript is Script {
 }
 
 contract DeployScripts is ContractRegistryScript {
-    bool __DEPLOY_SCRIPTS_BYPASS; // bypasses fancy checks; still deploys contracts
-    bool __DEPLOY_SCRIPTS_DRY_RUN; // doesn't log new deployments
+    bool __DEPLOY_SCRIPTS_BYPASS; // deploys contracts without any checks whatsoever
+    bool __DEPLOY_SCRIPTS_DRY_RUN; // doesn't overrwrite new deployments
+    bool __DEPLOY_SCRIPTS_ATTACH; // doesn't deploy contracts, just attaches with checks
 
     mapping(address => bool) firstTimeDeployed; // set to true for contracts that are just deployed; useful for inits
     mapping(address => bool) storageLayoutGenerated; // cache to not repeat layout generation
@@ -315,16 +316,18 @@ contract DeployScripts is ContractRegistryScript {
 
         generateStorageLayoutFile(contractName, newImplementation);
 
-        string[] memory script = new string[](6);
+        string[] memory script = new string[](8);
 
         // TODO throw when not found??
 
         script[0] = "diff";
         script[1] = "-ayw";
-        script[2] = "--side-by-side";
-        script[3] = "--suppress-common-lines";
-        script[4] = getStorageLayoutFilePath(oldImplementation);
-        script[5] = getStorageLayoutFilePath(newImplementation);
+        script[2] = "-W";
+        script[3] = "180";
+        script[4] = "--side-by-side";
+        script[5] = "--suppress-common-lines";
+        script[6] = getStorageLayoutFilePath(oldImplementation);
+        script[7] = getStorageLayoutFilePath(newImplementation);
 
         bytes memory diff = vm.ffi(script);
 

@@ -10,21 +10,11 @@ import {GangWarSetup} from "./GangWarSetup.sol";
 // function addConsumer(uint64 subId, address consumer) external override onlySubOwner(subId) nonReentrant {
 
 /* 
-# 1: Run Tests
-forge test -vvv
-
 # 2: Simulate
 forge script deploy --rpc-url $RPC_MUMBAI --private-key $PRIVATE_KEY --with-gas-price 38gwei -vvvv
 
 3 #: Deploy
 source .env && forge script deploy --rpc-url $RPC_MUMBAI --private-key $PRIVATE_KEY --verify --etherscan-api-key $POLYGONSCAN_KEY --with-gas-price 38gwei -vvvv --ffi --broadcast 
-
-cp ~/git/eth/GangWar/out/MockGMC.sol/MockGMC.json ~/git/eth/gmc-website/data/abi
-cp ~/git/eth/GangWar/out/MockERC20.sol/MockERC20.json ~/git/eth/gmc-website/data/abi
-cp ~/git/eth/GangWar/out/MockVRFCoordinator.sol/MockVRFCoordinator.json ~/git/eth/gmc-website/data/abi
-cp ~/git/eth/GangWar/out/GangWar.sol/GangWar.json ~/git/eth/gmc-website/data/abi
-cp ~/git/eth/GangWar/out/Mice.sol/Mice.json ~/git/eth/gmc-website/data/abi
-cp ~/git/eth/GangWar/deployments/80001/deploy-latest.json ~/git/eth/gmc-website/data/deployments_80001.json
 */
 
 contract deploy is GangWarSetup {
@@ -42,12 +32,7 @@ contract deploy is GangWarSetup {
     }
 
     function run() external {
-        if (block.chainid == 80001)
-            isUpgradeSafe[0x6B0F760e95Ee569bEe7cB4aDf62E38B3576A3EDb][
-                0xc5a8c0654aa06fC5834d9Ad2D683AB1532e08b69
-            ] = true;
-
-        startBroadcastIfFFIEnabled();
+        vm.startBroadcast();
 
         if (isTestnet()) {
             setUpContractsTestnet();
@@ -60,12 +45,5 @@ contract deploy is GangWarSetup {
         vm.stopBroadcast();
 
         logRegisteredContracts();
-
-        if (!__DEPLOY_SCRIPTS_DRY_RUN) {
-            string memory json = generateRegisteredContractsJson();
-
-            vm.writeFile(getDeploymentsPath(string.concat("deploy-latest.json")), json);
-            vm.writeFile(getDeploymentsPath(string.concat("deploy-", vm.toString(block.timestamp), ".json")), json);
-        }
     }
 }
