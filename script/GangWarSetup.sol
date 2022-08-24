@@ -8,7 +8,6 @@ import {ERC1967Proxy} from "UDS/proxy/ERC1967Proxy.sol";
 import "/lib/VRFConsumerV2.sol";
 import "/GangWar.sol";
 import "/tokens/GangToken.sol";
-import "/tokens/GangWarItems.sol";
 
 import "solmate/test/utils/mocks/MockERC721.sol";
 import "solmate/test/utils/mocks/MockERC20.sol";
@@ -19,7 +18,7 @@ import {MockGangWar} from "../test/mocks/MockGangWar.sol";
 import {Mice} from "/tokens/Mice.sol";
 
 import "futils/futils.sol";
-import {DeployScripts} from "./deploy-scripts.sol";
+import {DeployScripts} from "./DeployScripts.sol";
 
 contract GangWarSetup is DeployScripts {
     using futils for *;
@@ -29,7 +28,6 @@ contract GangWarSetup is DeployScripts {
     MockVRFCoordinator coordinator;
     GangToken[3] tokens;
     GangToken badges;
-    GangWarItems gangItems;
     Mice mice;
     MockGangWar game;
     MockERC20 gouda;
@@ -81,10 +79,6 @@ contract GangWarSetup is DeployScripts {
         address miceImpl = setUpContract("MICE_IMPLEMENTATION", "Mice", miceCreationCode);
         mice = Mice(setUpProxy("MICE", "Mice", miceImpl, abi.encodePacked(Mice.init.selector)));
 
-        bytes memory gangWarItemsInitCall = abi.encodeWithSelector(GangWarItems.init.selector, "", 5);
-        address gangWarItemsImpl = setUpContract("GANG_WAR_ITEMS_IMPLEMENTATION", "GangWarItems", type(GangWarItems).creationCode); // prettier-ignore
-        gangItems = GangWarItems(setUpProxy("GANG_WAR_ITEMS", "GangWarItems", gangWarItemsImpl, gangWarItemsInitCall)); // prettier-ignore
-
         bytes memory goudaCreationCode = abi.encodePacked(type(MockERC20).creationCode, abi.encode("Gouda", "GOUDA", 18)); // prettier-ignore
 
         coordinator = MockVRFCoordinator(setUpContract("MOCK_VRF_COORDINATOR", "MockVRFCoordinator", type(MockVRFCoordinator).creationCode)); // prettier-ignore
@@ -101,10 +95,14 @@ contract GangWarSetup is DeployScripts {
 
     function initContracts() internal {
         gmc.setGangWar(address(game));
-    }
 
-    function initContractsTEST() internal {
-        initContracts();
+        game.setBaronItemCost(ITEM_SEWER, 3_000_000e18);
+        game.setBaronItemCost(ITEM_BLITZ, 3_000_000e18);
+        game.setBaronItemCost(ITEM_BARRICADES, 2_250_000e18);
+        game.setBaronItemCost(ITEM_SMOKE, 2_250_000e18);
+        game.setBaronItemCost(ITEM_911, 1_500_000e18);
+
+        game.setBriberyFee(address(gouda), 2e18);
 
         GangToken(tokens[0]).grantMintAuthority(address(game));
         GangToken(tokens[1]).grantMintAuthority(address(game));
@@ -117,22 +115,35 @@ contract GangWarSetup is DeployScripts {
         GangToken(badges).grantBurnAuthority(address(mice));
     }
 
+    function initContractsTEST() internal {
+        initContracts();
+    }
+
     bytes32 constant MINT_AUTHORITY = keccak256("MINT_AUTHORITY");
     bytes32 constant BURN_AUTHORITY = keccak256("BURN_AUTHORITY");
 
     function initContractsCI() internal {
         if (firstTimeDeployed[address(game)]) initContracts();
 
-        // don't re-send transactions unnecessarily
-        if (!tokens[0].hasRole(MINT_AUTHORITY, address(game))) GangToken(tokens[0]).grantMintAuthority(address(game));
-        if (!tokens[1].hasRole(MINT_AUTHORITY, address(game))) GangToken(tokens[1]).grantMintAuthority(address(game));
-        if (!tokens[2].hasRole(MINT_AUTHORITY, address(game))) GangToken(tokens[2]).grantMintAuthority(address(game));
-        if (!badges.hasRole(MINT_AUTHORITY, address(game))) GangToken(badges).grantMintAuthority(address(game));
+        // // don't re-send transactions unnecessarily
+        // if (!tokens[0].hasRole(MINT_AUTHORITY, address(game))) GangToken(tokens[0]).grantMintAuthority(address(game));
+        // if (!tokens[1].hasRole(MINT_AUTHORITY, address(game))) GangToken(tokens[1]).grantMintAuthority(address(game));
+        // if (!tokens[2].hasRole(MINT_AUTHORITY, address(game))) GangToken(tokens[2]).grantMintAuthority(address(game));
+        // if (!badges.hasRole(MINT_AUTHORITY, address(game))) GangToken(badges).grantMintAuthority(address(game));
 
-        if (!tokens[0].hasRole(BURN_AUTHORITY, address(mice))) GangToken(tokens[0]).grantBurnAuthority(address(mice));
-        if (!tokens[1].hasRole(BURN_AUTHORITY, address(mice))) GangToken(tokens[1]).grantBurnAuthority(address(mice));
-        if (!tokens[2].hasRole(BURN_AUTHORITY, address(mice))) GangToken(tokens[2]).grantBurnAuthority(address(mice));
-        if (!badges.hasRole(BURN_AUTHORITY, address(mice))) GangToken(badges).grantBurnAuthority(address(mice));
+        // if (!tokens[0].hasRole(BURN_AUTHORITY, address(mice))) GangToken(tokens[0]).grantBurnAuthority(address(mice));
+        // if (!tokens[1].hasRole(BURN_AUTHORITY, address(mice))) GangToken(tokens[1]).grantBurnAuthority(address(mice));
+        // if (!tokens[2].hasRole(BURN_AUTHORITY, address(mice))) GangToken(tokens[2]).grantBurnAuthority(address(mice));
+        // if (!badges.hasRole(BURN_AUTHORITY, address(mice))) GangToken(badges).grantBurnAuthority(address(mice));
+
+        // TODO take out (only 1st deployments)
+        game.setBaronItemCost(ITEM_SEWER, 3_000_000e18);
+        game.setBaronItemCost(ITEM_BLITZ, 3_000_000e18);
+        game.setBaronItemCost(ITEM_BARRICADES, 2_250_000e18);
+        game.setBaronItemCost(ITEM_SMOKE, 2_250_000e18);
+        game.setBaronItemCost(ITEM_911, 1_500_000e18);
+
+        game.setBriberyFee(address(gouda), 2e18);
     }
 
     function initContractsCITEST() internal {
@@ -170,7 +181,11 @@ contract GangWarSetup is DeployScripts {
         // console.log(block.chainid);
         // console.log(block.timestamp);
 
+        // Anvil y u so weird
+        if (block.chainid == 31337) return;
+
         // setup a test attack
+
         // prettier-ignore
         if (uint8(game.getGangster(BARON_YAKUZA_1).state) == 0 && uint8(game.getDistrict(DISTRICT_CARTEL_1).state) == 0) {
             game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, BARON_YAKUZA_1, false);

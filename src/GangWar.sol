@@ -16,7 +16,6 @@ import "./GangWarGameLogic.sol";
 
 error NotAuthorized();
 error InvalidItemId();
-error ItemAlreadyActive();
 
 contract GangWar is UUPSUpgrade, Ownable, GangWarBase, GangWarGameLogic, GMCMarket {
     constructor(
@@ -44,9 +43,13 @@ contract GangWar is UUPSUpgrade, Ownable, GangWarBase, GangWarGameLogic, GMCMark
         // initialize gang tokens
         _setGangTokens(gangTokens);
 
-        District storage district;
+        reset(occupants, yields);
+    }
 
+    function reset(Gang[21] calldata occupants, uint256[21] calldata yields) public onlyOwner {
         uint256[3] memory initialGangYields;
+
+        District storage district;
 
         for (uint256 i; i < 21; ++i) {
             district = s().districts[i];
@@ -54,17 +57,14 @@ contract GangWar is UUPSUpgrade, Ownable, GangWarBase, GangWarGameLogic, GMCMark
             // initialize rounds
             district.roundId = 1;
 
-            Gang gang = occupants[i];
-            uint256 yield = yields[i];
-
             // initialize occupants and yield token
-            district.token = gang;
-            district.occupants = gang;
+            district.token = occupants[i];
+            district.occupants = occupants[i];
 
             // initialize district yield amount
-            district.yield = yield;
+            district.yield = yields[i];
 
-            initialGangYields[uint256(gang)] += yield;
+            initialGangYields[uint256(occupants[i])] += yields[i];
         }
 
         // initialize yields for gangs
@@ -73,47 +73,34 @@ contract GangWar is UUPSUpgrade, Ownable, GangWarBase, GangWarGameLogic, GMCMark
         _setYield(2, 2, initialGangYields[2]);
     }
 
-    function purchaseGangWarItem(uint256 baronId, uint256 itemId) external {
+    function purchaseBaronItem(uint256 baronId, uint256 itemId) external {
         _verifyAuthorized(msg.sender, baronId);
 
-        if (!isBaron(baronId)) {
-            revert TokenMustBeBaron();
-        }
+        if (!isBaron(baronId)) revert TokenMustBeBaron();
 
-        uint256 price = s().itemPrice[itemId];
-        if (price == 0) {
-            revert InvalidItemId();
-        }
+        uint256 price = s().baronItemCost[itemId];
+        if (price == 0) revert InvalidItemId();
 
         Gang gang = gangOf(baronId);
 
         _spendGangVaultBalance(uint256(gang), price, price, price, true);
 
-        s().warItems[gang][itemId] += 1;
+        s().baronItems[gang][itemId] += 1;
     }
 
-    function useGangWarItem(
+    function useBaronItem(
         uint256 baronId,
         uint256 itemId,
         uint256 districtId
     ) external {
         _verifyAuthorized(msg.sender, baronId);
 
-        if (!isBaron(baronId)) {
-            revert TokenMustBeBaron();
-        }
+        if (!isBaron(baronId)) revert TokenMustBeBaron();
+        if (itemId == ITEM_SEWER) revert InvalidItemId();
 
         Gang gang = gangOf(baronId);
 
-        s().warItems[gang][itemId] -= 1;
-
-        uint256 items = s().districts[districtId].activeItems;
-
-        if (items & (1 << itemId) != 0) {
-            revert ItemAlreadyActive();
-        }
-
-        s().districts[districtId].activeItems = items | (1 << itemId);
+        _useBaronItem(gang, itemId, districtId);
     }
 
     /* ------------- protected ------------- */

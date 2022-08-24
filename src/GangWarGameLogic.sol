@@ -112,7 +112,7 @@ abstract contract GangWarGameLogic is GangWarBase, GangWarReward(GANG_VAULT_FEE)
         if (!isConnecting(connectingId, districtId)) {
             if (!sewers) revert InvalidConnectingDistrict();
 
-            s().warItems[gang][ITEM_SEWER] -= 1;
+            _useBaronItem(gang, ITEM_SEWER, districtId);
         }
 
         if (!isBaron(tokenId)) revert TokenMustBeBaron();
@@ -541,6 +541,7 @@ abstract contract GangWarGameLogic is GangWarBase, GangWarReward(GANG_VAULT_FEE)
                     district.attackDeclarationTime = 0;
                     district.baronAttackId = 0;
                     district.baronDefenseId = 0;
+                    district.activeItems = 0;
                 }
 
                 upkeepTriggered = true;

@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "forge-std/Test.sol";
 
 import "futils/futils.sol";
-import {TestGangWar} from "./GangWarBase.t.sol";
+import {TestGangWar} from "./Base.t.sol";
 import "/GMCMarket.sol";
 
 contract TestGangWarMarket is TestGangWar {

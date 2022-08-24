@@ -13,15 +13,6 @@ interface VmParseJson {
 }
 
 contract ContractRegistryScript is Script {
-    function loadLatestDeployedAddress(string memory key) internal returns (address addr) {
-        try vm.readFile(getDeploymentsPath("deploy-latest.json")) returns (string memory json) {
-            // try vm.parseJson(json, string.concat(".", key)) returns (bytes memory data) {
-            try VmParseJson(address(vm)).parseJson(json, string.concat(".", key)) returns (bytes memory data) {
-                if (data.length == 32) return abi.decode(data, (address));
-            } catch {}
-        } catch {}
-    }
-
     struct ContractData {
         string name;
         address addr;
@@ -33,22 +24,7 @@ contract ContractRegistryScript is Script {
         registeredContracts.push(ContractData({name: name, addr: addr}));
     }
 
-    mapping(address => string) labels;
-
-    function label(address addr, string memory name) internal {
-        if (bytes(labels[addr]).length != 0) {
-            console.log("Address %s already labeled as `%s`.", addr, labels[addr]);
-            revert("Label already exists");
-        }
-        labels[addr] = name;
-    }
-
-    function getLabel(address addr) internal returns (string memory) {
-        if (bytes(labels[addr]).length == 0) return vm.toString(addr);
-        return labels[addr];
-    }
-
-    function getRegisteredContractsJson() internal returns (string memory json) {
+    function generateRegisteredContractsJson() internal returns (string memory json) {
         if (registeredContracts.length == 0) return "";
 
         mkdir(getDeploymentsPath(""));
@@ -95,15 +71,21 @@ contract ContractRegistryScript is Script {
 
     /* ------------- utils ------------- */
 
-    // function isFFIEnabled() internal returns (bool) {
-    //     string[] memory script = new string[](1);
-    //     script[0] = "echo";
-    //     try vm.ffi(script) {
-    //         return true;
-    //     } catch {
-    //         return false;
-    //     }
-    // }
+    function isFFIEnabled() internal returns (bool) {
+        string[] memory script = new string[](1);
+        script[0] = "echo";
+        try vm.ffi(script) {
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
+    // hacky until vm.parseBytes32 comes around
+    function parseBytes32(string memory data) internal returns (bytes32) {
+        vm.setEnv("_TMP", data);
+        return vm.envBytes32("_TMP");
+    }
 
     function mkdir(string memory path) internal {
         string[] memory script = new string[](3);
@@ -116,18 +98,6 @@ contract ContractRegistryScript is Script {
 
     function eq(string memory a, string memory b) internal pure returns (bool) {
         return keccak256(bytes(a)) == keccak256(bytes(b));
-    }
-
-    function tryLoadEnvString(string memory key) internal returns (string memory) {
-        return tryLoadEnvString(key, "");
-    }
-
-    function tryLoadEnvString(string memory key, string memory defaultValue) internal returns (string memory) {
-        try vm.envString(key) returns (string memory value) {
-            return value;
-        } catch {
-            return defaultValue;
-        }
     }
 
     /* ------------- prints ------------- */
@@ -178,7 +148,15 @@ contract ContractRegistryScript is Script {
 
 contract DeployScripts is ContractRegistryScript {
     bool __DEPLOY_SCRIPTS_BYPASS; // bypasses fancy checks; still deploys contracts
-    bool __DEPLOY_SCRIPTS_DRY_RUN; // doesn't use ffi to log new deployments
+    bool __DEPLOY_SCRIPTS_DRY_RUN; // doesn't log new deployments
+
+    mapping(address => bool) firstTimeDeployed; // set to true for contracts that are just deployed; useful for inits
+    mapping(address => bool) storageLayoutGenerated; // cache to not repeat layout generation
+    mapping(address => mapping(address => bool)) isUpgradeSafe; // whether a contract => contract is deemed upgrade safe
+
+    constructor() {
+        if (!isFFIEnabled()) __DEPLOY_SCRIPTS_DRY_RUN = true;
+    }
 
     /* ------------- setUp ------------- */
 
@@ -224,7 +202,9 @@ contract DeployScripts is ContractRegistryScript {
         }
 
         if (deployNew) {
-            implementation = confirmDeployCode(creationCode, label(contractName, implementation, key));
+            implementation = confirmDeployCode(creationCode);
+
+            console.log("=> new %s.\n", label(contractName, implementation, key));
 
             saveCreationCodeHash(implementation, keccak256(creationCode));
         }
@@ -275,7 +255,9 @@ contract DeployScripts is ContractRegistryScript {
         } else {
             console.log("Existing Proxy::%s [%s] not found.", contractName, key);
 
-            proxy = confirmDeployProxy(implementation, initCall, proxyLabel(proxy, contractName, implementation, key));
+            proxy = confirmDeployProxy(implementation, initCall);
+
+            console.log("=> new %s.\n", proxyLabel(proxy, contractName, implementation, key));
 
             generateStorageLayoutFile(contractName, implementation);
         }
@@ -283,21 +265,25 @@ contract DeployScripts is ContractRegistryScript {
         registerContract(key, proxy);
     }
 
-    /* ------------- snippets ------------- */
+    function loadLatestDeployedAddress(string memory key) internal returns (address addr) {
+        try vm.readFile(getDeploymentsPath("deploy-latest.json")) returns (string memory json) {
+            // try vm.parseJson(json, string.concat(".", key)) returns (bytes memory data) {
+            try VmParseJson(address(vm)).parseJson(json, string.concat(".", key)) returns (bytes memory data) {
+                if (data.length == 32) return abi.decode(data, (address));
+            } catch {}
+        } catch {}
+    }
 
-    mapping(address => mapping(address => bool)) isUpgradeSafe;
-    mapping(address => bool) storageLayoutGenerated;
-    mapping(address => bool) firstTimeDeployed;
+    /* ------------- snippets ------------- */
 
     function generateStorageLayoutFile(string memory contractName, address implementation) internal {
         if (storageLayoutGenerated[implementation]) return;
 
-        if (__DEPLOY_SCRIPTS_DRY_RUN) {
-            console.log("SKIPPING storage layout mapping for %s (FFI=false).", label(contractName, implementation));
-            return;
+        if (!isFFIEnabled()) {
+            return console.log("SKIPPING storage layout mapping for %s (FFI=false).\n", label(contractName, implementation)); // prettier-ignore
         }
 
-        console.log("Generating storage layout mapping for %s.", label(contractName, implementation));
+        console.log("Generating storage layout mapping for %s.\n", label(contractName, implementation));
 
         string[] memory script = new string[](4);
         script[0] = "forge";
@@ -317,11 +303,11 @@ contract DeployScripts is ContractRegistryScript {
         address oldImplementation,
         address newImplementation
     ) internal {
-        if (__DEPLOY_SCRIPTS_DRY_RUN) {
-            return console.log("SKIPPING storage layout compatibility check [%s <-> %s] (FFI=false).", oldImplementation, newImplementation); // prettier-ignore
-        }
         if (isUpgradeSafe[oldImplementation][newImplementation]) {
-            return console.log("storage layout compatibility check [%s <-> %s]: pass", oldImplementation, newImplementation); // prettier-ignore
+            return console.log("Storage layout compatibility check [%s <-> %s]: pass", oldImplementation, newImplementation); // prettier-ignore
+        }
+        if (!isFFIEnabled()) {
+            return console.log("SKIPPING storage layout compatibility check [%s <-> %s] (FFI=false).", oldImplementation, newImplementation); // prettier-ignore
         }
 
         mkdir(getDeploymentsDataPath(""));
@@ -357,9 +343,9 @@ contract DeployScripts is ContractRegistryScript {
     function saveCreationCodeHash(address addr, bytes32 creationCodeHash) internal {
         if (__DEPLOY_SCRIPTS_DRY_RUN) return;
 
-        mkdir(getDeploymentsDataPath(""));
-
         string memory path = getCreationCodeHashFilePath(addr);
+
+        mkdir(getDeploymentsDataPath("")); // should check for ffi, though DRY_RUN should be true then
 
         // console.log(string.concat("Saving creation code hash for ", vm.toString(addr), "."));
 
@@ -382,21 +368,14 @@ contract DeployScripts is ContractRegistryScript {
                 return true;
             } else {
                 // console.log(string.concat("Existing codehash (", vm.toString(codehash), "), does not match new codehash (", vm.toString(newCreationCodeHash), ") for"), addr); // prettier-ignore
-
-                return false;
             }
         } catch {
             // console.log("Could not find existing codehash for", addr);
-
-            return false;
         }
+        return false;
     }
 
-    // hacky until vm.parseBytes32 comes around
-    function parseBytes32(string memory data) internal returns (bytes32) {
-        vm.setEnv("_TMP", data);
-        return vm.envBytes32("_TMP");
-    }
+    /* ------------- utils ------------- */
 
     function loadProxyStoredImplementation(address proxy) internal returns (address implementation) {
         require(proxy.code.length != 0, string.concat("No code stored at ", vm.toString(proxy)));
@@ -416,8 +395,6 @@ contract DeployScripts is ContractRegistryScript {
         }
     }
 
-    /* ------------- utils ------------- */
-
     function deployProxy(address implementation, bytes memory initCall) internal returns (address) {
         return deployCode(abi.encodePacked(type(ERC1967Proxy).creationCode, abi.encode(implementation, initCall)));
     }
@@ -426,29 +403,21 @@ contract DeployScripts is ContractRegistryScript {
         assembly {
             addr := create(0, add(code, 0x20), mload(code))
         }
+
+        firstTimeDeployed[addr] = true;
+
         require(addr.code.length != 0, "Failed to deploy code.");
     }
 
-    function confirmDeployProxy(
-        address implementation,
-        bytes memory initCall,
-        string memory contractName
-    ) internal returns (address) {
+    function confirmDeployProxy(address implementation, bytes memory initCall) internal returns (address) {
         return
-            confirmDeployCode(
-                abi.encodePacked(type(ERC1967Proxy).creationCode, abi.encode(implementation, initCall)),
-                contractName
-            );
+            confirmDeployCode(abi.encodePacked(type(ERC1967Proxy).creationCode, abi.encode(implementation, initCall)));
     }
 
-    function confirmDeployCode(bytes memory code, string memory contractName) internal returns (address addr) {
+    function confirmDeployCode(bytes memory code) internal returns (address addr) {
         requireConfirmation("CONFIRM_DEPLOYMENT");
 
         addr = deployCode(code);
-
-        console.log("=> new %s(%s).\n", contractName, addr);
-
-        firstTimeDeployed[addr] = true;
     }
 
     function requireConfirmation(string memory variable) internal {

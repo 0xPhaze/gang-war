@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "forge-std/Test.sol";
 
 import "futils/futils.sol";
-import "./GangWarBase.t.sol";
+import "./Base.t.sol";
 
 contract TestGangWarGameLogic is TestGangWar {
     using futils for *;
@@ -730,30 +730,72 @@ contract TestGangWarGameLogic is TestGangWar {
 
     // @notice test with all roundId mismatch combinations
 
-    function test_upkeepGas() public {
-        // for (uint256 i; i < 21; i++) {
-        //     try gmc.mint(bob, i) {} catch {}
-        // }
-        // string[] memory ff = new string[](2);
-        // ff[0] = "echo";
-        // ff[1] = "hi";
-        // try vm.ffi(ff) {
-        //     console.log("yay");
-        // } catch {
-        //     console.log("nay");
-        // }
-        // if (
-        //     uint8(game.getGangster(BARON_YAKUZA_1).state) == 0 && uint8(game.getDistrict(DISTRICT_CARTEL_1).state) == 0
-        // ) {
-        //     vm.prank(bob);
-        //     game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, BARON_YAKUZA_1, false);
-        //     vm.prank(alice);
-        //     game.joinGangAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, [GANGSTER_YAKUZA_1].toMemory());
-        // }
-        // // prettier-ignore
-        // if (uint8(game.getGangster(BARON_YAKUZA_2).state) == 0 && uint8(game.getDistrict(DISTRICT_CARTEL_2).state) == 0) {
-        //     game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_2, BARON_YAKUZA_2, false);
-        //     game.joinGangAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_2, [GANGSTER_YAKUZA_2].toMemory());
-        // }
-    }
+    // function test_upkeepGas() public {
+    //     for (uint256 i; i < 21; i++) {
+    //         try gmc.mint(bob, 10_000 + i) {} catch {}
+    //     }
+
+    //     for (uint256 i; i < 10; i++) {
+    //         vm.prank(bob);
+    //         game.baronDeclareAttack(i, i, 10_000 + i, false);
+    //     }
+
+    //     skip(1000 days);
+
+    //     assertEq(game.getDistrict(DISTRICT_CARTEL_1).state, DISTRICT_STATE.POST_GANG_WAR);
+
+    //     (, bytes memory data) = game.checkUpkeep("");
+
+    //     game.performUpkeep(data);
+
+    //     uint256[] memory randomWords = new uint256[](1);
+    //     randomWords[0] = 1234;
+
+    //     uint256 id = coordinator.requestIdCounter();
+
+    //     vm.prank(address(coordinator));
+
+    //     uint256 gas = gasleft();
+
+    //     address(game).call(
+    //         abi.encodeWithSelector(bytes4(keccak256("rawFulfillRandomWords(uint256,uint256[])")), id, randomWords)
+    //     );
+
+    //     gas = gas - gasleft();
+
+    //     console.log("gas", gas);
+
+    //     skip(10000000000);
+
+    //     assertEq(game.getDistrict(DISTRICT_CARTEL_1).state, DISTRICT_STATE.IDLE);
+
+    //     for (uint256 i; i < 10; i++) {
+    //         vm.prank(bob);
+    //         game.baronDeclareAttack(i, i, 10_000 + i, false);
+    //     }
+
+    //     skip(1000 days);
+
+    //     (, data) = game.checkUpkeep("");
+
+    //     game.performUpkeep(data);
+
+    //     vm.prank(address(coordinator));
+
+    //     gas = gasleft();
+
+    //     address(game).call(
+    //         abi.encodeWithSelector(bytes4(keccak256("rawFulfillRandomWords(uint256,uint256[])")), 2, randomWords)
+    //     );
+
+    //     gas = gas - gasleft();
+
+    //     console.log("gas", gas);
+
+    //     skip(1000 days);
+
+    //     assertEq(game.getDistrict(DISTRICT_CARTEL_1).state, DISTRICT_STATE.IDLE);
+
+    //     // assertEq(game.getDistrict(DISTRICT_CARTEL_1).state, DISTRICT_STATE.IDLE);
+    // }
 }

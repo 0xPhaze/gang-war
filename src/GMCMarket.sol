@@ -42,6 +42,8 @@ error OfferAlreadyAccepted();
 error MinimumTimeDelayNotReached();
 
 abstract contract GMCMarket {
+    GangMarketDS private __storageLayout;
+
     /* ------------- view ------------- */
 
     function isOwnerOrRenter(address user, uint256 id) public view returns (bool) {

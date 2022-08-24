@@ -29,6 +29,7 @@ function s() pure returns (GangWarRewardDS storage diamondStorage) {
 /// @author phaze (https://github.com/0xPhaze)
 /// @author Adapted from Synthetix StakingReward (https://github.com/Synthetixio/synthetix/blob/develop/contracts/StakingReward.sol)
 contract GangWarReward {
+    GangWarRewardDS private __storageLayout;
     uint256 public immutable gangVaultFeesPercent;
 
     event Burn(address indexed from, uint256 indexed token, uint256 amount);
