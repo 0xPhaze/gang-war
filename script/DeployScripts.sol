@@ -235,9 +235,8 @@ contract DeployScripts is ContractRegistryScript {
         if (proxy != address(0)) {
             address storedImplementation = loadProxyStoredImplementation(proxy);
 
-            if (storedImplementation.codehash == implementation.codehash) {
-                console.log("Stored %s up-to-date.", proxyLabel(proxy, contractName, implementation, key));
-            } else {
+            // TODO check for creationcodehash
+            if (firstTimeDeployed[implementation] || storedImplementation.codehash != implementation.codehash) {
                 console.log("Existing %s needs upgrade.", proxyLabel(proxy, contractName, storedImplementation, key)); // prettier-ignore
 
                 if (keepExisting) {
@@ -251,6 +250,8 @@ contract DeployScripts is ContractRegistryScript {
 
                     UUPSUpgrade(proxy).upgradeToAndCall(implementation, "");
                 }
+            } else {
+                console.log("Stored %s up-to-date.", proxyLabel(proxy, contractName, implementation, key));
             }
         } else {
             console.log("Existing Proxy::%s [%s] not found.", contractName, key);
@@ -304,7 +305,7 @@ contract DeployScripts is ContractRegistryScript {
         address newImplementation
     ) internal {
         if (isUpgradeSafe[oldImplementation][newImplementation]) {
-            return console.log("Storage layout compatibility check [%s <-> %s]: pass", oldImplementation, newImplementation); // prettier-ignore
+            return console.log("Storage layout compatibility check [%s <-> %s]: pass (`isUpgradeSafe=true` set)", oldImplementation, newImplementation); // prettier-ignore
         }
         if (!isFFIEnabled()) {
             return console.log("SKIPPING storage layout compatibility check [%s <-> %s] (FFI=false).", oldImplementation, newImplementation); // prettier-ignore
@@ -314,13 +315,16 @@ contract DeployScripts is ContractRegistryScript {
 
         generateStorageLayoutFile(contractName, newImplementation);
 
-        string[] memory script = new string[](5);
+        string[] memory script = new string[](6);
+
+        // TODO throw when not found??
 
         script[0] = "diff";
-        script[1] = "-aw";
-        script[2] = "--suppress-common-lines";
-        script[3] = getStorageLayoutFilePath(oldImplementation);
-        script[4] = getStorageLayoutFilePath(newImplementation);
+        script[1] = "-ayw";
+        script[2] = "--side-by-side";
+        script[3] = "--suppress-common-lines";
+        script[4] = getStorageLayoutFilePath(oldImplementation);
+        script[5] = getStorageLayoutFilePath(newImplementation);
 
         bytes memory diff = vm.ffi(script);
 
@@ -332,7 +336,7 @@ contract DeployScripts is ContractRegistryScript {
             console.log(string(diff));
 
             console.log("If you believe the storage layout is compatible,");
-            console.log("add `isUpgradeSafe[%s][%s] = true;` to `run()` in your deploy script.", oldImplementation, newImplementation); // prettier-ignore
+            console.log("add `if (block.chainid == %s) isUpgradeSafe[%s][%s] = true;` to `run()` in your deploy script.", block.chainid, oldImplementation, newImplementation); // prettier-ignore
 
             revert("Contract storage layout changed and might not be compatible.");
         }

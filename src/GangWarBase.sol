@@ -16,9 +16,9 @@ import {LibPackedMap} from "./lib/LibPackedMap.sol";
 // uint256 constant TIME_RECOVERY = 12 hours;
 // uint256 constant TIME_REINFORCEMENTS = 5 hours;
 uint256 constant TIME_TRUCE = 10 minutes;
-uint256 constant TIME_LOCKUP = 10 minutes;
+uint256 constant TIME_LOCKUP = 5 minutes;
 uint256 constant TIME_GANG_WAR = 10 minutes;
-uint256 constant TIME_RECOVERY = 10 minutes;
+uint256 constant TIME_RECOVERY = 5 minutes;
 uint256 constant TIME_REINFORCEMENTS = 10 minutes;
 
 uint256 constant DEFENSE_FAVOR_LIM = 150;
@@ -26,7 +26,7 @@ uint256 constant BARON_DEFENSE_FORCE = 50;
 uint256 constant ATTACK_FAVOR = 65;
 uint256 constant DEFENSE_FAVOR = 200;
 
-uint256 constant LOCKUP_CHANCE = 20;
+uint256 constant LOCKUP_CHANCE = 30;
 uint256 constant LOCKUP_FINE = 50e18;
 
 uint256 constant INJURED_WON_FACTOR = 35;
@@ -37,7 +37,8 @@ uint256 constant GANG_VAULT_FEE = 20;
 uint256 constant BADGES_EARNED_VICTORY = 6e18;
 uint256 constant BADGES_EARNED_DEFEAT = 2e18;
 
-uint256 constant UPKEEP_INTERVAL = 5 minutes;
+// TODO change to 5 minutes
+uint256 constant UPKEEP_INTERVAL = 1 minutes;
 
 uint256 constant ITEM_SEWER = 0;
 uint256 constant ITEM_BLITZ = 1;
@@ -159,7 +160,7 @@ abstract contract GangWarBase is OwnableUDS {
     /* ------------- internal ------------- */
 
     function isBaron(uint256 tokenId) internal pure returns (bool) {
-        return tokenId >= 1000;
+        return tokenId >= 10_000;
     }
 
     function _verifyAuthorized(address owner, uint256 tokenId) internal view virtual;

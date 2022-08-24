@@ -51,6 +51,8 @@ contract TestGangWar is Test, deploy {
 
         vm.prank(bob);
         gouda.approve(address(game), type(uint256).max);
+
+        game.scrambleStorage();
     }
 
     function assertEq(Gang a, Gang b) internal {

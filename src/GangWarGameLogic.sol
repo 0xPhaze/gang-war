@@ -462,10 +462,10 @@ abstract contract GangWarGameLogic is GangWarBase, GangWarReward(GANG_VAULT_FEE)
             }
         }
 
-        if (upkeepIds != 0) {
-            uint256 requestId = requestRandomWords(1);
-            s().requestIdToDistrictIds[requestId] = upkeepIds;
-        }
+        if (upkeepIds == 0) revert InvalidUpkeep();
+
+        uint256 requestId = requestRandomWords(1);
+        s().requestIdToDistrictIds[requestId] = upkeepIds;
     }
 
     function fulfillRandomWords(uint256 requestId, uint256[] calldata randomWords) internal override {
@@ -480,7 +480,7 @@ abstract contract GangWarGameLogic is GangWarBase, GangWarReward(GANG_VAULT_FEE)
         // before state update. Though the lockup effect will
         // happen afterwards, just to be sure that the VRF request
         // was valid
-        bool lockup = rand % 100 < LOCKUP_CHANCE;
+        bool lockup = uint256(keccak256(abi.encode(rand, 0))) % 100 < LOCKUP_CHANCE;
         uint256 lockupDistrictId = rand % 21;
 
         bool upkeepTriggered;
@@ -488,24 +488,29 @@ abstract contract GangWarGameLogic is GangWarBase, GangWarReward(GANG_VAULT_FEE)
         if (lockup) {
             district = s().districts[lockupDistrictId];
 
-            Gang token = district.token;
+            uint256 lockupTime = district.lockupTime;
+            if (block.timestamp - lockupTime < TIME_LOCKUP) {
+                lockup = false; // already in lockup state
+            } else {
+                Gang token = district.token;
 
-            uint256 lockupAmount_0;
-            uint256 lockupAmount_1;
-            uint256 lockupAmount_2;
+                uint256 lockupAmount_0;
+                uint256 lockupAmount_1;
+                uint256 lockupAmount_2;
 
-            if (token == Gang.YAKUZA) lockupAmount_0 = LOCKUP_FINE;
-            else if (token == Gang.CARTEL) lockupAmount_1 = LOCKUP_FINE;
-            else if (token == Gang.CYBERP) lockupAmount_2 = LOCKUP_FINE;
+                if (token == Gang.YAKUZA) lockupAmount_0 = LOCKUP_FINE;
+                else if (token == Gang.CARTEL) lockupAmount_1 = LOCKUP_FINE;
+                else if (token == Gang.CYBERP) lockupAmount_2 = LOCKUP_FINE;
 
-            uint256 lockupOccupants = uint256(district.occupants);
-            uint256 lockupAttackers = uint256(district.attackDeclarationTime != 0 ? district.attackers : Gang.NONE);
+                uint256 lockupOccupants = uint256(district.occupants);
+                uint256 lockupAttackers = uint256(district.attackDeclarationTime != 0 ? district.attackers : Gang.NONE);
 
-            _spendGangVaultBalance(lockupOccupants, lockupAmount_0, lockupAmount_1, lockupAmount_2, false);
+                _spendGangVaultBalance(lockupOccupants, lockupAmount_0, lockupAmount_1, lockupAmount_2, false);
 
-            // if attackers are present
-            if (lockupAttackers != uint256(Gang.NONE)) {
-                _spendGangVaultBalance(lockupAttackers, lockupAmount_0, lockupAmount_1, lockupAmount_2, false);
+                // if attackers are present
+                if (lockupAttackers != uint256(Gang.NONE)) {
+                    _spendGangVaultBalance(lockupAttackers, lockupAmount_0, lockupAmount_1, lockupAmount_2, false);
+                }
             }
         }
 

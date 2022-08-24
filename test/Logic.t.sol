@@ -303,7 +303,7 @@ contract TestGangWarGameLogic is TestGangWar {
 
     /// Add testfail
 
-    /// join attack during locked district state
+    /// join attack during attack locked district state
     function test_joinGangAttack_fail_DistrictInvalidState() public {
         vm.prank(bob);
         game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, BARON_YAKUZA_1, false);
@@ -619,11 +619,7 @@ contract TestGangWarGameLogic is TestGangWar {
     /* ------------- injury() ------------- */
 
     function test_injury() public {
-        vm.prank(bob);
-        game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, BARON_YAKUZA_1, false);
-
-        vm.prank(alice);
-        game.joinGangAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, [GANGSTER_YAKUZA_1].toMemory());
+        test_joinGangAttack();
 
         skip(TIME_REINFORCEMENTS + TIME_GANG_WAR);
 
@@ -681,6 +677,9 @@ contract TestGangWarGameLogic is TestGangWar {
         assertEq(game.getGangster(GANGSTER_YAKUZA_1).stateCountdown, int256(TIME_RECOVERY));
     }
 
+    /* ------------- lockup() ------------- */
+
+    // test lockup when gangvault balance is less than fine
     function test_lockup() public {
         vm.prank(bob);
         game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, BARON_YAKUZA_1, false);
@@ -690,17 +689,91 @@ contract TestGangWarGameLogic is TestGangWar {
 
         skip(TIME_REINFORCEMENTS + TIME_GANG_WAR);
 
+        vm.prank(address(0));
+        uint256[3] memory balancesBefore = game.getGangVaultBalance(uint8(Gang.CARTEL));
+
         (, bytes memory data) = game.checkUpkeep("");
 
         game.performUpkeep(data);
 
+        // random % 21 corresponds to locked up district
         MockVRFCoordinator(coordinator).fulfillLatestRequest(DISTRICT_CARTEL_1);
+
+        vm.prank(address(0));
+        uint256[3] memory balancesAfter = game.getGangVaultBalance(uint8(Gang.CARTEL));
 
         District memory district = game.getDistrict(DISTRICT_CARTEL_1);
 
         assertEq(district.roundId, 2);
         assertEq(district.state, DISTRICT_STATE.LOCKUP);
         assertEq(district.lastOutcomeTime, block.timestamp);
+
+        assertEq(balancesAfter[0], 0);
+        assertTrue(balancesBefore[1] - balancesAfter[1] > 0);
+        assertEq(balancesAfter[2], 0);
+    }
+
+    // test lockup when gangvault balance is enough and both teams are locked
+    function test_lockup_fullFine() public {
+        game.setYield(uint8(Gang.YAKUZA), 1, 100e10); // make sure they have balances so can get fined
+
+        vm.prank(bob);
+        game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, BARON_YAKUZA_1, false);
+
+        vm.prank(alice);
+        game.joinGangAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, [GANGSTER_YAKUZA_1].toMemory());
+
+        skip(100 days);
+
+        vm.prank(address(0));
+        uint256[3] memory balancesBeforeCartel = game.getGangVaultBalance(uint8(Gang.CARTEL));
+
+        vm.prank(address(0));
+        uint256[3] memory balancesBeforeYakuza = game.getGangVaultBalance(uint8(Gang.YAKUZA));
+
+        (, bytes memory data) = game.checkUpkeep("");
+
+        game.performUpkeep(data);
+
+        // random % 21 corresponds to locked up district
+        MockVRFCoordinator(coordinator).fulfillLatestRequest(DISTRICT_CARTEL_1);
+
+        vm.prank(address(0));
+        uint256[3] memory balancesAfterCartel = game.getGangVaultBalance(uint8(Gang.CARTEL));
+        vm.prank(address(0));
+        uint256[3] memory balancesAfterYakuza = game.getGangVaultBalance(uint8(Gang.YAKUZA));
+
+        District memory district = game.getDistrict(DISTRICT_CARTEL_1);
+
+        assertEq(district.roundId, 2);
+        assertEq(district.state, DISTRICT_STATE.LOCKUP);
+        assertEq(district.lastOutcomeTime, block.timestamp);
+
+        assertEq(balancesBeforeCartel[1] - balancesAfterCartel[1], LOCKUP_FINE);
+        assertEq(balancesBeforeYakuza[1] - balancesAfterYakuza[1], LOCKUP_FINE);
+    }
+
+    function test_lockupYield() public {
+        // uint256[3] memory balancesBefore;
+        // uint256[3] memory balancesAfter;
+        // uint256[] memory itemCosts = [
+        //     uint256(3_000_000e18), // ITEM_SEWER
+        //     3_000_000e18, // ITEM_BLITZ
+        //     2_250_000e18, // ITEM_BARRICADES
+        //     2_250_000e18, // ITEM_SMOKE
+        //     1_500_000e18 // ITEM_911
+        // ].toMemory();
+        // for (uint256 i; i < NUM_BARON_ITEMS; i++) {
+        //     vm.prank(address(0));
+        //     balancesBefore = game.getGangVaultBalance(0);
+        //     vm.prank(bob);
+        //     game.purchaseBaronItem(BARON_YAKUZA_1, i);
+        //     vm.prank(address(0));
+        //     balancesAfter = game.getGangVaultBalance(0);
+        //     assertEq(balancesBefore[0] - balancesAfter[0], itemCosts[i]);
+        //     assertEq(balancesBefore[1] - balancesAfter[1], itemCosts[i]);
+        //     assertEq(balancesBefore[2] - balancesAfter[2], itemCosts[i]);
+        // }
     }
 
     function test_bribery() public {

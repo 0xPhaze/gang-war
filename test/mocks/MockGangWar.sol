@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 
 import "/GangWar.sol";
 import "/GangWar.sol";
+import "../utils.sol";
 
 contract MockGangWar is GangWar {
     constructor(
@@ -47,5 +48,15 @@ contract MockGangWar is GangWar {
         uint256 yield
     ) public {
         _setYield(gang, token, yield);
+    }
+
+    function setYield(uint256 gang, uint256[] calldata rates) external {
+        _setYield(gang, 0, rates[0]);
+        _setYield(gang, 1, rates[1]);
+        _setYield(gang, 2, rates[2]);
+    }
+
+    function scrambleStorage() public {
+        utils.scrambleStorage(0, 100);
     }
 }

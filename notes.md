@@ -1,20 +1,22 @@
 
 # TODO
 
-- make enterGangWar/exitGangWar more robust, add resync option
-- add Game pause/reset option
 
-- add actual VRF integration!
 
 - MockGMC enumerable
 - MockGMC NFT random gang for Demo?
 
 - market listing
+
+- add validation to using items on districts (attackers / defenders)
+
+- add Game pause/reset option
+- make enterGangWar/exitGangWar more robust, add resync option
 - build environment to quickly script/interact with deployed contracts
+- add actual VRF integration!
+
 
 # Frontend
-- add getBaronItemBalances(Gang gang) to frontend
-- update ABI (BaronItems)
 
 # Test
 - test purchaseItems (add delay for barons?)
@@ -26,12 +28,6 @@
 
 - test clean activeItems on state change
 
-- test cops lockup activating
-- make sure cops don't lockup same district twice
-- test lockup yield taken
-- test lockup state (district, player)
-- test bribery durations
-
 - recovery/bribery countdown reduction half of remaining time (disable for barons?)
 - make sure this state is kept even for exit/enter GangWar
 
@@ -42,9 +38,9 @@
     // 10 warm: gas 384932
 
 # Final
-- finalize prices for items
-- restore times
+- restore times (district phases)
 - integrate with final VRF
+- what is LOCKUP_FINE?
 
 # Not-so-important
 - getGangVaultBalance without address(0) call

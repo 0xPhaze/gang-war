@@ -35,6 +35,10 @@ contract deploy is GangWarSetup {
     }
 
     function run() external {
+        if (block.chainid == 80001) {
+            // isUpgradeSafe[0x4413beEB6186720ae3cc54a127C495E946ceB3aB][0x6B0F760e95Ee569bEe7cB4aDf62E38B3576A3EDb] = true; // prettier-ignore
+        }
+
         startBroadcastIfFFIEnabled();
 
         setUpContracts();

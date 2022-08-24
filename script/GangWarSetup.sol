@@ -136,14 +136,14 @@ contract GangWarSetup is DeployScripts {
         // if (!tokens[2].hasRole(BURN_AUTHORITY, address(mice))) GangToken(tokens[2]).grantBurnAuthority(address(mice));
         // if (!badges.hasRole(BURN_AUTHORITY, address(mice))) GangToken(badges).grantBurnAuthority(address(mice));
 
-        // TODO take out (only 1st deployments)
-        game.setBaronItemCost(ITEM_SEWER, 3_000_000e18);
-        game.setBaronItemCost(ITEM_BLITZ, 3_000_000e18);
-        game.setBaronItemCost(ITEM_BARRICADES, 2_250_000e18);
-        game.setBaronItemCost(ITEM_SMOKE, 2_250_000e18);
-        game.setBaronItemCost(ITEM_911, 1_500_000e18);
+        // // TODO take out (only 1st deployments)
+        // game.setBaronItemCost(ITEM_SEWER, 3_000_000e18);
+        // game.setBaronItemCost(ITEM_BLITZ, 3_000_000e18);
+        // game.setBaronItemCost(ITEM_BARRICADES, 2_250_000e18);
+        // game.setBaronItemCost(ITEM_SMOKE, 2_250_000e18);
+        // game.setBaronItemCost(ITEM_911, 1_500_000e18);
 
-        game.setBriberyFee(address(gouda), 2e18);
+        // game.setBriberyFee(address(gouda), 2e18);
     }
 
     function initContractsCITEST() internal {
@@ -184,19 +184,20 @@ contract GangWarSetup is DeployScripts {
         // Anvil y u so weird
         if (block.chainid == 31337) return;
 
+        // note: go for owned ids?
         // setup a test attack
 
-        // prettier-ignore
-        if (uint8(game.getGangster(BARON_YAKUZA_1).state) == 0 && uint8(game.getDistrict(DISTRICT_CARTEL_1).state) == 0) {
-            game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, BARON_YAKUZA_1, false);
-            game.joinGangAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, [GANGSTER_YAKUZA_1].toMemory());
-        }
+        // // prettier-ignore
+        // if (uint8(game.getGangster(BARON_YAKUZA_1).state) == 0 && uint8(game.getDistrict(DISTRICT_CARTEL_1).state) == 0) {
+        //     game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, BARON_YAKUZA_1, false);
+        //     game.joinGangAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, [GANGSTER_YAKUZA_1].toMemory());
+        // }
 
-        // prettier-ignore
-        if (uint8(game.getGangster(BARON_YAKUZA_2).state) == 0 && uint8(game.getDistrict(DISTRICT_CARTEL_2).state) == 0) {
-            game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_2, BARON_YAKUZA_2, false);
-            game.joinGangAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_2, [GANGSTER_YAKUZA_2].toMemory());
-        }
+        // // prettier-ignore
+        // if (uint8(game.getGangster(BARON_YAKUZA_2).state) == 0 && uint8(game.getDistrict(DISTRICT_CARTEL_2).state) == 0) {
+        //     game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_2, BARON_YAKUZA_2, false);
+        //     game.joinGangAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_2, [GANGSTER_YAKUZA_2].toMemory());
+        // }
 
         // // setup a test attack
         // try game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, BARON_YAKUZA_1, false) {} catch {}
