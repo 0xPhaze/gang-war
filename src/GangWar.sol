@@ -108,21 +108,21 @@ contract GangWar is UUPSUpgrade, Ownable, GangWarBase, GangWarGameLogic, GMCMark
 
     /* ------------- protected ------------- */
 
-    // function enterGangWar(address owner, uint256 tokenId) public {
-    //     require(msg.sender == gmc());
+    function enterGangWar(address owner, uint256 tokenId) public {
+        require(msg.sender == gmc());
 
-    //     Gang gang = gangOf(tokenId);
+        Gang gang = gangOf(tokenId);
 
-    //     _addShares(owner, uint256(gang), 100);
-    // }
+        _addShares(owner, uint256(gang), 100);
+    }
 
-    // function exitGangWar(address owner, uint256 tokenId) public {
-    //     require(msg.sender == gmc());
+    function exitGangWar(address owner, uint256 tokenId) public {
+        require(msg.sender == gmc());
 
-    //     Gang gang = gangOf(tokenId);
+        Gang gang = gangOf(tokenId);
 
-    //     _removeShares(owner, uint256(gang), 100);
-    // }
+        _removeShares(owner, uint256(gang), 100);
+    }
 
     /* ------------- internal ------------- */
 

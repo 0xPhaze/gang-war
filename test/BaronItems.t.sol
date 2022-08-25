@@ -71,9 +71,9 @@ contract TestBaronItems is TestGangWar {
             vm.prank(address(0));
             balancesAfter = game.getGangVaultBalance(0);
 
-            assertEq(balancesBefore[0] - balancesAfter[0], itemCosts[i]);
-            assertEq(balancesBefore[1] - balancesAfter[1], itemCosts[i]);
-            assertEq(balancesBefore[2] - balancesAfter[2], itemCosts[i]);
+            assertEq(balancesBefore[0] - balancesAfter[0], itemCosts[i] / 2);
+            assertEq(balancesBefore[1] - balancesAfter[1], itemCosts[i] / 2);
+            assertEq(balancesBefore[2] - balancesAfter[2], itemCosts[i] / 2);
         }
     }
 
