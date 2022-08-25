@@ -74,6 +74,10 @@ contract GangWarReward {
         out[2] = uint256(s().userBalance[gangVault][2]) * 1e10;
     }
 
+    function getGangAccumulatedBalance() external view returns (uint80[3][3] memory) {
+        return s().totalYieldPerToken;
+    }
+
     /* ------------- enter/exit ------------- */
 
     function _addShares(
@@ -245,16 +249,6 @@ contract GangWarReward {
 
         s().yield[gang][token] = uint80(yield);
     }
-
-    // function _setYield(
-    //     uint256 gang,
-    //     uint256 token,
-    //     int256 yield
-    // ) internal {
-    //     // _updateReward(gang, address(0), 0);
-    //     // require(yield > 0 ? yield : -yield <= 1e12); // implicit 1e18 decimals
-    //     // s().yield[gang][token] += int80(yield);
-    // }
 
     function _transferYield(
         uint256 gangFrom,

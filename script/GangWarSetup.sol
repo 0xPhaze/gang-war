@@ -18,9 +18,9 @@ import {MockGangWar} from "../test/mocks/MockGangWar.sol";
 import {Mice} from "/tokens/Mice.sol";
 
 import "futils/futils.sol";
-import {DeployScripts} from "./DeployScripts.sol";
+import {UpgradeScripts} from "upgrade-scripts/UpgradeScripts.sol";
 
-contract GangWarSetup is DeployScripts {
+contract GangWarSetup is UpgradeScripts {
     using futils for *;
 
     // ---------------- vars

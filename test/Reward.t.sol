@@ -19,9 +19,6 @@ contract TestGangWarReward is TestGangWar {
     using futils for *;
 
     function setUp() public virtual override {
-        // super.setUp();
-        __DEPLOY_SCRIPTS_BYPASS = true;
-
         setUpContractsTEST();
         initContractsTEST();
 

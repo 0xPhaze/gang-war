@@ -14,7 +14,7 @@ import {GangWarSetup} from "./GangWarSetup.sol";
 forge test -vvv
 
 # 2: Simulate
-forge script deploy --rpc-url $RPC_MUMBAI --private-key $PRIVATE_KEY --with-gas-price 38gwei -vvvv
+source .env && UPGRADE_SCRIPTS_DRY_RUN=true forge script deploy --rpc-url $RPC_MUMBAI --private-key $PRIVATE_KEY --with-gas-price 38gwei -vvvv --ffi
 
 3 #: Deploy
 source .env && forge script deploy --rpc-url $RPC_MUMBAI --private-key $PRIVATE_KEY --verify --etherscan-api-key $POLYGONSCAN_KEY --with-gas-price 38gwei -vvvv --ffi --broadcast 
@@ -42,11 +42,6 @@ contract deploy is GangWarSetup {
     }
 
     function run() external {
-        if (block.chainid == 80001)
-            isUpgradeSafe[0x6B0F760e95Ee569bEe7cB4aDf62E38B3576A3EDb][
-                0xc5a8c0654aa06fC5834d9Ad2D683AB1532e08b69
-            ] = true;
-
         startBroadcastIfFFIEnabled();
 
         if (isTestnet()) {
@@ -59,13 +54,7 @@ contract deploy is GangWarSetup {
 
         vm.stopBroadcast();
 
-        logRegisteredContracts();
-
-        if (!__DEPLOY_SCRIPTS_DRY_RUN) {
-            string memory json = generateRegisteredContractsJson();
-
-            vm.writeFile(getDeploymentsPath(string.concat("deploy-latest.json")), json);
-            vm.writeFile(getDeploymentsPath(string.concat("deploy-", vm.toString(block.timestamp), ".json")), json);
-        }
+        logDeployments();
+        storeLatestDeployments();
     }
 }

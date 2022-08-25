@@ -25,9 +25,11 @@ contract TestGangWar is Test, deploy {
     address alice = address(0xbabe);
     address tester = address(this);
 
-    function setUp() public virtual {
-        __DEPLOY_SCRIPTS_BYPASS = true;
+    function __upgrade_scripts_init() internal override {
+        __UPGRADE_SCRIPTS_BYPASS = true;
+    }
 
+    function setUp() public virtual {
         setUpContractsTEST();
         initContractsTEST();
 

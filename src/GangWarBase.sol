@@ -125,8 +125,6 @@ struct GangWarDS {
     uint256 lockupTime;
     mapping(uint256 => District) districts;
     mapping(uint256 => Gangster) gangsters;
-    /*      id      => bool  */
-    mapping(uint256 => bool) sharesRegistered; // whether the id has registered shares
     /*      id      => price  */
     mapping(uint256 => uint256) baronItemCost;
     /*      address => fee  */
@@ -140,6 +138,8 @@ struct GangWarDS {
     /*   districtId =>     roundId     => numForces */
     mapping(uint256 => mapping(uint256 => uint256)) districtAttackForces;
     mapping(uint256 => mapping(uint256 => uint256)) districtDefenseForces;
+    /*      id      => bool  */
+    mapping(uint256 => bool) sharesRegistered; // whether the id has registered shares
 }
 
 // ------------- Storage

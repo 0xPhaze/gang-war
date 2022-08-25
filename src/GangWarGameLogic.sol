@@ -38,7 +38,7 @@ error InvalidToken();
 error InvalidUpkeep();
 error InvalidVRFRequest();
 
-function gangWarWonProb(
+function gangWarWonProbFn(
     uint256 attackForce,
     uint256 defenseForce,
     bool baronDefense
@@ -60,21 +60,7 @@ function gangWarWonProb(
     return p >> 64; // >> 128
 }
 
-function isInjuredProb(
-    uint256 attackForce,
-    uint256 defenseForce,
-    bool baronDefense,
-    uint256 gRand
-) pure returns (uint256) {
-    uint256 p = gangWarWonProb(attackForce, defenseForce, baronDefense);
-    bool won = gRand >> 128 < p;
-
-    uint256 c = won ? INJURED_WON_FACTOR : INJURED_LOST_FACTOR;
-
-    return (c * ((1 << 128) - 1 - p)) / 100; // >> 128
-}
-
-function isInjuredProb(uint256 gangWarWonP, bool gangWarWon) pure returns (uint256) {
+function isInjuredProbFn(uint256 gangWarWonP, bool gangWarWon) pure returns (uint256) {
     uint256 c = gangWarWon ? INJURED_WON_FACTOR : INJURED_LOST_FACTOR;
 
     return (c * ((1 << 128) - 1 - gangWarWonP)) / 100; // >> 128
@@ -573,72 +559,19 @@ abstract contract GangWarGameLogic is GangWarBase, GangWarReward(GANG_VAULT_FEE)
         return s().gangWarOutcomes[districtId][roundId];
     }
 
-    function gangWarWon(uint256 districtId, uint256 roundId) public view returns (bool) {
-        uint256 gRand = s().gangWarOutcomes[districtId][roundId];
-
-        uint256 attackForce = s().districtAttackForces[districtId][roundId];
-        uint256 defenseForce = s().districtDefenseForces[districtId][roundId];
-
-        District storage district = s().districts[districtId];
-
-        bool baronDefense = district.baronDefenseId != 0;
-
-        uint256 p = gangWarWonProb(attackForce, defenseForce, baronDefense);
-
-        return gRand >> 128 < p;
-    }
-
-    function isInjured(
-        uint256 gangsterId,
-        uint256 districtId,
-        uint256 roundId
-    ) public view returns (bool) {
-        uint256 gRand = s().gangWarOutcomes[districtId][roundId];
-
-        District storage district = s().districts[districtId];
-
-        uint256 attackForce = s().districtAttackForces[districtId][roundId];
-        uint256 defenseForce = s().districtDefenseForces[districtId][roundId];
-
-        bool baronDefense = district.baronDefenseId != 0;
-
-        uint256 p = isInjuredProb(attackForce, defenseForce, baronDefense, gRand);
-
-        uint256 pRand = uint256(keccak256(abi.encode(gRand, gangsterId)));
-
-        // console.log("injured prob", (p * 100) >> 128);
-        // console.log("pRand", ((pRand >> 128) * 100) >> 128);
-        // console.log("injured", pRand >> 128 < p);
-
-        return pRand >> 128 < p;
-    }
-
-    // function gangWarOutcome(uint256 districtId, uint256 roundId) public view returns (uint256) {
-    //     return s().gangWarOutcomes[districtId][roundId];
-    // }
-
     // function gangWarWon(uint256 districtId, uint256 roundId) public view returns (bool) {
     //     uint256 gRand = s().gangWarOutcomes[districtId][roundId];
 
-    //     uint256 p = gangWarWonDistrictProb(districtId, roundId);
-
-    //     return gRand >> 128 < p;
-    // }
-
-    // function gangWarWonDistrictProb(uint256 districtId, uint256 roundId) private view returns (uint256) {
     //     uint256 attackForce = s().districtAttackForces[districtId][roundId];
     //     uint256 defenseForce = s().districtDefenseForces[districtId][roundId];
 
     //     District storage district = s().districts[districtId];
 
-    //     uint256 items = district.activeItems;
-
-    //     attackForce += ((items >> ITEM_SMOKE) & 1) * attackForce * ITEM_SMOKE_ATTACK_INCREASE;
-    //     defenseForce += ((items >> ITEM_BARRICADES) & 1) * defenseForce * ITEM_BARRICADES_DEFENSE_INCREASE;
-
     //     bool baronDefense = district.baronDefenseId != 0;
 
-    //     return gangWarWonProb(attackForce, defenseForce, baronDefense);
+    //     uint256 p = gangWarWonProbFn(attackForce, defenseForce, baronDefense);
+
+    //     return gRand >> 128 < p;
     // }
 
     // function isInjured(
@@ -648,11 +581,14 @@ abstract contract GangWarGameLogic is GangWarBase, GangWarReward(GANG_VAULT_FEE)
     // ) public view returns (bool) {
     //     uint256 gRand = s().gangWarOutcomes[districtId][roundId];
 
-    //     uint256 wonP = gangWarWonDistrictProb(districtId, roundId);
+    //     District storage district = s().districts[districtId];
 
-    //     bool won = gRand >> 128 < wonP;
+    //     uint256 attackForce = s().districtAttackForces[districtId][roundId];
+    //     uint256 defenseForce = s().districtDefenseForces[districtId][roundId];
 
-    //     uint256 p = isInjuredProb(wonP, won);
+    //     bool baronDefense = district.baronDefenseId != 0;
+
+    //     uint256 p = isInjuredProbFn(attackForce, defenseForce, baronDefense, gRand);
 
     //     uint256 pRand = uint256(keccak256(abi.encode(gRand, gangsterId)));
 
@@ -662,6 +598,52 @@ abstract contract GangWarGameLogic is GangWarBase, GangWarReward(GANG_VAULT_FEE)
 
     //     return pRand >> 128 < p;
     // }
+
+    // function gangWarOutcome(uint256 districtId, uint256 roundId) public view returns (uint256) {
+    //     return s().gangWarOutcomes[districtId][roundId];
+    // }
+
+    function gangWarWon(uint256 districtId, uint256 roundId) public view returns (bool) {
+        uint256 gRand = s().gangWarOutcomes[districtId][roundId];
+
+        uint256 p = gangWarWonDistrictProb(districtId, roundId);
+
+        return gRand >> 128 < p;
+    }
+
+    function gangWarWonDistrictProb(uint256 districtId, uint256 roundId) private view returns (uint256) {
+        uint256 attackForce = s().districtAttackForces[districtId][roundId];
+        uint256 defenseForce = s().districtDefenseForces[districtId][roundId];
+
+        District storage district = s().districts[districtId];
+
+        uint256 items = district.activeItems;
+
+        attackForce += ((items >> ITEM_SMOKE) & 1) * attackForce * ITEM_SMOKE_ATTACK_INCREASE;
+        defenseForce += ((items >> ITEM_BARRICADES) & 1) * defenseForce * ITEM_BARRICADES_DEFENSE_INCREASE;
+
+        bool baronDefense = district.baronDefenseId != 0;
+
+        return gangWarWonProbFn(attackForce, defenseForce, baronDefense);
+    }
+
+    function isInjured(
+        uint256 gangsterId,
+        uint256 districtId,
+        uint256 roundId
+    ) public view returns (bool) {
+        uint256 gRand = s().gangWarOutcomes[districtId][roundId];
+
+        uint256 wonP = gangWarWonDistrictProb(districtId, roundId);
+
+        bool won = gRand >> 128 < wonP;
+
+        uint256 p = isInjuredProbFn(wonP, won);
+
+        uint256 pRand = uint256(keccak256(abi.encode(gRand, gangsterId)));
+
+        return pRand >> 128 < p;
+    }
 
     /* ------------- internal ------------- */
 
