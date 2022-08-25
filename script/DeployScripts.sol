@@ -148,7 +148,7 @@ contract ContractRegistryScript is Script {
 
 contract DeployScripts is ContractRegistryScript {
     bool __DEPLOY_SCRIPTS_BYPASS; // deploys contracts without any checks whatsoever
-    bool __DEPLOY_SCRIPTS_DRY_RUN; // doesn't overrwrite new deployments
+    bool __DEPLOY_SCRIPTS_DRY_RUN; // doesn't overrwrite new deployments in de
     bool __DEPLOY_SCRIPTS_ATTACH; // doesn't deploy contracts, just attaches with checks
 
     mapping(address => bool) firstTimeDeployed; // set to true for contracts that are just deployed; useful for inits
@@ -176,6 +176,7 @@ contract DeployScripts is ContractRegistryScript {
         bool keepExisting
     ) internal returns (address implementation) {
         if (__DEPLOY_SCRIPTS_BYPASS) return deployCode(creationCode);
+        if (__DEPLOY_SCRIPTS_ATTACH) keepExisting = true;
 
         implementation = loadLatestDeployedAddress(key);
 
@@ -230,6 +231,7 @@ contract DeployScripts is ContractRegistryScript {
         bool keepExisting
     ) internal returns (address proxy) {
         if (__DEPLOY_SCRIPTS_BYPASS) return deployProxy(implementation, initCall);
+        if (__DEPLOY_SCRIPTS_ATTACH) keepExisting = true;
 
         proxy = loadLatestDeployedAddress(key);
 

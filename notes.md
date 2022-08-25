@@ -16,7 +16,10 @@
 - add actual VRF integration!
 
 
+- add shares reset / automated enter mechanics that conform with market
+
 # Frontend
+- transform activeItems to array
 
 # Test
 - test purchaseItems (add delay for barons?)
@@ -30,7 +33,7 @@
 - recovery/bribery countdown reduction half of remaining time (disable for barons?)
 - make sure this state is kept even for exit/enter GangWar
 
-- test performUpkeep on all districts (gas)
+- performUpkeep (gas)
     // 21 cold: gas 1400000
     // 21 warm: gas 800000
     // 10 cold: gas 676532

@@ -30,13 +30,14 @@ contract MockVRFCoordinator is IVRFCoordinatorV2 {
         uint256[] memory randomWords = new uint256[](1);
         randomWords[0] = rand;
 
-        game.call(
+        (bool success, ) = game.call(
             abi.encodeWithSelector(
                 bytes4(keccak256("rawFulfillRandomWords(uint256,uint256[])")),
                 requestId,
                 randomWords
             )
         );
+        require(success);
     }
 
     function fulfillLatestRequests() public {
@@ -44,13 +45,15 @@ contract MockVRFCoordinator is IVRFCoordinatorV2 {
         uint256[] memory randomWords = new uint256[](1);
         for (uint256 i; i < pendingRequestsLength; ++i) {
             randomWords[0] = uint256(keccak256(abi.encode(blockhash(block.number - 1), i)));
-            game.call(
+            (bool success, ) = game.call(
                 abi.encodeWithSelector(
                     bytes4(keccak256("rawFulfillRandomWords(uint256,uint256[])")),
                     pendingRequests[i],
                     randomWords
                 )
             );
+
+            require(success);
         }
         delete pendingRequests;
     }

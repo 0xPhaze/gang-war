@@ -83,6 +83,9 @@ contract GangWar is UUPSUpgrade, Ownable, GangWarBase, GangWarGameLogic, GMCMark
 
         Gang gang = gangOf(baronId);
 
+        // we're using 3:2 exchange rate
+        price /= 2;
+
         _spendGangVaultBalance(uint256(gang), price, price, price, true);
 
         s().baronItems[gang][itemId] += 1;
@@ -105,31 +108,31 @@ contract GangWar is UUPSUpgrade, Ownable, GangWarBase, GangWarGameLogic, GMCMark
 
     /* ------------- protected ------------- */
 
-    function enterGangWar(address owner, uint256 tokenId) public {
-        require(msg.sender == gmc());
+    // function enterGangWar(address owner, uint256 tokenId) public {
+    //     require(msg.sender == gmc());
 
-        Gang gang = gangOf(tokenId);
+    //     Gang gang = gangOf(tokenId);
 
-        _addShares(owner, uint256(gang), 100);
-    }
+    //     _addShares(owner, uint256(gang), 100);
+    // }
 
-    function exitGangWar(address owner, uint256 tokenId) public {
-        require(msg.sender == gmc());
+    // function exitGangWar(address owner, uint256 tokenId) public {
+    //     require(msg.sender == gmc());
 
-        Gang gang = gangOf(tokenId);
+    //     Gang gang = gangOf(tokenId);
 
-        _removeShares(owner, uint256(gang), 100);
-    }
+    //     _removeShares(owner, uint256(gang), 100);
+    // }
 
     /* ------------- internal ------------- */
 
-    function multiCall(bytes[] calldata data) external {
-        for (uint256 i; i < data.length; ++i) {
-            (bool success, ) = address(this).delegatecall(data[i]);
+    // function multiCall(bytes[] calldata data) external {
+    //     for (uint256 i; i < data.length; ++i) {
+    //         (bool success, ) = address(this).delegatecall(data[i]);
 
-            if (!success) revert();
-        }
-    }
+    //         if (!success) revert();
+    //     }
+    // }
 
     /* ------------- hooks ------------- */
 
