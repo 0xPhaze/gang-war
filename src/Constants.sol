@@ -3,7 +3,6 @@ pragma solidity ^0.8.0;
 
 import {ERC721UDS} from "UDS/tokens/ERC721UDS.sol";
 import {OwnableUDS} from "UDS/auth/OwnableUDS.sol";
-import {IERC721} from "./interfaces/IERC721.sol";
 import {LibPackedMap} from "./lib/LibPackedMap.sol";
 
 // ------------- Constants
@@ -52,7 +51,7 @@ uint256 constant ITEM_BLITZ_TIME_REDUCTION = 80;
 uint256 constant ITEM_BARRICADES_DEFENSE_INCREASE = 30;
 uint256 constant ITEM_SMOKE_ATTACK_INCREASE = 30;
 
-// ------------- Enum
+// ------------- enum
 
 enum Gang {
     YAKUZA,
@@ -80,7 +79,7 @@ enum PLAYER_STATE {
     LOCKUP
 }
 
-// ------------- Struct
+// ------------- struct
 
 struct Gangster {
     uint256 roundId;
@@ -120,7 +119,7 @@ struct District {
 
 struct GangWarDS {
     address gmc;
-    address badges;
+    address vault;
     uint256 districtConnections; // packed bool matrix
     uint256 lockupTime;
     mapping(uint256 => District) districts;
@@ -138,11 +137,9 @@ struct GangWarDS {
     /*   districtId =>     roundId     => numForces */
     mapping(uint256 => mapping(uint256 => uint256)) districtAttackForces;
     mapping(uint256 => mapping(uint256 => uint256)) districtDefenseForces;
-    /*      id      => bool  */
-    mapping(uint256 => bool) sharesRegistered; // whether the id has registered shares
 }
 
-// ------------- Storage
+// ------------- storage
 
 bytes32 constant DIAMOND_STORAGE_GANG_WAR = keccak256("diamond.storage.gang.war");
 
@@ -151,82 +148,32 @@ function s() pure returns (GangWarDS storage diamondStorage) {
     assembly { diamondStorage.slot := slot } // prettier-ignore
 }
 
-// ------------- Errors
+// ------------- errors
 
-error CallerNotOwner();
-error ItemAlreadyActive();
+function gangWarWonProbFn(
+    uint256 attackForce,
+    uint256 defenseForce,
+    bool baronDefense
+) pure returns (uint256) {
+    attackForce += 1;
+    defenseForce += 1;
 
-abstract contract GangWarBase is OwnableUDS {
-    GangWarDS private __storageLayout;
+    uint256 q = attackForce < DEFENSE_FAVOR_LIM ? ((1 << 32) - (attackForce << 32) / DEFENSE_FAVOR_LIM) ** 2 : 0; // prettier-ignore
 
-    /* ------------- internal ------------- */
+    defenseForce = ((q * DEFENSE_FAVOR + ((1 << 64) - q) * ATTACK_FAVOR) * defenseForce) / 100;
 
-    function isBaron(uint256 tokenId) internal pure returns (bool) {
-        return tokenId >= 10_000;
-    }
+    if (baronDefense) defenseForce += BARON_DEFENSE_FORCE << 64;
 
-    function _verifyAuthorized(address owner, uint256 tokenId) internal view virtual;
+    uint256 p = (attackForce << 128) / ((attackForce << 64) + defenseForce);
 
-    function isConnecting(uint256 districtA, uint256 districtB) internal view returns (bool) {
-        return LibPackedMap.isConnecting(s().districtConnections, districtA, districtB);
-    }
+    if (p > 1 << 63) p = (1 << 192) - ((((1 << 64) - p)**3) << 2);
+    else p = (p**3) << 2;
 
-    function _useBaronItem(
-        Gang gang,
-        uint256 itemId,
-        uint256 districtId
-    ) internal {
-        s().baronItems[gang][itemId] -= 1;
+    return p >> 64; // >> 128
+}
 
-        uint256 items = s().districts[districtId].activeItems;
+function isInjuredProbFn(uint256 gangWarWonP, bool gangWarWon) pure returns (uint256) {
+    uint256 c = gangWarWon ? INJURED_WON_FACTOR : INJURED_LOST_FACTOR;
 
-        if (items & (1 << itemId) != 0) revert ItemAlreadyActive();
-
-        s().districts[districtId].activeItems = items | (1 << itemId);
-    }
-
-    /* ------------- view ------------- */
-
-    function gmc() public view returns (address) {
-        return s().gmc;
-    }
-
-    function gangOf(uint256 id) public pure returns (Gang) {
-        return id == 0 ? Gang.NONE : Gang((id < 10000 ? id - 1 : id - (10001 - 3)) % 3);
-    }
-
-    function getBaronItemBalances(Gang gang) external view returns (uint256[] memory items) {
-        items = new uint256[](NUM_BARON_ITEMS);
-        unchecked {
-            for (uint256 i; i < NUM_BARON_ITEMS; ++i) items[i] = s().baronItems[gang][i];
-        }
-    }
-
-    function getGangWarOutcome(uint256 districtId, uint256 roundId) external view returns (uint256) {
-        return s().gangWarOutcomes[districtId][roundId];
-    }
-
-    function briberyFee(address token) public view returns (uint256) {
-        return s().briberyFee[token];
-    }
-
-    /* ------------- Owner ------------- */
-
-    function setBaronItemCost(uint256 itemId, uint256 cost) external payable onlyOwner {
-        s().baronItemCost[itemId] = cost;
-    }
-
-    function setBriberyFee(address token, uint256 amount) external payable onlyOwner {
-        s().briberyFee[token] = amount;
-    }
-
-    // function setDistrictOccupants(Gang[21] calldata gangs) external payable onlyOwner {
-    //     for (uint256 i; i < 21; ++i) {
-    //         s().districts[i].occupants = gangs[i];
-    //     }
-    // }
-
-    // function setDistrictConnections(uint256 connections) external payable onlyOwner {
-    //     s().districtConnections = connections;
-    // }
+    return (c * ((1 << 128) - 1 - gangWarWonP)) / 100; // >> 128
 }

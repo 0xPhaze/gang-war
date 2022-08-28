@@ -3,7 +3,7 @@
     {
       "astId": 538,
       "contract": "src/tokens/Mice.sol:Mice",
-      "label": "_layout",
+      "label": "__storageLayout",
       "offset": 0,
       "slot": "0",
       "type": "t_struct(OwnableDS)528_storage"
@@ -11,23 +11,23 @@
     {
       "astId": 381,
       "contract": "src/tokens/Mice.sol:Mice",
-      "label": "_layout",
+      "label": "__storageLayout",
       "offset": 0,
       "slot": "1",
       "type": "t_struct(EIP2612DS)373_storage"
     },
     {
-      "astId": 1641,
+      "astId": 1203,
       "contract": "src/tokens/Mice.sol:Mice",
-      "label": "_layout",
+      "label": "__storageLayout",
       "offset": 0,
       "slot": "2",
-      "type": "t_struct(ERC20DS)1631_storage"
+      "type": "t_struct(ERC20DS)1193_storage"
     },
     {
       "astId": 47,
       "contract": "src/tokens/Mice.sol:Mice",
-      "label": "_layout",
+      "label": "__storageLayout",
       "offset": 0,
       "slot": "8",
       "type": "t_struct(AccessControlDS)28_storage"
@@ -112,12 +112,12 @@
       ],
       "numberOfBytes": "32"
     },
-    "t_struct(ERC20DS)1631_storage": {
+    "t_struct(ERC20DS)1193_storage": {
       "encoding": "inplace",
       "label": "struct ERC20DS",
       "members": [
         {
-          "astId": 1614,
+          "astId": 1176,
           "contract": "src/tokens/Mice.sol:Mice",
           "label": "name",
           "offset": 0,
@@ -125,7 +125,7 @@
           "type": "t_string_storage"
         },
         {
-          "astId": 1616,
+          "astId": 1178,
           "contract": "src/tokens/Mice.sol:Mice",
           "label": "symbol",
           "offset": 0,
@@ -133,7 +133,7 @@
           "type": "t_string_storage"
         },
         {
-          "astId": 1618,
+          "astId": 1180,
           "contract": "src/tokens/Mice.sol:Mice",
           "label": "decimals",
           "offset": 0,
@@ -141,7 +141,7 @@
           "type": "t_uint8"
         },
         {
-          "astId": 1620,
+          "astId": 1182,
           "contract": "src/tokens/Mice.sol:Mice",
           "label": "totalSupply",
           "offset": 0,
@@ -149,7 +149,7 @@
           "type": "t_uint256"
         },
         {
-          "astId": 1624,
+          "astId": 1186,
           "contract": "src/tokens/Mice.sol:Mice",
           "label": "balanceOf",
           "offset": 0,
@@ -157,7 +157,7 @@
           "type": "t_mapping(t_address,t_uint256)"
         },
         {
-          "astId": 1630,
+          "astId": 1192,
           "contract": "src/tokens/Mice.sol:Mice",
           "label": "allowance",
           "offset": 0,

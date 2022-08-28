@@ -44,9 +44,7 @@ contract TestBaronItems is TestGangWar {
 
     function test_purchaseBaronItem() public {
         // need yield on all gang tokens
-        game.setYield(uint256(Gang.YAKUZA), 0, 100e10);
-        game.setYield(uint256(Gang.YAKUZA), 1, 100e10);
-        game.setYield(uint256(Gang.YAKUZA), 2, 100e10);
+        vault.setYield(uint256(Gang.YAKUZA), [uint256(1e10), uint256(1e10), uint256(1e10)]);
 
         skip(100 days);
 
@@ -63,13 +61,13 @@ contract TestBaronItems is TestGangWar {
 
         for (uint256 i; i < NUM_BARON_ITEMS; i++) {
             vm.prank(address(0));
-            balancesBefore = game.getGangVaultBalance(0);
+            balancesBefore = vault.getGangVaultBalance(0);
 
             vm.prank(bob);
             game.purchaseBaronItem(BARON_YAKUZA_1, i);
 
             vm.prank(address(0));
-            balancesAfter = game.getGangVaultBalance(0);
+            balancesAfter = vault.getGangVaultBalance(0);
 
             assertEq(balancesBefore[0] - balancesAfter[0], itemCosts[i] / 2);
             assertEq(balancesBefore[1] - balancesAfter[1], itemCosts[i] / 2);
@@ -78,9 +76,7 @@ contract TestBaronItems is TestGangWar {
     }
 
     function test_useBaronItem() public {
-        game.setYield(uint256(Gang.YAKUZA), 0, 100e10);
-        game.setYield(uint256(Gang.YAKUZA), 1, 100e10);
-        game.setYield(uint256(Gang.YAKUZA), 2, 100e10);
+        vault.setYield(uint256(Gang.YAKUZA), [uint256(1e10), uint256(1e10), uint256(1e10)]);
 
         skip(100 days);
 

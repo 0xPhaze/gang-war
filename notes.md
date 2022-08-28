@@ -1,7 +1,11 @@
 
 # TODO
 
+- add bribery fee
+- baron item cost
 
+- fix collect badges
+- fix adding shares (enter/exit gangWar)
 
 - MockGMC enumerable
 - MockGMC NFT random gang for Demo?

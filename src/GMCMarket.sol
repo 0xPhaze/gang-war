@@ -1,19 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import {UUPSUpgrade} from "UDS/proxy/UUPSUpgrade.sol";
-import {OwnableUDS} from "UDS/auth/OwnableUDS.sol";
 import {ERC721UDS} from "UDS/tokens/ERC721UDS.sol";
-import {IERC721} from "./interfaces/IERC721.sol";
-
-import {s as gangWarDS} from "./GangWarBase.sol";
+import {OwnableUDS} from "UDS/auth/OwnableUDS.sol";
+import {UUPSUpgrade} from "UDS/proxy/UUPSUpgrade.sol";
+import {LibEnumerableSet, Uint256Set} from "UDS/lib/LibEnumerableSet.sol";
 
 uint256 constant RENTAL_ACCEPTANCE_MINIMUM_TIME_DELAY = 1 days;
 
 // ------------- storage
 
-// keccak256("diamond.storage.gang.market") == 0x9350130b46a3a95c1d15eccf95069b652f55a1610fded59bd348259d7c017faf;
-bytes32 constant DIAMOND_STORAGE_GANG_MARKET = 0x9350130b46a3a95c1d15eccf95069b652f55a1610fded59bd348259d7c017faf;
+bytes32 constant DIAMOND_STORAGE_GMC_MARKET = keccak256("diamond.storage.gmc.market");
 
 struct Offer {
     address renter;
@@ -22,59 +19,87 @@ struct Offer {
 }
 
 struct GangMarketDS {
+    mapping(uint256 => Uint256Set) listedOffers;
     mapping(uint256 => Offer) activeOffers;
     mapping(address => uint256) lastRentalAcceptance;
 }
 
 function s() pure returns (GangMarketDS storage diamondStorage) {
-    assembly { diamondStorage.slot := DIAMOND_STORAGE_GANG_MARKET } // prettier-ignore
+    bytes32 slot = DIAMOND_STORAGE_GMC_MARKET;
+    assembly { diamondStorage.slot := slot } // prettier-ignore
 }
-
-import "forge-std/console.sol";
 
 // ------------- error
 
-error PrivateOffer();
+error InvalidOffer();
 error ActiveRental();
+error AlreadyListed();
 error NotAuthorized();
 error InvalidRenterShare();
 error OfferAlreadyAccepted();
 error MinimumTimeDelayNotReached();
 
 abstract contract GMCMarket {
+    using LibEnumerableSet for Uint256Set;
+
     GangMarketDS private __storageLayout;
+
+    /* ------------- virtual ------------- */
+
+    function ownerOf(uint256 id) public view virtual returns (address);
+
+    function isAuthorized(address user, uint256 id) public view virtual returns (bool);
 
     /* ------------- view ------------- */
 
-    function isOwnerOrRenter(address user, uint256 id) public view returns (bool) {
-        return IERC721(gangWarDS().gmc).ownerOf(id) == user || s().activeOffers[id].renter == user;
+    function renterOf(uint256 id) public view virtual returns (address) {
+        return s().activeOffers[id].renter;
+    }
+
+    function getListedOffers() public view returns (Offer[] memory offers) {
+        uint256[] memory offerIds = s().listedOffers[0].values();
+        offers = new Offer[](offerIds.length);
+        for (uint256 i; i < offerIds.length; ++i) {
+            offers[i] = s().activeOffers[offerIds[i]];
+        }
     }
 
     function getActiveOffer(uint256 id) public view returns (Offer memory) {
         return s().activeOffers[id];
     }
 
+    function numListedOffers() public view returns (uint256) {
+        return s().listedOffers[0].length();
+    }
+
     /* ------------- external ------------- */
 
     function listOffer(uint256[] calldata ids, Offer[] calldata offers) external {
         for (uint256 i; i < ids.length; i++) {
-            uint56 share = offers[i].renterShare;
-            address owner = IERC721(gangWarDS().gmc).ownerOf(ids[i]);
+            uint256 id = ids[i];
+
+            Offer calldata offer = offers[i];
+            uint256 renterShare = offer.renterShare;
+
+            address owner = ownerOf(id);
 
             if (owner != msg.sender) revert NotAuthorized();
-            if (share < 30 || 100 < share) revert InvalidRenterShare();
+            if (offer.renter == msg.sender) revert InvalidOffer();
+            if (renterShare < 30 || 100 < renterShare) revert InvalidRenterShare();
 
-            Offer storage activeRental = s().activeOffers[ids[i]];
-            address currentRenter = activeRental.renter;
+            bool alreadyExists = s().listedOffers[0].add(id);
+            if (alreadyExists) revert AlreadyListed();
 
-            if (currentRenter != address(0)) {
-                // can't change renter once rental is active
-                if (offers[i].renter != currentRenter) revert ActiveRental();
-                // can't change share once rental is active
-                if (offers[i].renterShare != activeRental.renterShare) revert ActiveRental();
-            }
+            // Offer storage activeRental = s().activeOffers[id];
+            // address currentRenter = activeRental.renter;
+            // if (currentRenter != address(0)) revert ActiveRental();
 
-            s().activeOffers[ids[i]] = offers[i];
+            s().activeOffers[id] = offers[i];
+
+            // direct offer to renter
+            if (offer.renter != address(0)) _afterStartRent(owner, offer.renter, id, renterShare);
+
+            s().listedOffers[0].add(id);
         }
     }
 
@@ -84,20 +109,52 @@ abstract contract GMCMarket {
         if (block.timestamp - s().lastRentalAcceptance[msg.sender] > RENTAL_ACCEPTANCE_MINIMUM_TIME_DELAY) {
             revert MinimumTimeDelayNotReached();
         }
+
         if (offer.renter != address(0)) revert OfferAlreadyAccepted();
 
         offer.renter = msg.sender;
 
         s().lastRentalAcceptance[msg.sender] = block.timestamp;
+
+        _afterStartRent(ownerOf(id), msg.sender, id, offer.renterShare);
     }
 
-    function endRent(uint256 id) external {
-        if (!isOwnerOrRenter(msg.sender, id)) revert NotAuthorized();
+    function endRent(uint256[] calldata ids) external {
+        for (uint256 i; i < ids.length; ++i) {
+            uint256 id = ids[i];
 
+            if (!isAuthorized(msg.sender, id)) revert NotAuthorized();
+
+            // @note check for existance?
+            Offer storage offer = s().activeOffers[id];
+
+            address renter = offer.renter;
+            uint256 renterShare = offer.renterShare;
+
+            if (offer.expiresOnAcceptance) {
+                delete s().activeOffers[id];
+
+                _deleteActiveRental(id);
+
+                s().listedOffers[0].remove(id);
+            } else delete offer.renter;
+
+            _afterEndRent(ownerOf(id), renter, id, renterShare);
+        }
+    }
+
+    function _deleteActiveRental(uint256 id) internal {
         Offer storage offer = s().activeOffers[id];
 
-        if (offer.expiresOnAcceptance) delete s().activeOffers[id];
-        else offer.renter = address(0);
+        address renter = offer.renter;
+
+        if (renter != address(0)) {
+            _afterEndRent(ownerOf(id), renter, id, offer.renterShare);
+        }
+
+        delete s().activeOffers[id];
+
+        s().listedOffers[0].remove(id);
     }
 
     /* ------------- hooks ------------- */

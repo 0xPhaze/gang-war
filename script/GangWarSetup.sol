@@ -3,34 +3,40 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Script.sol";
 
-import {ERC1967Proxy} from "UDS/proxy/ERC1967Proxy.sol";
-
+import "/Constants.sol";
 import "/lib/VRFConsumerV2.sol";
-import "/GangWar.sol";
-import "/tokens/GangToken.sol";
+
+import {Mice} from "/tokens/Mice.sol";
+import {GangWar} from "/GangWar.sol";
+import {GMCChild} from "/tokens/GMCChild.sol";
+import {GangVault} from "/GangVault.sol";
+import {GangToken} from "/tokens/GangToken.sol";
+
+import {MockGMC} from "../test/mocks/MockGMC.sol";
+import {MockGangWar} from "../test/mocks/MockGangWar.sol";
+import {MockVRFCoordinator} from "../test/mocks/MockVRFCoordinator.sol";
 
 import "solmate/test/utils/mocks/MockERC721.sol";
 import "solmate/test/utils/mocks/MockERC20.sol";
-import {MockVRFCoordinator} from "../test/mocks/MockVRFCoordinator.sol";
-import {MockGMC} from "../test/mocks/MockGMC.sol";
-import {MockGangWar} from "../test/mocks/MockGangWar.sol";
-
-import {Mice} from "/tokens/Mice.sol";
 
 import "futils/futils.sol";
+import {ERC1967Proxy} from "UDS/proxy/ERC1967Proxy.sol";
 import {UpgradeScripts} from "upgrade-scripts/UpgradeScripts.sol";
 
 contract GangWarSetup is UpgradeScripts {
     using futils for *;
 
-    // ---------------- vars
     MockGMC gmc;
-    MockVRFCoordinator coordinator;
     GangToken[3] tokens;
     GangToken badges;
     Mice mice;
     MockGangWar game;
+    GangVault vault;
     MockERC20 gouda;
+
+    address coordinator;
+
+    // ---------------- vars
 
     uint256 constant GANGSTER_YAKUZA_1 = 1;
     uint256 constant GANGSTER_CARTEL_1 = 2;
@@ -53,6 +59,10 @@ contract GangWarSetup is UpgradeScripts {
     uint256 constant DISTRICT_CARTEL_2 = 10;
     uint256 constant DISTRICT_CYBERP_2 = 4;
 
+    address linkCoordinator;
+    bytes32 linkKeyHash;
+    uint64 linkSubId;
+
     constructor() {
         if (block.chainid == 31337) {
             vm.warp(1660993892);
@@ -60,15 +70,16 @@ contract GangWarSetup is UpgradeScripts {
         }
 
         setUpGangWarConstants();
+        setUpChainlinkParams();
     }
 
     function setUpContractsCommon() internal {
-        address gangTokenImpl = setUpContract("GANG_TOKEN_IMPLEMENTATION", "GangToken", type(GangToken).creationCode); // prettier-ignore
-
         bytes memory yakuzaInitCall = abi.encodeWithSelector(GangToken.init.selector, "Yakuza Token", "YKZ");
         bytes memory cartelInitCall = abi.encodeWithSelector(GangToken.init.selector, "CARTEL Token", "CTL");
         bytes memory cyberpInitCall = abi.encodeWithSelector(GangToken.init.selector, "Cyberpunk Token", "CBP");
         bytes memory badgesInitCall = abi.encodeWithSelector(GangToken.init.selector, "Badges", "BADGE");
+
+        address gangTokenImpl = setUpContract("GANG_TOKEN_IMPLEMENTATION", "GangToken", type(GangToken).creationCode); // prettier-ignore
 
         tokens[0] = GangToken(setUpProxy("YAKUZA_TOKEN", "GangToken", gangTokenImpl, yakuzaInitCall));
         tokens[1] = GangToken(setUpProxy("CARTEL_TOKEN", "GangToken", gangTokenImpl, cartelInitCall));
@@ -76,43 +87,40 @@ contract GangWarSetup is UpgradeScripts {
         badges = GangToken(setUpProxy("BADGES_TOKEN", "GangToken", gangTokenImpl, badgesInitCall));
 
         bytes memory miceCreationCode = abi.encodePacked(type(Mice).creationCode, abi.encode(tokens[0], tokens[1], tokens[2], badges)); // prettier-ignore
+        bytes memory vaultCreationCode = abi.encodePacked(type(GangVault).creationCode, abi.encode(tokens[0], tokens[1], tokens[2], GANG_VAULT_FEE)); // prettier-ignore
+        bytes memory gangWarCreationCode;
+
+        if (isTestnet()) {
+            gangWarCreationCode = abi.encodePacked(type(MockGangWar).creationCode, abi.encode(coordinator, linkKeyHash, linkSubId, 3, 200_000)); // prettier-ignore
+        } else {
+            gangWarCreationCode = abi.encodePacked(type(GangWar).creationCode, abi.encode(coordinator, linkKeyHash, linkSubId, 3, 200_000)); // prettier-ignore
+        }
+
         address miceImpl = setUpContract("MICE_IMPLEMENTATION", "Mice", miceCreationCode);
-        mice = Mice(setUpProxy("MICE", "Mice", miceImpl, abi.encodePacked(Mice.init.selector)));
+        mice = Mice(setUpProxy("MICE", "Mice", miceImpl, abi.encode(Mice.init.selector)));
+
+        address vaultImpl = setUpContract("VAULT_IMPLEMENTATION", "Vault", vaultCreationCode);
+        vault = GangVault(setUpProxy("VAULT", "GangVault", vaultImpl, abi.encode(GangVault.init.selector)));
+
+        address gangWarImpl = setUpContract("GANG_WAR_IMPLEMENTATION", "GangWar", gangWarCreationCode); // prettier-ignore
+        game = MockGangWar(setUpProxy("GANG_WAR", "GangWar", gangWarImpl, abi.encodeWithSelector(GangWar.init.selector, gmc, vault, connectionsPacked))); // prettier-ignore
     }
 
     function setUpContractsTEST() internal {
-        setUpContractsCommon();
-
         bytes memory goudaCreationCode = abi.encodePacked(type(MockERC20).creationCode, abi.encode("Gouda", "GOUDA", 18)); // prettier-ignore
+        bytes memory gmcCreationCode = abi.encodePacked(type(MockGMC).creationCode, abi.encode(address(0))); // prettier-ignore
 
-        coordinator = MockVRFCoordinator(setUpContract("MOCK_VRF_COORDINATOR", "MockVRFCoordinator", type(MockVRFCoordinator).creationCode)); // prettier-ignore
-        gmc = MockGMC(setUpContract("MOCK_GMC", "MockGMC", type(MockGMC).creationCode)); // prettier-ignore
+        coordinator = setUpContract("MOCK_VRF_COORDINATOR", "MockVRFCoordinator", type(MockVRFCoordinator).creationCode); // prettier-ignore
+
+        address gmcImpl = setUpContract("GMCChild_IMPLEMENTATION", "GMCChild", gmcCreationCode); // prettier-ignore
+        gmc = MockGMC(setUpProxy("GMC", "GMCChild", gmcImpl, abi.encodePacked(GMCChild.init.selector))); // prettier-ignore
         gouda = MockERC20(setUpContract("GOUDA", "MockERC20", goudaCreationCode)); // prettier-ignore
 
-        bytes memory gangWarCreationCode = abi.encodePacked(type(MockGangWar).creationCode, abi.encode(coordinator, 0, 0, 0, 0)); // prettier-ignore
-        address gangWarImpl = setUpContract("GANG_WAR_IMPLEMENTATION", "GangWar", gangWarCreationCode); // prettier-ignore
-        game = MockGangWar(setUpProxy("GANG_WAR", "GangWar", gangWarImpl, gangWarInitCalldata())); // prettier-ignore
+        setUpContractsCommon();
     }
 
     function setUpContractsTestnet() internal {
-        setUpContractsCommon();
-
-        bytes memory goudaCreationCode = abi.encodePacked(type(MockERC20).creationCode, abi.encode("Gouda", "GOUDA", 18)); // prettier-ignore
-
-        coordinator = MockVRFCoordinator(setUpContract("MOCK_VRF_COORDINATOR", "MockVRFCoordinator", type(MockVRFCoordinator).creationCode)); // prettier-ignore
-        gmc = MockGMC(setUpContract("MOCK_GMC", "MockGMC", type(MockGMC).creationCode)); // prettier-ignore
-        gouda = MockERC20(setUpContract("GOUDA", "MockERC20", goudaCreationCode)); // prettier-ignore
-
-        (
-            ,
-            /* coordinator */
-            bytes32 keyHash,
-            uint64 subId
-        ) = getChainlinkParams();
-
-        bytes memory gangWarCreationCode = abi.encodePacked(type(GangWar).creationCode, abi.encode(coordinator, keyHash, subId, 3, 200_000)); // prettier-ignore
-        address gangWarImpl = setUpContract("GANG_WAR_IMPLEMENTATION", "GangWar", gangWarCreationCode); // prettier-ignore
-        game = MockGangWar(setUpProxy("GANG_WAR", "GangWar", gangWarImpl, gangWarInitCalldata())); // prettier-ignore
+        setUpContractsTEST();
     }
 
     function setUpContracts() internal {
@@ -122,13 +130,29 @@ contract GangWarSetup is UpgradeScripts {
         //     /* coordinator */
         //     bytes32 keyHash,
         //     uint64 subId
-        // ) = getChainlinkParams();
+        // ) = setUpChainlinkParams();
         // revert();
         // need to attach / create gouda child, gmc child
     }
 
+    bytes32 constant GANG_VAULT_CONTROLLER = keccak256("GANG.VAULT.CONTROLLER");
+
     function initContracts() internal {
-        gmc.setGangWar(address(game));
+        gmc.setGangVault(address(vault));
+        // game.setGangVault(address(vault));
+
+        tokens[0].grantMintAuthority(address(vault));
+        tokens[1].grantMintAuthority(address(vault));
+        tokens[2].grantMintAuthority(address(vault));
+        badges.grantMintAuthority(address(vault));
+
+        tokens[0].grantBurnAuthority(address(mice));
+        tokens[1].grantBurnAuthority(address(mice));
+        tokens[2].grantBurnAuthority(address(mice));
+        badges.grantBurnAuthority(address(mice));
+
+        vault.grantRole(GANG_VAULT_CONTROLLER, address(gmc));
+        vault.grantRole(GANG_VAULT_CONTROLLER, address(game));
 
         game.setBaronItemCost(ITEM_SEWER, 3_000_000e18);
         game.setBaronItemCost(ITEM_BLITZ, 3_000_000e18);
@@ -138,19 +162,7 @@ contract GangWarSetup is UpgradeScripts {
 
         game.setBriberyFee(address(gouda), 2e18);
 
-        tokens[0].grantMintAuthority(address(game));
-        tokens[1].grantMintAuthority(address(game));
-        tokens[2].grantMintAuthority(address(game));
-        badges.grantMintAuthority(address(game));
-
-        tokens[0].grantBurnAuthority(address(mice));
-        tokens[1].grantBurnAuthority(address(mice));
-        tokens[2].grantBurnAuthority(address(mice));
-        badges.grantBurnAuthority(address(mice));
-    }
-
-    function initContractsTEST() internal {
-        initContracts();
+        game.reset(occupants, yields);
     }
 
     bytes32 constant MINT_AUTHORITY = keccak256("MINT_AUTHORITY");
@@ -175,6 +187,8 @@ contract GangWarSetup is UpgradeScripts {
         if (!tokens[1].hasRole(MINT_AUTHORITY, lumy)) tokens[1].grantMintAuthority(lumy);
         if (!tokens[2].hasRole(MINT_AUTHORITY, lumy)) tokens[2].grantMintAuthority(lumy);
         if (!badges.hasRole(MINT_AUTHORITY, lumy)) badges.grantMintAuthority(lumy);
+
+        if (!vault.hasRole(GANG_VAULT_CONTROLLER, address(game))) vault.grantRole(GANG_VAULT_CONTROLLER, address(game));
 
         // mint tokens for testing
         if (firstTimeDeployed[address(game)]) {
@@ -221,211 +235,188 @@ contract GangWarSetup is UpgradeScripts {
         // try game.joinGangAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_2, [GANGSTER_YAKUZA_2].toMemory()) {} catch {}
     }
 
-    function getChainlinkParams()
-        internal
-        view
-        returns (
-            address coordinator_,
-            bytes32 keyHash,
-            uint64 subId
-        )
-    {
+    function setUpChainlinkParams() internal {
         if (block.chainid == 137) {
-            coordinator_ = COORDINATOR_POLYGON;
-            keyHash = KEYHASH_POLYGON;
-            subId = 133;
+            coordinator = COORDINATOR_POLYGON;
+            linkKeyHash = KEYHASH_POLYGON;
+            linkSubId = 133;
         } else if (block.chainid == 80001) {
-            coordinator_ = COORDINATOR_MUMBAI;
-            keyHash = KEYHASH_MUMBAI;
-            subId = 862;
+            coordinator = COORDINATOR_MUMBAI;
+            linkKeyHash = KEYHASH_MUMBAI;
+            linkSubId = 862;
         } else if (block.chainid == 4) {
-            coordinator_ = COORDINATOR_RINKEBY;
-            keyHash = KEYHASH_RINKEBY;
-            subId = 6985;
+            coordinator = COORDINATOR_RINKEBY;
+            linkKeyHash = KEYHASH_RINKEBY;
+            linkSubId = 6985;
         } else if (block.chainid == 31337) {
-            coordinator_ = COORDINATOR_RINKEBY;
-            keyHash = KEYHASH_RINKEBY;
-            subId = 6985;
+            // coordinator = COORDINATOR_RINKEBY;
+            // linkKeyHash = KEYHASH_RINKEBY;
+            // linkSubId = 6985;
         } else {
             revert("unknown chainid");
         }
     }
 
     // ---------------- constants
-    bool[22][22] connections;
-    uint256[22] yields;
-    Gang[22] occupants;
+
+    uint256 connectionsPacked;
+    bool[21][21] connections;
+    Gang[21] occupants;
+    uint256[21] yields;
+
+    bool[22][22] connections_1;
+    Gang[22] occupants_1;
 
     function setUpGangWarConstants() private {
-        connections[1][2] = true;
-        connections[1][3] = true;
-        connections[1][8] = true;
-        connections[1][9] = true;
-        connections[1][11] = true;
-        connections[2][1] = true;
-        connections[2][9] = true;
-        connections[2][10] = true;
-        connections[2][11] = true;
-        connections[3][1] = true;
-        connections[3][4] = true;
-        connections[3][11] = true;
-        connections[3][12] = true;
-        connections[3][13] = true;
-        connections[4][3] = true;
-        connections[4][5] = true;
-        connections[4][13] = true;
-        connections[4][14] = true;
-        connections[4][15] = true;
-        connections[5][4] = true;
-        connections[5][6] = true;
-        connections[5][7] = true;
-        connections[5][15] = true;
-        connections[6][5] = true;
-        connections[6][7] = true;
-        connections[6][15] = true;
-        connections[7][5] = true;
-        connections[7][6] = true;
-        connections[7][8] = true;
-        connections[7][16] = true;
-        connections[8][1] = true;
-        connections[8][7] = true;
-        connections[8][9] = true;
-        connections[8][16] = true;
-        connections[8][17] = true;
-        connections[9][1] = true;
-        connections[9][2] = true;
-        connections[9][8] = true;
-        connections[9][17] = true;
-        connections[9][18] = true;
-        connections[10][2] = true;
-        connections[10][11] = true;
-        connections[10][18] = true;
-        connections[10][19] = true;
-        connections[11][1] = true;
-        connections[11][2] = true;
-        connections[11][3] = true;
-        connections[11][10] = true;
-        connections[11][12] = true;
-        connections[12][3] = true;
-        connections[12][11] = true;
-        connections[12][13] = true;
-        connections[12][20] = true;
-        connections[13][3] = true;
-        connections[13][4] = true;
-        connections[13][12] = true;
-        connections[13][14] = true;
-        connections[13][20] = true;
-        connections[13][21] = true;
-        connections[14][4] = true;
-        connections[14][13] = true;
-        connections[14][15] = true;
-        connections[14][21] = true;
-        connections[15][4] = true;
-        connections[15][5] = true;
-        connections[15][6] = true;
-        connections[15][14] = true;
-        connections[16][7] = true;
-        connections[16][8] = true;
-        connections[16][17] = true;
-        connections[17][8] = true;
-        connections[17][9] = true;
-        connections[17][16] = true;
-        connections[17][18] = true;
-        connections[18][9] = true;
-        connections[18][10] = true;
-        connections[18][17] = true;
-        connections[18][19] = true;
-        connections[19][10] = true;
-        connections[19][18] = true;
-        connections[20][12] = true;
-        connections[20][13] = true;
-        connections[20][21] = true;
-        connections[21][13] = true;
-        connections[21][14] = true;
-        connections[21][20] = true;
+        connections_1[1][2] = true;
+        connections_1[1][3] = true;
+        connections_1[1][8] = true;
+        connections_1[1][9] = true;
+        connections_1[1][11] = true;
+        connections_1[2][1] = true;
+        connections_1[2][9] = true;
+        connections_1[2][10] = true;
+        connections_1[2][11] = true;
+        connections_1[3][1] = true;
+        connections_1[3][4] = true;
+        connections_1[3][11] = true;
+        connections_1[3][12] = true;
+        connections_1[3][13] = true;
+        connections_1[4][3] = true;
+        connections_1[4][5] = true;
+        connections_1[4][13] = true;
+        connections_1[4][14] = true;
+        connections_1[4][15] = true;
+        connections_1[5][4] = true;
+        connections_1[5][6] = true;
+        connections_1[5][7] = true;
+        connections_1[5][15] = true;
+        connections_1[6][5] = true;
+        connections_1[6][7] = true;
+        connections_1[6][15] = true;
+        connections_1[7][5] = true;
+        connections_1[7][6] = true;
+        connections_1[7][8] = true;
+        connections_1[7][16] = true;
+        connections_1[8][1] = true;
+        connections_1[8][7] = true;
+        connections_1[8][9] = true;
+        connections_1[8][16] = true;
+        connections_1[8][17] = true;
+        connections_1[9][1] = true;
+        connections_1[9][2] = true;
+        connections_1[9][8] = true;
+        connections_1[9][17] = true;
+        connections_1[9][18] = true;
+        connections_1[10][2] = true;
+        connections_1[10][11] = true;
+        connections_1[10][18] = true;
+        connections_1[10][19] = true;
+        connections_1[11][1] = true;
+        connections_1[11][2] = true;
+        connections_1[11][3] = true;
+        connections_1[11][10] = true;
+        connections_1[11][12] = true;
+        connections_1[12][3] = true;
+        connections_1[12][11] = true;
+        connections_1[12][13] = true;
+        connections_1[12][20] = true;
+        connections_1[13][3] = true;
+        connections_1[13][4] = true;
+        connections_1[13][12] = true;
+        connections_1[13][14] = true;
+        connections_1[13][20] = true;
+        connections_1[13][21] = true;
+        connections_1[14][4] = true;
+        connections_1[14][13] = true;
+        connections_1[14][15] = true;
+        connections_1[14][21] = true;
+        connections_1[15][4] = true;
+        connections_1[15][5] = true;
+        connections_1[15][6] = true;
+        connections_1[15][14] = true;
+        connections_1[16][7] = true;
+        connections_1[16][8] = true;
+        connections_1[16][17] = true;
+        connections_1[17][8] = true;
+        connections_1[17][9] = true;
+        connections_1[17][16] = true;
+        connections_1[17][18] = true;
+        connections_1[18][9] = true;
+        connections_1[18][10] = true;
+        connections_1[18][17] = true;
+        connections_1[18][19] = true;
+        connections_1[19][10] = true;
+        connections_1[19][18] = true;
+        connections_1[20][12] = true;
+        connections_1[20][13] = true;
+        connections_1[20][21] = true;
+        connections_1[21][13] = true;
+        connections_1[21][14] = true;
+        connections_1[21][20] = true;
 
-        occupants[3] = Gang.YAKUZA;
-        occupants[4] = Gang.YAKUZA;
-        occupants[12] = Gang.YAKUZA;
-        occupants[13] = Gang.YAKUZA;
-        occupants[14] = Gang.YAKUZA;
-        occupants[20] = Gang.YAKUZA;
-        occupants[21] = Gang.YAKUZA;
-
-        occupants[1] = Gang.CARTEL;
-        occupants[2] = Gang.CARTEL;
-        occupants[9] = Gang.CARTEL;
-        occupants[10] = Gang.CARTEL;
-        occupants[11] = Gang.CARTEL;
-        occupants[18] = Gang.CARTEL;
-        occupants[19] = Gang.CARTEL;
-
-        occupants[5] = Gang.CYBERP;
-        occupants[6] = Gang.CYBERP;
-        occupants[7] = Gang.CYBERP;
-        occupants[8] = Gang.CYBERP;
-        occupants[15] = Gang.CYBERP;
-        occupants[16] = Gang.CYBERP;
-        occupants[17] = Gang.CYBERP;
-
-        yields[3] = 1_300_000;
-        yields[4] = 1_000_000;
-        yields[12] = 700_000;
-        yields[13] = 1_000_000;
-        yields[14] = 1_300_000;
-        yields[20] = 1_700_000;
-        yields[21] = 700_000;
-
-        yields[1] = 1_300_000;
-        yields[2] = 700_000;
-        yields[9] = 1_000_000;
-        yields[10] = 700_000;
-        yields[11] = 1_300_000;
-        yields[18] = 1_000_000;
-        yields[19] = 1_700_000;
-
-        yields[5] = 1_000_000;
-        yields[6] = 1_700_000;
-        yields[7] = 700_000;
-        yields[8] = 1_000_000;
-        yields[15] = 1_300_000;
-        yields[16] = 700_000;
-        yields[17] = 1_300_000;
-    }
-
-    function gangWarInitCalldata() internal view returns (bytes memory) {
-        bool[21][21] memory connectionsNormalized;
         for (uint256 i; i < 21; i++) {
             for (uint256 j; j < 21; j++) {
-                connectionsNormalized[i][j] = connections[i + 1][j + 1];
-
-                assert(connections[i + 1][j + 1] == connections[j + 1][i + 1]);
+                connections[i][j] = connections_1[i + 1][j + 1];
             }
         }
 
-        uint256 connectionsPacked = LibPackedMap.encode(connectionsNormalized);
+        connectionsPacked = LibPackedMap.encode(connections);
 
-        Gang[22] memory occ;
-        occ = occupants;
+        // assembly { occupants_1.slot := sub(occupants.slot, 1) } // prettier-ignore
 
-        uint256[21] memory initialOccupants;
+        occupants_1[3] = Gang.YAKUZA;
+        occupants_1[4] = Gang.YAKUZA;
+        occupants_1[12] = Gang.YAKUZA;
+        occupants_1[13] = Gang.YAKUZA;
+        occupants_1[14] = Gang.YAKUZA;
+        occupants_1[20] = Gang.YAKUZA;
+        occupants_1[21] = Gang.YAKUZA;
 
-        // shift index by 1 so that districts start at 0: [1, 22) => [0, 21)
-        assembly { initialOccupants := add(occ, 0x20) } // prettier-ignore
+        occupants_1[1] = Gang.CARTEL;
+        occupants_1[2] = Gang.CARTEL;
+        occupants_1[9] = Gang.CARTEL;
+        occupants_1[10] = Gang.CARTEL;
+        occupants_1[11] = Gang.CARTEL;
+        occupants_1[18] = Gang.CARTEL;
+        occupants_1[19] = Gang.CARTEL;
 
-        uint256[21] storage initialYields;
-        assembly { initialYields.slot := add(yields.slot, 1) } // prettier-ignore
+        occupants_1[5] = Gang.CYBERP;
+        occupants_1[6] = Gang.CYBERP;
+        occupants_1[7] = Gang.CYBERP;
+        occupants_1[8] = Gang.CYBERP;
+        occupants_1[15] = Gang.CYBERP;
+        occupants_1[16] = Gang.CYBERP;
+        occupants_1[17] = Gang.CYBERP;
 
-        bytes memory initCalldata = abi.encodeWithSelector(
-            GangWar.init.selector,
-            gmc,
-            tokens,
-            badges,
-            connectionsPacked,
-            initialOccupants,
-            initialYields
-        );
+        for (uint256 i; i < 21; i++) occupants[i] = occupants_1[i + 1];
 
-        return initCalldata;
+        uint256[22] storage yields_1;
+
+        assembly { yields_1.slot := sub(yields.slot, 1) } // prettier-ignore
+
+        yields_1[3] = 1_300_000;
+        yields_1[4] = 1_000_000;
+        yields_1[12] = 700_000;
+        yields_1[13] = 1_000_000;
+        yields_1[14] = 1_300_000;
+        yields_1[20] = 1_700_000;
+        yields_1[21] = 700_000;
+
+        yields_1[1] = 1_300_000;
+        yields_1[2] = 700_000;
+        yields_1[9] = 1_000_000;
+        yields_1[10] = 700_000;
+        yields_1[11] = 1_300_000;
+        yields_1[18] = 1_000_000;
+        yields_1[19] = 1_700_000;
+
+        yields_1[5] = 1_000_000;
+        yields_1[6] = 1_700_000;
+        yields_1[7] = 700_000;
+        yields_1[8] = 1_000_000;
+        yields_1[15] = 1_300_000;
+        yields_1[16] = 700_000;
+        yields_1[17] = 1_300_000;
     }
 }

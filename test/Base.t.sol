@@ -4,21 +4,21 @@ pragma solidity ^0.8.0;
 import "forge-std/Test.sol";
 
 // base
-import {ERC1967Proxy} from "UDS/proxy/ERC1967Proxy.sol";
 import "/GangWar.sol";
-import "/tokens/GangToken.sol";
-import {deploy} from "../script/deploy.s.sol";
+import {GangToken} from "/tokens/GangToken.sol";
+import {GangWarSetup} from "../script/GangWarSetup.sol";
+
+import {ERC1967Proxy} from "UDS/proxy/ERC1967Proxy.sol";
 
 // utils
 import "futils/futils.sol";
 import "/lib/LibPackedMap.sol";
-import "./utils.sol";
 
 // mock
 import {MockVRFCoordinator} from "./mocks/MockVRFCoordinator.sol";
 import "solmate/test/utils/mocks/MockERC721.sol";
 
-contract TestGangWar is Test, deploy {
+contract TestGangWar is Test, GangWarSetup {
     using futils for *;
 
     address bob = address(0xb0b);
@@ -31,9 +31,13 @@ contract TestGangWar is Test, deploy {
 
     function setUp() public virtual {
         setUpContractsTEST();
-        initContractsTEST();
+        initContracts();
 
-        // console.log(block.chainid);
+        tokens[0].grantBurnAuthority(tester);
+        tokens[1].grantBurnAuthority(tester);
+        tokens[2].grantBurnAuthority(tester);
+
+        vault.grantRole(GANG_VAULT_CONTROLLER, address(this));
 
         gmc.mint(alice, GANGSTER_YAKUZA_1);
         gmc.mint(alice, GANGSTER_CARTEL_1);
@@ -54,7 +58,7 @@ contract TestGangWar is Test, deploy {
         vm.prank(bob);
         gouda.approve(address(game), type(uint256).max);
 
-        game.scrambleStorage();
+        // game.scrambleStorage();
     }
 
     function assertEq(Gang a, Gang b) internal {
@@ -75,7 +79,7 @@ contract TestGangWar is Test, deploy {
         for (uint256 i; i < 21; i++) {
             for (uint256 j; j < 21; j++) {
                 (uint256 a, uint256 b) = (i < j) ? (i, j) : (j, i);
-                assertEq(connections[a + 1][b + 1], LibPackedMap.isConnecting(packedConnections, i, j));
+                assertEq(connections[a][b], LibPackedMap.isConnecting(packedConnections, i, j));
             }
         }
 
@@ -94,7 +98,7 @@ contract TestGangWar is Test, deploy {
             assertEq(district.stateCountdown, 0);
         }
 
-        uint256[3][3] memory yield = game.getYield();
+        uint256[3][3] memory yield = vault.getYield();
 
         assertTrue(yield[0][0] > 0);
         assertEq(yield[0][0], yield[1][1]);

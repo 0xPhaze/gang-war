@@ -691,7 +691,7 @@ contract TestGangWarGameLogic is TestGangWar {
         skip(TIME_REINFORCEMENTS + TIME_GANG_WAR);
 
         vm.prank(address(0));
-        uint256[3] memory balancesBefore = game.getGangVaultBalance(uint8(Gang.CARTEL));
+        uint256[3] memory balancesBefore = vault.getGangVaultBalance(uint8(Gang.CARTEL));
 
         (, bytes memory data) = game.checkUpkeep("");
 
@@ -701,7 +701,7 @@ contract TestGangWarGameLogic is TestGangWar {
         MockVRFCoordinator(coordinator).fulfillLatestRequest(DISTRICT_CARTEL_1);
 
         vm.prank(address(0));
-        uint256[3] memory balancesAfter = game.getGangVaultBalance(uint8(Gang.CARTEL));
+        uint256[3] memory balancesAfter = vault.getGangVaultBalance(uint8(Gang.CARTEL));
 
         District memory district = game.getDistrict(DISTRICT_CARTEL_1);
 
@@ -716,7 +716,7 @@ contract TestGangWarGameLogic is TestGangWar {
 
     // test lockup when gangvault balance is enough and both teams are locked
     function test_lockup_fullFine() public {
-        game.setYield(uint8(Gang.YAKUZA), 1, 100e10); // make sure they have balances so can get fined
+        vault.setYield(uint8(Gang.YAKUZA), [uint256(0), 1e10, 0]); // make sure they have balances so can get fined
 
         vm.prank(bob);
         game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, BARON_YAKUZA_1, false);
@@ -727,10 +727,10 @@ contract TestGangWarGameLogic is TestGangWar {
         skip(100 days);
 
         vm.prank(address(0));
-        uint256[3] memory balancesBeforeCartel = game.getGangVaultBalance(uint8(Gang.CARTEL));
+        uint256[3] memory balancesBeforeCartel = vault.getGangVaultBalance(uint8(Gang.CARTEL));
 
         vm.prank(address(0));
-        uint256[3] memory balancesBeforeYakuza = game.getGangVaultBalance(uint8(Gang.YAKUZA));
+        uint256[3] memory balancesBeforeYakuza = vault.getGangVaultBalance(uint8(Gang.YAKUZA));
 
         (, bytes memory data) = game.checkUpkeep("");
 
@@ -740,9 +740,9 @@ contract TestGangWarGameLogic is TestGangWar {
         MockVRFCoordinator(coordinator).fulfillLatestRequest(DISTRICT_CARTEL_1);
 
         vm.prank(address(0));
-        uint256[3] memory balancesAfterCartel = game.getGangVaultBalance(uint8(Gang.CARTEL));
+        uint256[3] memory balancesAfterCartel = vault.getGangVaultBalance(uint8(Gang.CARTEL));
         vm.prank(address(0));
-        uint256[3] memory balancesAfterYakuza = game.getGangVaultBalance(uint8(Gang.YAKUZA));
+        uint256[3] memory balancesAfterYakuza = vault.getGangVaultBalance(uint8(Gang.YAKUZA));
 
         District memory district = game.getDistrict(DISTRICT_CARTEL_1);
 
@@ -766,11 +766,11 @@ contract TestGangWarGameLogic is TestGangWar {
         // ].toMemory();
         // for (uint256 i; i < NUM_BARON_ITEMS; i++) {
         //     vm.prank(address(0));
-        //     balancesBefore = game.getGangVaultBalance(0);
+        //     balancesBefore = vault.getGangVaultBalance(0);
         //     vm.prank(bob);
         //     game.purchaseBaronItem(BARON_YAKUZA_1, i);
         //     vm.prank(address(0));
-        //     balancesAfter = game.getGangVaultBalance(0);
+        //     balancesAfter = vault.getGangVaultBalance(0);
         //     assertEq(balancesBefore[0] - balancesAfter[0], itemCosts[i]);
         //     assertEq(balancesBefore[1] - balancesAfter[1], itemCosts[i]);
         //     assertEq(balancesBefore[2] - balancesAfter[2], itemCosts[i]);
