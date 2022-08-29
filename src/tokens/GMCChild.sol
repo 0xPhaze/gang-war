@@ -49,23 +49,43 @@ contract GMCChild is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChildTunnelUDS, 
         return id == 0 ? Gang.NONE : Gang((id < 10000 ? id - 1 : id - (10001 - 3)) % 3);
     }
 
+    // function resyncShares() public {
+    //     uint256 idsLength = balanceOf(msg.sender);
+
+    //     uint40[3] memory shares;
+    //     for (uint256 i; i < idsLength; ++i) {
+    //         uint256 id = tokenOfOwnerByIndex(msg.sender, i);
+
+    //         _endRent(id);
+
+    //         uint256 gang = uint256(gangOf(id));
+    //         shares[gang] += 100;
+    //     }
+
+    //     GangVault(vault).resetShares(msg.sender, shares);
+    // }
+
     /* ------------- hooks ------------- */
 
+    /// @dev these hooks are called by Polygon's PoS bridge
+    /// extra care must be taken such that these calls never fail!
     function _afterIdRegistered(address to, uint256 id) internal override {
-        // @note add try catch
         super._afterIdRegistered(to, id);
 
-        GangVault(vault).addShares(to, uint256(gangOf(id)), 100);
-        // try GangVault(vault).addShares(to, uint256(gangOf(id)), 100) {} catch {}
+        // GangVault(vault).addShares(to, uint256(gangOf(id)), 100);
+        try GangVault(vault).addShares(to, uint256(gangOf(id)), 100) {} catch {}
     }
 
     function _afterIdDeregistered(address from, uint256 id) internal override {
         super._afterIdDeregistered(from, id);
 
-        _deleteActiveRental(id);
+        // make sure any active rental is cleaned up
+        // so that shares invariant holds.
+        // calls `_afterEndRent` if rental is active.
+        _endRent(id);
 
-        GangVault(vault).removeShares(from, uint256(gangOf(id)), 100);
-        // try GangVault(vault).removeShares(from, uint256(gangOf(id)), 100) {} catch {}
+        // GangVault(vault).removeShares(from, uint256(gangOf(id)), 100);
+        try GangVault(vault).removeShares(from, uint256(gangOf(id)), 100) {} catch {}
     }
 
     function _afterStartRent(
@@ -105,6 +125,4 @@ contract GMCChild is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChildTunnelUDS, 
     function _authorizeUpgrade() internal override onlyOwner {}
 
     function _authorizeTunnelController() internal override onlyOwner {}
-
-    // TODO add resync option
 }

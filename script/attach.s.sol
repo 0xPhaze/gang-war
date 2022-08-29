@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "forge-std/Script.sol";
 
 import {ERC1967Proxy} from "UDS/proxy/ERC1967Proxy.sol";
-import {GangWarSetup} from "./GangWarSetup.sol";
+import {GangWarSetup} from "../src/Setup.sol";
 
 // import "chainlink/contracts/src/v0.8/VRFCoordinatorV2.sol";
 // function addConsumer(uint64 subId, address consumer) external override onlySubOwner(subId) nonReentrant {

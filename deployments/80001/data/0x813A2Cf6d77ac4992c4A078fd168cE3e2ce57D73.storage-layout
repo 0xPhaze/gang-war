@@ -9,20 +9,20 @@
       "type": "t_struct(AccessControlDS)28_storage"
     },
     {
-      "astId": 37706,
+      "astId": 35694,
       "contract": "src/GangVault.sol:GangVault",
       "label": "__storageLayoutFlexible",
       "offset": 0,
       "slot": "1",
-      "type": "t_struct(GangVaultFlexibleDS)37666_storage"
+      "type": "t_struct(GangVaultFlexibleDS)35637_storage"
     },
     {
-      "astId": 37709,
+      "astId": 35697,
       "contract": "src/GangVault.sol:GangVault",
       "label": "__storageLayoutPersistent",
       "offset": 0,
       "slot": "2",
-      "type": "t_struct(GangVaultPersistentDS)37657_storage"
+      "type": "t_struct(GangVaultPersistentDS)35628_storage"
     }
   ],
   "types": {
@@ -66,6 +66,13 @@
       "numberOfBytes": "32",
       "value": "t_array(t_array(t_uint80)3_storage)3_storage"
     },
+    "t_mapping(t_address,t_array(t_uint40)3_storage)": {
+      "encoding": "mapping",
+      "key": "t_address",
+      "label": "mapping(address => uint40[3])",
+      "numberOfBytes": "32",
+      "value": "t_array(t_uint40)3_storage"
+    },
     "t_mapping(t_address,t_array(t_uint80)3_storage)": {
       "encoding": "mapping",
       "key": "t_address",
@@ -102,12 +109,12 @@
       ],
       "numberOfBytes": "32"
     },
-    "t_struct(GangVaultFlexibleDS)37666_storage": {
+    "t_struct(GangVaultFlexibleDS)35637_storage": {
       "encoding": "inplace",
       "label": "struct GangVaultFlexibleDS",
       "members": [
         {
-          "astId": 37665,
+          "astId": 35636,
           "contract": "src/GangVault.sol:GangVault",
           "label": "lastUserYieldPerShare",
           "offset": 0,
@@ -117,12 +124,12 @@
       ],
       "numberOfBytes": "32"
     },
-    "t_struct(GangVaultPersistentDS)37657_storage": {
+    "t_struct(GangVaultPersistentDS)35628_storage": {
       "encoding": "inplace",
       "label": "struct GangVaultPersistentDS",
       "members": [
         {
-          "astId": 37628,
+          "astId": 35599,
           "contract": "src/GangVault.sol:GangVault",
           "label": "totalShares",
           "offset": 0,
@@ -130,7 +137,7 @@
           "type": "t_array(t_uint40)3_storage"
         },
         {
-          "astId": 37632,
+          "astId": 35603,
           "contract": "src/GangVault.sol:GangVault",
           "label": "lastUpdateTime",
           "offset": 0,
@@ -138,7 +145,7 @@
           "type": "t_array(t_uint40)3_storage"
         },
         {
-          "astId": 37638,
+          "astId": 35609,
           "contract": "src/GangVault.sol:GangVault",
           "label": "yield",
           "offset": 0,
@@ -146,7 +153,7 @@
           "type": "t_array(t_array(t_uint80)3_storage)3_storage"
         },
         {
-          "astId": 37644,
+          "astId": 35615,
           "contract": "src/GangVault.sol:GangVault",
           "label": "accruedYieldPerShare",
           "offset": 0,
@@ -154,15 +161,15 @@
           "type": "t_array(t_array(t_uint80)3_storage)3_storage"
         },
         {
-          "astId": 37650,
+          "astId": 35621,
           "contract": "src/GangVault.sol:GangVault",
           "label": "userShares",
           "offset": 0,
           "slot": "8",
-          "type": "t_mapping(t_address,t_array(t_uint80)3_storage)"
+          "type": "t_mapping(t_address,t_array(t_uint40)3_storage)"
         },
         {
-          "astId": 37656,
+          "astId": 35627,
           "contract": "src/GangVault.sol:GangVault",
           "label": "userBalance",
           "offset": 0,

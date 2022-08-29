@@ -1,32 +1,26 @@
 
 # TODO
 
-- add bribery fee
-- baron item cost
-
 - fix collect badges
-- fix adding shares (enter/exit gangWar)
 
-- MockGMC enumerable
 - MockGMC NFT random gang for Demo?
-
-- market listing
 
 - add validation to using items on districts (attackers / defenders)
 
 - add actual VRF integration!
 
 - add Game pause/reset option
-- make enterGangWar/exitGangWar more robust, add resync option
 
-- add shares reset / automated enter mechanics that conform with market
+- badges
+- call 911
 
 # Frontend
-- transform activeItems to array
+- add in function getGangAccumulatedBalance() external view returns (uint256[3][3])
+- test market listing
 
-- add in function getGangAccumulatedBalance() external view returns (uint80[3][3])
 
 # Test
+- test market listing
 - test purchaseItems (add delay for barons?)
 - test badges rewards
 - test exchange
@@ -48,7 +42,4 @@
 - integrate with final VRF
 - what is LOCKUP_FINE?
 
-# Not-so-important
-- getGangVaultBalance without address(0) call
-
-# XChain Registry???
+# XChain testing

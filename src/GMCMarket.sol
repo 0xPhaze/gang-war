@@ -19,6 +19,8 @@ struct Offer {
 }
 
 struct GangMarketDS {
+    // listedOffers is stuck in a mapping at [0],
+    // because nested structs are dangerous!
     mapping(uint256 => Uint256Set) listedOffers;
     mapping(uint256 => Offer) activeOffers;
     mapping(address => uint256) lastRentalAcceptance;
@@ -56,20 +58,16 @@ abstract contract GMCMarket {
         return s().activeOffers[id].renter;
     }
 
-    function getListedOffers() public view returns (Offer[] memory offers) {
-        uint256[] memory offerIds = s().listedOffers[0].values();
-        offers = new Offer[](offerIds.length);
-        for (uint256 i; i < offerIds.length; ++i) {
-            offers[i] = s().activeOffers[offerIds[i]];
-        }
-    }
-
-    function getActiveOffer(uint256 id) public view returns (Offer memory) {
-        return s().activeOffers[id];
+    function getListedOfferByIndex(uint256 id) public view returns (Offer memory) {
+        return s().activeOffers[s().listedOffers[0].at(id)];
     }
 
     function numListedOffers() public view returns (uint256) {
         return s().listedOffers[0].length();
+    }
+
+    function getActiveOffer(uint256 id) public view returns (Offer memory) {
+        return s().activeOffers[id];
     }
 
     /* ------------- external ------------- */
@@ -97,9 +95,19 @@ abstract contract GMCMarket {
             s().activeOffers[id] = offers[i];
 
             // direct offer to renter
-            if (offer.renter != address(0)) _afterStartRent(owner, offer.renter, id, renterShare);
+            if (offer.renter != address(0)) {
+                _afterStartRent(owner, offer.renter, id, renterShare);
+            }
 
             s().listedOffers[0].add(id);
+        }
+    }
+
+    function deleteOffer(uint256[] calldata ids) external {
+        for (uint256 i; i < ids.length; i++) {
+            if (ownerOf(ids[i]) != msg.sender) revert NotAuthorized();
+
+            _endRent(ids[i]);
         }
     }
 
@@ -125,25 +133,30 @@ abstract contract GMCMarket {
 
             if (!isAuthorized(msg.sender, id)) revert NotAuthorized();
 
-            // @note check for existance?
             Offer storage offer = s().activeOffers[id];
 
             address renter = offer.renter;
             uint256 renterShare = offer.renterShare;
 
+            // offer has not been accepted / is invalid
+            if (offer.renter == address(0)) revert InvalidOffer();
+
             if (offer.expiresOnAcceptance) {
-                delete s().activeOffers[id];
+                _endRent(id);
+            } else {
+                delete offer.renter;
 
-                _deleteActiveRental(id);
-
-                s().listedOffers[0].remove(id);
-            } else delete offer.renter;
-
-            _afterEndRent(ownerOf(id), renter, id, renterShare);
+                _afterEndRent(ownerOf(id), renter, id, renterShare);
+            }
         }
     }
 
-    function _deleteActiveRental(uint256 id) internal {
+    // function rewardBadges(uint256 id) external onlyRole() {
+    // }
+
+    /* ------------- internal ------------- */
+
+    function _endRent(uint256 id) internal {
         Offer storage offer = s().activeOffers[id];
 
         address renter = offer.renter;

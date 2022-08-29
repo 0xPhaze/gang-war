@@ -6,12 +6,15 @@ import "futils/futils.sol";
 
 contract MockGangWar is GangWar {
     constructor(
+        GMC gmc,
+        GangVault vault,
+        GangToken badges,
         address coordinator,
         bytes32 keyHash,
         uint64 subscriptionId,
         uint16 requestConfirmations,
         uint32 callbackGasLimit
-    ) GangWar(coordinator, keyHash, subscriptionId, requestConfirmations, callbackGasLimit) {}
+    ) GangWar(gmc, vault, badges, coordinator, keyHash, subscriptionId, requestConfirmations, callbackGasLimit) {}
 
     function setGangWarOutcome(
         uint256 districtId,

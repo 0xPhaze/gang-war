@@ -64,6 +64,7 @@ contract TestGangWarOutcome is Test {
     //     assertEq((p * 1e12) >> 128, (res * 1e12) >> 128);
     // }
 
+    // TODO args=[127, 130, false]]
     function test_gangWarWonProbProperties(
         uint16 attackForce,
         uint16 defenseForce,

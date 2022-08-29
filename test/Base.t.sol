@@ -6,7 +6,7 @@ import "forge-std/Test.sol";
 // base
 import "/GangWar.sol";
 import {GangToken} from "/tokens/GangToken.sol";
-import {GangWarSetup} from "../script/GangWarSetup.sol";
+import {GangWarSetup} from "../src/Setup.sol";
 
 import {ERC1967Proxy} from "UDS/proxy/ERC1967Proxy.sol";
 

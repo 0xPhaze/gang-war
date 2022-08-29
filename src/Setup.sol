@@ -90,20 +90,20 @@ contract GangWarSetup is UpgradeScripts {
         bytes memory vaultCreationCode = abi.encodePacked(type(GangVault).creationCode, abi.encode(tokens[0], tokens[1], tokens[2], GANG_VAULT_FEE)); // prettier-ignore
         bytes memory gangWarCreationCode;
 
+        address vaultImpl = setUpContract("VAULT_IMPLEMENTATION", "Vault", vaultCreationCode);
+        vault = GangVault(setUpProxy("VAULT", "GangVault", vaultImpl, abi.encode(GangVault.init.selector)));
+
         if (isTestnet()) {
-            gangWarCreationCode = abi.encodePacked(type(MockGangWar).creationCode, abi.encode(coordinator, linkKeyHash, linkSubId, 3, 200_000)); // prettier-ignore
+            gangWarCreationCode = abi.encodePacked(type(MockGangWar).creationCode, abi.encode(gmc, vault, badges, coordinator, linkKeyHash, linkSubId, 3, 200_000)); // prettier-ignore
         } else {
-            gangWarCreationCode = abi.encodePacked(type(GangWar).creationCode, abi.encode(coordinator, linkKeyHash, linkSubId, 3, 200_000)); // prettier-ignore
+            gangWarCreationCode = abi.encodePacked(type(GangWar).creationCode, abi.encode(gmc, vault, badges, coordinator, linkKeyHash, linkSubId, 3, 200_000)); // prettier-ignore
         }
 
         address miceImpl = setUpContract("MICE_IMPLEMENTATION", "Mice", miceCreationCode);
         mice = Mice(setUpProxy("MICE", "Mice", miceImpl, abi.encode(Mice.init.selector)));
 
-        address vaultImpl = setUpContract("VAULT_IMPLEMENTATION", "Vault", vaultCreationCode);
-        vault = GangVault(setUpProxy("VAULT", "GangVault", vaultImpl, abi.encode(GangVault.init.selector)));
-
         address gangWarImpl = setUpContract("GANG_WAR_IMPLEMENTATION", "GangWar", gangWarCreationCode); // prettier-ignore
-        game = MockGangWar(setUpProxy("GANG_WAR", "GangWar", gangWarImpl, abi.encodeWithSelector(GangWar.init.selector, gmc, vault, connectionsPacked))); // prettier-ignore
+        game = MockGangWar(setUpProxy("GANG_WAR", "GangWar", gangWarImpl, abi.encodeWithSelector(GangWar.init.selector, connectionsPacked))); // prettier-ignore
     }
 
     function setUpContractsTEST() internal {
@@ -144,7 +144,7 @@ contract GangWarSetup is UpgradeScripts {
         tokens[0].grantMintAuthority(address(vault));
         tokens[1].grantMintAuthority(address(vault));
         tokens[2].grantMintAuthority(address(vault));
-        badges.grantMintAuthority(address(vault));
+        badges.grantMintAuthority(address(game));
 
         tokens[0].grantBurnAuthority(address(mice));
         tokens[1].grantBurnAuthority(address(mice));

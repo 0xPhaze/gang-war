@@ -3,8 +3,9 @@ pragma solidity ^0.8.0;
 
 import "./Constants.sol";
 import {GangVault} from "./GangVault.sol";
+import {GangToken} from "./tokens/GangToken.sol";
 import {VRFConsumerV2} from "./lib/VRFConsumerV2.sol";
-import {GMCChild as GMC} from "./tokens/GMCChild.sol";
+import {GMCChild as GMC, Offer} from "./tokens/GMCChild.sol";
 
 import {ERC20UDS} from "UDS/tokens/ERC20UDS.sol";
 import {ERC721UDS} from "UDS/tokens/ERC721UDS.sol";
@@ -64,25 +65,30 @@ contract GangWar is
     event GangWarWon(uint256 indexed districtId, Gang indexed losers, Gang indexed winners);
     event CopsLockup(uint256 indexed districtId);
 
+    GMC public immutable gmc;
+    GangToken public immutable badges;
+    GangVault public immutable vault;
+
     constructor(
+        GMC gmc_,
+        GangVault vault_,
+        GangToken badges_,
         address coordinator,
         bytes32 keyHash,
         uint64 subscriptionId,
         uint16 requestConfirmations,
         uint32 callbackGasLimit
-    ) VRFConsumerV2(coordinator, keyHash, subscriptionId, requestConfirmations, callbackGasLimit) {}
+    ) VRFConsumerV2(coordinator, keyHash, subscriptionId, requestConfirmations, callbackGasLimit) {
+        gmc = gmc_;
+        vault = vault_;
+        badges = badges_;
+    }
 
     /* ------------- init ------------- */
 
-    function init(
-        address gmc_,
-        address vault,
-        uint256 connections
-    ) external initializer {
+    function init(uint256 connections) external initializer {
         __Ownable_init();
 
-        s().gmc = gmc_;
-        s().vault = vault;
         s().districtConnections = connections;
 
         // reset(occupants, yields);
@@ -109,8 +115,6 @@ contract GangWar is
             initialGangYields[uint256(occupants[i])] += yields[i];
         }
 
-        GangVault vault = gangVault();
-
         // initialize yields for gangs
         vault.setYield(0, [initialGangYields[0], uint256(0), uint256(0)]);
         vault.setYield(1, [uint256(0), initialGangYields[1], uint256(0)]);
@@ -130,7 +134,7 @@ contract GangWar is
         // 3:2 exchange rate
         price /= 2;
 
-        gangVault().spendGangVaultBalance(uint256(gang), price, price, price, true);
+        vault.spendGangVaultBalance(uint256(gang), price, price, price, true);
 
         s().baronItems[gang][itemId] += 1;
     }
@@ -171,14 +175,6 @@ contract GangWar is
         district.defenseForces = s().districtDefenseForces[districtId][district.roundId];
     }
 
-    function gmc() public view returns (GMC) {
-        return GMC(s().gmc);
-    }
-
-    function gangVault() public view returns (GangVault) {
-        return GangVault(s().vault);
-    }
-
     function gangOf(uint256 id) public pure returns (Gang) {
         return id == 0 ? Gang.NONE : Gang((id < 10000 ? id - 1 : id - (10001 - 3)) % 3);
     }
@@ -204,7 +200,6 @@ contract GangWar is
         (DISTRICT_STATE districtState, ) = _districtStateAndCountdown(district);
 
         _verifyAuthorized(msg.sender, tokenId);
-        // _collectBadges(tokenId);
 
         if (!isConnecting(connectingId, districtId)) {
             if (!sewers) revert InvalidConnectingDistrict();
@@ -218,9 +213,10 @@ contract GangWar is
         if (s().districts[connectingId].occupants != gang) revert ConnectingDistrictNotOwnedByGang();
 
         (PLAYER_STATE baronState, ) = _gangsterStateAndCountdown(tokenId);
-        if (baronState != PLAYER_STATE.IDLE) {
-            revert BaronInactionable();
-        }
+        if (baronState != PLAYER_STATE.IDLE) revert BaronInactionable();
+
+        // collect badges from previous gang war
+        _collectBadges(tokenId);
 
         Gangster storage baron = s().gangsters[tokenId];
 
@@ -242,16 +238,15 @@ contract GangWar is
         (DISTRICT_STATE districtState, ) = _districtStateAndCountdown(district);
 
         _verifyAuthorized(msg.sender, tokenId);
-        // _collectBadges(tokenId);
 
         if (!isBaron(tokenId)) revert TokenMustBeBaron();
         if (districtState != DISTRICT_STATE.REINFORCEMENT) revert DistrictInvalidState();
         if (district.occupants != gang) revert DistrictNotOwnedByGang();
 
         (PLAYER_STATE gangsterState, ) = _gangsterStateAndCountdown(tokenId);
-        if (gangsterState != PLAYER_STATE.IDLE) {
-            revert BaronInactionable();
-        }
+        if (gangsterState != PLAYER_STATE.IDLE) revert BaronInactionable();
+
+        _collectBadges(tokenId);
 
         Gangster storage baron = s().gangsters[tokenId];
 
@@ -336,7 +331,6 @@ contract GangWar is
             bool attacking = state == PLAYER_STATE.ATTACK;
 
             _verifyAuthorized(msg.sender, tokenId);
-            // _collectBadges(tokenId);
 
             Gangster storage gangster = s().gangsters[tokenId];
 
@@ -347,6 +341,8 @@ contract GangWar is
 
             if (attacking) s().districtAttackForces[districtId][roundId]--;
             else s().districtDefenseForces[districtId][roundId]--;
+
+            _collectBadges(tokenId);
 
             emit ExitGangWar(districtId, gang, tokenId);
 
@@ -406,6 +402,8 @@ contract GangWar is
 
                 emit ExitGangWar(gangsterLocation, gang, tokenId);
             }
+
+            _collectBadges(tokenId);
 
             gangster.bribery = 0;
             gangster.recovery = 0;
@@ -510,67 +508,43 @@ contract GangWar is
 
     /* ------------- hooks ------------- */
 
-    // function _collectBadges(uint256 gangsterId) internal override {
-    //     Gangster storage gangster = s().gangsters[gangsterId];
+    function _collectBadges(uint256 gangsterId) internal {
+        Gangster storage gangster = s().gangsters[gangsterId];
 
-    //     uint256 roundId = gangster.roundId;
+        uint256 roundId = gangster.roundId;
 
-    //     if (roundId != 0) {
-    //         uint256 districtId = gangster.location;
+        if (roundId != 0) {
+            uint256 districtId = gangster.location;
 
-    //         uint256 outcome = gangWarOutcome(districtId, roundId);
+            uint256 outcome = gangWarOutcome(districtId, roundId);
 
-    //         if (outcome != 0) {
-    //             uint256 badgesEarned = gangWarWon(districtId, roundId) ? BADGES_EARNED_VICTORY : BADGES_EARNED_DEFEAT;
+            if (outcome != 0) {
+                uint256 badgesEarned = gangWarWon(districtId, roundId) ? BADGES_EARNED_VICTORY : BADGES_EARNED_DEFEAT;
 
-    //             address owner = GMC(gmc()).ownerOf(gangsterId);
+                // @note can we assume msg.sender?
+                address owner = gmc.ownerOf(gangsterId);
 
-    //             Offer memory rental = getActiveOffer(gangsterId);
+                Offer memory rental = gmc.getActiveOffer(gangsterId);
 
-    //             address renter = rental.renter;
+                address renter = rental.renter;
 
-    //             address badges = s().badges;
-    //             uint256 renterAmount;
+                if (renter != address(0)) {
+                    uint256 renterAmount = (badgesEarned * rental.renterShare) / 100;
 
-    //             if (renter != address(0)) {
-    //                 renterAmount = (badgesEarned * 100) / rental.renterShare;
+                    badges.mint(renter, renterAmount);
 
-    //                 GangToken(badges).mint(renter, renterAmount);
-    //             }
+                    badgesEarned -= renterAmount;
+                }
 
-    //             GangToken(badges).mint(owner, badgesEarned - renterAmount);
+                badges.mint(owner, badgesEarned);
 
-    //             gangster.roundId = 0;
-    //         }
-    //     }
-    // }
-
-    // function _afterStartRent(
-    //     address owner,
-    //     address renter,
-    //     uint256 tokenId,
-    //     uint256 rentershares
-    // ) internal override {
-    //     Gang gang = gangOf(tokenId);
-
-    //     _removeShares(owner, uint256(gang), uint40(rentershares));
-    //     _addShares(renter, uint256(gang), uint40(rentershares));
-    // }
-
-    // function _afterEndRent(
-    //     address owner,
-    //     address renter,
-    //     uint256 tokenId,
-    //     uint256 rentershares
-    // ) internal override {
-    //     Gang gang = gangOf(tokenId);
-
-    //     _removeShares(renter, uint256(gang), uint40(rentershares));
-    //     _addShares(owner, uint256(gang), uint40(rentershares));
-    // }
+                gangster.roundId = 0;
+            }
+        }
+    }
 
     function _verifyAuthorized(address owner, uint256 tokenId) internal view {
-        if (!gmc().isAuthorized(owner, tokenId)) revert NotAuthorized();
+        if (!gmc.isAuthorized(owner, tokenId)) revert NotAuthorized();
     }
 
     /* ------------- upkeep ------------- */
@@ -639,8 +613,6 @@ contract GangWar is
         uint256 lockupDistrictId = rand % 21;
 
         bool upkeepTriggered;
-
-        GangVault vault = gangVault();
 
         if (lockup) {
             district = s().districts[lockupDistrictId];

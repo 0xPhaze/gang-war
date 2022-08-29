@@ -9,15 +9,15 @@
       "type": "t_struct(OwnableDS)528_storage"
     },
     {
-      "astId": 37125,
+      "astId": 35095,
       "contract": "src/tokens/GMCChild.sol:GMCChild",
       "label": "__storageLayout",
       "offset": 0,
       "slot": "1",
-      "type": "t_struct(GangMarketDS)37092_storage"
+      "type": "t_struct(GangMarketDS)35062_storage"
     },
     {
-      "astId": 43016,
+      "astId": 43353,
       "contract": "src/tokens/GMCChild.sol:GMCChild",
       "label": "vault",
       "offset": 0,
@@ -25,7 +25,7 @@
       "type": "t_address"
     },
     {
-      "astId": 43018,
+      "astId": 43355,
       "contract": "src/tokens/GMCChild.sol:GMCChild",
       "label": "baseURI",
       "offset": 0,
@@ -57,12 +57,12 @@
       "numberOfBytes": "32",
       "value": "t_uint256"
     },
-    "t_mapping(t_uint256,t_struct(Offer)37077_storage)": {
+    "t_mapping(t_uint256,t_struct(Offer)35047_storage)": {
       "encoding": "mapping",
       "key": "t_uint256",
       "label": "mapping(uint256 => struct Offer)",
       "numberOfBytes": "32",
-      "value": "t_struct(Offer)37077_storage"
+      "value": "t_struct(Offer)35047_storage"
     },
     "t_mapping(t_uint256,t_struct(Uint256Set)620_storage)": {
       "encoding": "mapping",
@@ -83,12 +83,12 @@
       "label": "string",
       "numberOfBytes": "32"
     },
-    "t_struct(GangMarketDS)37092_storage": {
+    "t_struct(GangMarketDS)35062_storage": {
       "encoding": "inplace",
       "label": "struct GangMarketDS",
       "members": [
         {
-          "astId": 37082,
+          "astId": 35052,
           "contract": "src/tokens/GMCChild.sol:GMCChild",
           "label": "listedOffers",
           "offset": 0,
@@ -96,15 +96,15 @@
           "type": "t_mapping(t_uint256,t_struct(Uint256Set)620_storage)"
         },
         {
-          "astId": 37087,
+          "astId": 35057,
           "contract": "src/tokens/GMCChild.sol:GMCChild",
           "label": "activeOffers",
           "offset": 0,
           "slot": "1",
-          "type": "t_mapping(t_uint256,t_struct(Offer)37077_storage)"
+          "type": "t_mapping(t_uint256,t_struct(Offer)35047_storage)"
         },
         {
-          "astId": 37091,
+          "astId": 35061,
           "contract": "src/tokens/GMCChild.sol:GMCChild",
           "label": "lastRentalAcceptance",
           "offset": 0,
@@ -114,12 +114,12 @@
       ],
       "numberOfBytes": "96"
     },
-    "t_struct(Offer)37077_storage": {
+    "t_struct(Offer)35047_storage": {
       "encoding": "inplace",
       "label": "struct Offer",
       "members": [
         {
-          "astId": 37072,
+          "astId": 35042,
           "contract": "src/tokens/GMCChild.sol:GMCChild",
           "label": "renter",
           "offset": 0,
@@ -127,7 +127,7 @@
           "type": "t_address"
         },
         {
-          "astId": 37074,
+          "astId": 35044,
           "contract": "src/tokens/GMCChild.sol:GMCChild",
           "label": "renterShare",
           "offset": 20,
@@ -135,7 +135,7 @@
           "type": "t_uint8"
         },
         {
-          "astId": 37076,
+          "astId": 35046,
           "contract": "src/tokens/GMCChild.sol:GMCChild",
           "label": "expiresOnAcceptance",
           "offset": 21,
