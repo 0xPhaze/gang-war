@@ -45,6 +45,8 @@ uint256 constant ITEM_BARRICADES = 2;
 uint256 constant ITEM_SMOKE = 3;
 uint256 constant ITEM_911 = 4;
 
+uint256 constant ITEM_911_REQUEST = 1 << 40;
+
 uint256 constant NUM_BARON_ITEMS = 5;
 
 uint256 constant ITEM_BLITZ_TIME_REDUCTION = 80;
@@ -84,8 +86,8 @@ enum PLAYER_STATE {
 struct Gangster {
     uint256 roundId;
     uint256 location;
-    uint256 bribery;
-    uint256 recovery;
+    uint256 briberyTimeReduction;
+    uint256 recoveryTimeReduction;
     bool attack;
     // variables from here on are not explicitly set
     // but only written to in the view functions for getters

@@ -12,7 +12,7 @@ import {GMCChild} from "/tokens/GMCChild.sol";
 import {GangVault} from "/GangVault.sol";
 import {GangToken} from "/tokens/GangToken.sol";
 
-import {MockGMC} from "../test/mocks/MockGMC.sol";
+import {MockGMCChild} from "../test/mocks/MockGMCChild.sol";
 import {MockGangWar} from "../test/mocks/MockGangWar.sol";
 import {MockVRFCoordinator} from "../test/mocks/MockVRFCoordinator.sol";
 
@@ -26,7 +26,7 @@ import {UpgradeScripts} from "upgrade-scripts/UpgradeScripts.sol";
 contract GangWarSetup is UpgradeScripts {
     using futils for *;
 
-    MockGMC gmc;
+    MockGMCChild gmc;
     GangToken[3] tokens;
     GangToken badges;
     Mice mice;
@@ -44,6 +44,9 @@ contract GangWarSetup is UpgradeScripts {
     uint256 constant GANGSTER_YAKUZA_2 = 4;
     uint256 constant GANGSTER_CARTEL_2 = 5;
     uint256 constant GANGSTER_CYBERP_2 = 6;
+    uint256 constant GANGSTER_YAKUZA_3 = 7;
+    uint256 constant GANGSTER_CARTEL_3 = 8;
+    uint256 constant GANGSTER_CYBERP_3 = 9;
 
     uint256 constant BARON_YAKUZA_1 = 10_001;
     uint256 constant BARON_CARTEL_1 = 10_002;
@@ -73,50 +76,73 @@ contract GangWarSetup is UpgradeScripts {
         setUpChainlinkParams();
     }
 
+    function setUpContractsTEST() internal {
+        coordinator = setUpContract("MockVRFCoordinator");
+
+        address gmcImpl = setUpContract("MockGMCChild", abi.encode(address(0)));
+        gmc = MockGMCChild(setUpProxy(gmcImpl, abi.encodePacked(GMCChild.init.selector), "GMC"));
+
+        bytes memory goudaArgs = abi.encode("Gouda", "GOUDA", 18);
+        gouda = MockERC20(setUpContract("MockERC20", goudaArgs, "GOUDA"));
+
+        vm.label(address(gmc), "GMC");
+        vm.label(address(gouda), "GOUDA");
+        vm.label(address(coordinator), "coordinator");
+
+        setUpContractsCommon();
+    }
+
     function setUpContractsCommon() internal {
         bytes memory yakuzaInitCall = abi.encodeWithSelector(GangToken.init.selector, "Yakuza Token", "YKZ");
         bytes memory cartelInitCall = abi.encodeWithSelector(GangToken.init.selector, "CARTEL Token", "CTL");
         bytes memory cyberpInitCall = abi.encodeWithSelector(GangToken.init.selector, "Cyberpunk Token", "CBP");
         bytes memory badgesInitCall = abi.encodeWithSelector(GangToken.init.selector, "Badges", "BADGE");
 
-        address gangTokenImpl = setUpContract("GANG_TOKEN_IMPLEMENTATION", "GangToken", type(GangToken).creationCode); // prettier-ignore
+        address gangTokenImpl = setUpContract("GangToken");
 
-        tokens[0] = GangToken(setUpProxy("YAKUZA_TOKEN", "GangToken", gangTokenImpl, yakuzaInitCall));
-        tokens[1] = GangToken(setUpProxy("CARTEL_TOKEN", "GangToken", gangTokenImpl, cartelInitCall));
-        tokens[2] = GangToken(setUpProxy("CYBERP_TOKEN", "GangToken", gangTokenImpl, cyberpInitCall));
-        badges = GangToken(setUpProxy("BADGES_TOKEN", "GangToken", gangTokenImpl, badgesInitCall));
+        tokens[0] = GangToken(setUpProxy(gangTokenImpl, yakuzaInitCall, "YakuzaToken"));
+        tokens[1] = GangToken(setUpProxy(gangTokenImpl, cartelInitCall, "CartelToken"));
+        tokens[2] = GangToken(setUpProxy(gangTokenImpl, cyberpInitCall, "CyberpunkToken"));
+        badges = GangToken(setUpProxy(gangTokenImpl, badgesInitCall, "Badges"));
 
-        bytes memory miceCreationCode = abi.encodePacked(type(Mice).creationCode, abi.encode(tokens[0], tokens[1], tokens[2], badges)); // prettier-ignore
-        bytes memory vaultCreationCode = abi.encodePacked(type(GangVault).creationCode, abi.encode(tokens[0], tokens[1], tokens[2], GANG_VAULT_FEE)); // prettier-ignore
-        bytes memory gangWarCreationCode;
+        bytes memory miceArgs = abi.encode(tokens[0], tokens[1], tokens[2], badges);
+        bytes memory vaultArgs = abi.encode(tokens[0], tokens[1], tokens[2], GANG_VAULT_FEE);
 
-        address vaultImpl = setUpContract("VAULT_IMPLEMENTATION", "Vault", vaultCreationCode);
-        vault = GangVault(setUpProxy("VAULT", "GangVault", vaultImpl, abi.encode(GangVault.init.selector)));
+        address vaultImpl = setUpContract("GangVault", vaultArgs);
+        vault = GangVault(setUpProxy(vaultImpl, abi.encode(GangVault.init.selector)));
+
+        address miceImpl = setUpContract("Mice", miceArgs);
+        mice = Mice(setUpProxy(miceImpl, abi.encode(Mice.init.selector)));
+
+        bytes memory gangWarArgs = abi.encode(
+            gmc,
+            vault,
+            badges,
+            connectionsPacked,
+            coordinator,
+            linkKeyHash,
+            linkSubId,
+            3,
+            200_000
+        );
+
+        address gangWarImpl;
 
         if (isTestnet()) {
-            gangWarCreationCode = abi.encodePacked(type(MockGangWar).creationCode, abi.encode(gmc, vault, badges, coordinator, linkKeyHash, linkSubId, 3, 200_000)); // prettier-ignore
+            gangWarImpl = setUpContract("MockGangWar", gangWarArgs);
         } else {
-            gangWarCreationCode = abi.encodePacked(type(GangWar).creationCode, abi.encode(gmc, vault, badges, coordinator, linkKeyHash, linkSubId, 3, 200_000)); // prettier-ignore
+            gangWarImpl = setUpContract("GangWar", gangWarArgs);
         }
 
-        address miceImpl = setUpContract("MICE_IMPLEMENTATION", "Mice", miceCreationCode);
-        mice = Mice(setUpProxy("MICE", "Mice", miceImpl, abi.encode(Mice.init.selector)));
+        game = MockGangWar(setUpProxy(gangWarImpl, abi.encodeCall(GangWar.init, ()))); // prettier-ignore
 
-        address gangWarImpl = setUpContract("GANG_WAR_IMPLEMENTATION", "GangWar", gangWarCreationCode); // prettier-ignore
-        game = MockGangWar(setUpProxy("GANG_WAR", "GangWar", gangWarImpl, abi.encodeWithSelector(GangWar.init.selector, connectionsPacked))); // prettier-ignore
-    }
-
-    function setUpContractsTEST() internal {
-        bytes memory goudaCreationCode = abi.encodePacked(type(MockERC20).creationCode, abi.encode("Gouda", "GOUDA", 18)); // prettier-ignore
-        bytes memory gmcCreationCode = abi.encodePacked(type(MockGMC).creationCode, abi.encode(address(0))); // prettier-ignore
-
-        coordinator = setUpContract("MOCK_VRF_COORDINATOR", "MockVRFCoordinator", type(MockVRFCoordinator).creationCode); // prettier-ignore
-
-        address gmcImpl = setUpContract("GMCChild_IMPLEMENTATION", "GMCChild", gmcCreationCode); // prettier-ignore
-        gmc = MockGMC(setUpProxy("GMC", "GMCChild", gmcImpl, abi.encodePacked(GMCChild.init.selector))); // prettier-ignore
-        gouda = MockERC20(setUpContract("GOUDA", "MockERC20", goudaCreationCode)); // prettier-ignore
-
-        setUpContractsCommon();
+        vm.label(address(game), "GangWar");
+        vm.label(address(mice), "Mice");
+        vm.label(address(vault), "GangVault");
+        vm.label(address(badges), "Badges");
+        vm.label(address(tokens[0]), "YakuzaToken");
+        vm.label(address(tokens[1]), "CartelToken");
+        vm.label(address(tokens[2]), "CyberpunkToken");
     }
 
     function setUpContractsTestnet() internal {

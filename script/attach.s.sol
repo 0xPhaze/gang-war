@@ -18,9 +18,8 @@ forge script attach --rpc-url $RPC_MUMBAI --private-key $PRIVATE_KEY --with-gas-
 */
 
 contract attach is GangWarSetup {
-    function __upgrade_scripts_init() internal override {
-        __UPGRADE_SCRIPTS_ATTACH = true;
-        super.__upgrade_scripts_init();
+    function setUpUpgradeScripts() internal override {
+        UPGRADE_SCRIPTS_ATTACH_ONLY = true;
     }
 
     function run() external {

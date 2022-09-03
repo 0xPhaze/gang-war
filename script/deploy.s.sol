@@ -23,7 +23,7 @@ source .env && UPGRADE_SCRIPTS_DRY_RUN=true forge script deploy --rpc-url $RPC_M
 3 #: Deploy
 source .env && forge script deploy --rpc-url $RPC_MUMBAI --private-key $PRIVATE_KEY --verify --etherscan-api-key $POLYGONSCAN_KEY --with-gas-price 38gwei -vvvv --ffi --broadcast 
 
-cp ~/git/eth/GangWar/out/MockGMC.sol/MockGMC.json ~/git/eth/gmc-website/data/abi
+cp ~/git/eth/GangWar/out/MockGMCChild.sol/MockGMCChild.json ~/git/eth/gmc-website/data/abi
 cp ~/git/eth/GangWar/out/MockERC20.sol/MockERC20.json ~/git/eth/gmc-website/data/abi
 cp ~/git/eth/GangWar/out/MockVRFCoordinator.sol/MockVRFCoordinator.json ~/git/eth/gmc-website/data/abi
 cp ~/git/eth/GangWar/out/GangWar.sol/GangWar.json ~/git/eth/gmc-website/data/abi
@@ -33,21 +33,13 @@ cp ~/git/eth/GangWar/deployments/80001/deploy-latest.json ~/git/eth/gmc-website/
 */
 
 contract deploy is GangWarSetup {
-    function startBroadcastIfFFIEnabled() internal {
-        if (isFFIEnabled()) {
-            vm.startBroadcast();
-        } else {
-            console.log('FFI disabled: run again with `--ffi` to save deployments and run storage compatibility checks.'); // prettier-ignore
-            console.log('Disabling `broadcast`, continuing as a "dry-run".\n');
-
-            // need to start prank instead now to be consistent in "dry-run"
-            vm.stopBroadcast();
-            vm.startPrank(msg.sender);
-        }
+    function setUpUpgradeScripts() internal override {
+        UPGRADE_SCRIPTS_BYPASS = true;
     }
 
     function run() external {
-        startBroadcastIfFFIEnabled();
+        // console.log("running run");
+        startBroadcastIfNotDryRun();
 
         if (isTestnet()) {
             setUpContractsTestnet();

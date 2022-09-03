@@ -56,7 +56,7 @@ contract GMCChild is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChildTunnelUDS, 
     //     for (uint256 i; i < idsLength; ++i) {
     //         uint256 id = tokenOfOwnerByIndex(msg.sender, i);
 
-    //         _endRent(id);
+    //         _endRentAndDeleteOffer(id);
 
     //         uint256 gang = uint256(gangOf(id));
     //         shares[gang] += 100;
@@ -82,7 +82,7 @@ contract GMCChild is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChildTunnelUDS, 
         // make sure any active rental is cleaned up
         // so that shares invariant holds.
         // calls `_afterEndRent` if rental is active.
-        _endRent(id);
+        _endRentAndDeleteOffer(id);
 
         // GangVault(vault).removeShares(from, uint256(gangOf(id)), 100);
         try GangVault(vault).removeShares(from, uint256(gangOf(id)), 100) {} catch {}

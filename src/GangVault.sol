@@ -108,6 +108,11 @@ contract GangVault is UUPSUpgrade, AccessControlUDS {
         assembly { out := yield } //prettier-ignore
     }
 
+    function getUserShares(address account) external view returns (uint256[3] memory out) {
+        uint40[3] memory shares = s().userShares[account];
+        assembly { out := shares } //prettier-ignore
+    }
+
     function getClaimableUserBalance(address account) external view returns (uint256[3] memory out) {
         uint256 numSharesTimes100_0 = uint256(s().userShares[account][0]) * (100 - gangVaultFeePercent);
         uint256 numSharesTimes100_1 = uint256(s().userShares[account][1]) * (100 - gangVaultFeePercent);
@@ -259,6 +264,7 @@ contract GangVault is UUPSUpgrade, AccessControlUDS {
         yps_2 = s().accruedYieldPerShare[gang][2];
 
         // setting to 1 allows gangs to earn if there are no stakers
+        // though this is a degenerate case
         uint256 totalShares = max(s().totalShares[gang], 1);
 
         // needs to be in the correct range

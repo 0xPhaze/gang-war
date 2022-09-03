@@ -9,12 +9,25 @@ contract MockGangWar is GangWar {
         GMC gmc,
         GangVault vault,
         GangToken badges,
+        uint256 connections,
         address coordinator,
         bytes32 keyHash,
         uint64 subscriptionId,
         uint16 requestConfirmations,
         uint32 callbackGasLimit
-    ) GangWar(gmc, vault, badges, coordinator, keyHash, subscriptionId, requestConfirmations, callbackGasLimit) {}
+    )
+        GangWar(
+            gmc,
+            vault,
+            badges,
+            connections,
+            coordinator,
+            keyHash,
+            subscriptionId,
+            requestConfirmations,
+            callbackGasLimit
+        )
+    {}
 
     function setGangWarOutcome(
         uint256 districtId,
@@ -41,7 +54,7 @@ contract MockGangWar is GangWar {
     }
 
     function getDistrictConnections() external view returns (uint256) {
-        return s().districtConnections;
+        return districtConnections;
     }
 
     function scrambleStorage() public {

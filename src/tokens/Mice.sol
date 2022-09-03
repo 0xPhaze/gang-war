@@ -33,8 +33,8 @@ contract Mice is GangToken {
 
     function exchange(uint256 choice, uint256 amount) external {
         if (choice == 0) GangToken(tokenYakuza).burnFrom(msg.sender, amount);
-        else if (choice == 1) GangToken(tokenCyberpunk).burnFrom(msg.sender, amount);
-        else GangToken(tokenCartel).burnFrom(msg.sender, amount);
+        else if (choice == 1) GangToken(tokenCartel).burnFrom(msg.sender, amount);
+        else GangToken(tokenCyberpunk).burnFrom(msg.sender, amount);
 
         _mint(msg.sender, amount / 3);
     }

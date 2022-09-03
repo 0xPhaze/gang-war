@@ -21,18 +21,28 @@ import "solmate/test/utils/mocks/MockERC721.sol";
 contract TestGangWar is Test, GangWarSetup {
     using futils for *;
 
-    address bob = address(0xb0b);
-    address alice = address(0xbabe);
+    address alice = makeAddr("alice");
+    address bob = makeAddr("bob");
+    address eve = makeAddr("eve");
+
     address tester = address(this);
 
-    function __upgrade_scripts_init() internal override {
-        __UPGRADE_SCRIPTS_BYPASS = true;
+    function setUpUpgradeScripts() internal override {
+        UPGRADE_SCRIPTS_BYPASS = true;
     }
 
     function setUp() public virtual {
         setUpContractsTEST();
         initContracts();
 
+        vm.label(tester, "tester");
+
+        badges.grantMintAuthority(tester);
+        tokens[0].grantMintAuthority(tester);
+        tokens[1].grantMintAuthority(tester);
+        tokens[2].grantMintAuthority(tester);
+
+        badges.grantBurnAuthority(tester);
         tokens[0].grantBurnAuthority(tester);
         tokens[1].grantBurnAuthority(tester);
         tokens[2].grantBurnAuthority(tester);
@@ -45,6 +55,9 @@ contract TestGangWar is Test, GangWarSetup {
         gmc.mint(alice, GANGSTER_YAKUZA_2);
         gmc.mint(alice, GANGSTER_CARTEL_2);
         gmc.mint(alice, GANGSTER_CYBERP_2);
+        gmc.mint(eve, GANGSTER_YAKUZA_3);
+        gmc.mint(eve, GANGSTER_CARTEL_3);
+        gmc.mint(eve, GANGSTER_CYBERP_3);
 
         gmc.mint(bob, BARON_YAKUZA_1);
         gmc.mint(bob, BARON_CARTEL_1);

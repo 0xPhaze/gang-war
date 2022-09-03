@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "/tokens/GMCChild.sol";
 import "futils/futils.sol";
 
-contract MockGMC is GMCChild {
+contract MockGMCChild is GMCChild {
     using futils for *;
 
     uint256 gangsterSupply;
@@ -25,7 +25,9 @@ contract MockGMC is GMCChild {
 
     function mint(address to, uint256 id) public {
         _registerIds(to, [id].toMemory());
-        // _afterIdRegistered(to, id);
-        // GangWar(market).enterGangWar(to, id);
+    }
+
+    function burn(uint256 id) public {
+        _deregisterIds([id].toMemory());
     }
 }

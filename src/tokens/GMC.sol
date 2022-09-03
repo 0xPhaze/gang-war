@@ -40,7 +40,9 @@ contract GMC is OwnableUDS, FxERC721MRootUDS {
 
     address private signer = 0x68442589f40E8Fc3a9679dE62884c85C6E524888;
 
-    constructor(address checkpointManager, address fxRoot) FxERC721MRootUDS(checkpointManager, fxRoot) {}
+    constructor(address checkpointManager, address fxRoot) FxERC721MRootUDS(checkpointManager, fxRoot) {
+        __Ownable_init();
+    }
 
     /* ------------- external ------------- */
 

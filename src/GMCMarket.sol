@@ -34,7 +34,6 @@ function s() pure returns (GangMarketDS storage diamondStorage) {
 // ------------- error
 
 error InvalidOffer();
-error ActiveRental();
 error AlreadyListed();
 error NotAuthorized();
 error InvalidRenterShare();
@@ -58,8 +57,13 @@ abstract contract GMCMarket {
         return s().activeOffers[id].renter;
     }
 
-    function getListedOfferByIndex(uint256 id) public view returns (Offer memory) {
-        return s().activeOffers[s().listedOffers[0].at(id)];
+    function getListedOfferByIndex(uint256 index) public view returns (uint256, Offer memory) {
+        uint256 id = s().listedOffers[0].at(index);
+        return (id, s().activeOffers[id]);
+    }
+
+    function getListedOffersIds() public view returns (uint256[] memory) {
+        return s().listedOffers[0].values();
     }
 
     function numListedOffers() public view returns (uint256) {
@@ -85,8 +89,8 @@ abstract contract GMCMarket {
             if (offer.renter == msg.sender) revert InvalidOffer();
             if (renterShare < 30 || 100 < renterShare) revert InvalidRenterShare();
 
-            bool alreadyExists = s().listedOffers[0].add(id);
-            if (alreadyExists) revert AlreadyListed();
+            bool added = s().listedOffers[0].add(id);
+            if (!added) revert AlreadyListed();
 
             // Offer storage activeRental = s().activeOffers[id];
             // address currentRenter = activeRental.renter;
@@ -107,14 +111,14 @@ abstract contract GMCMarket {
         for (uint256 i; i < ids.length; i++) {
             if (ownerOf(ids[i]) != msg.sender) revert NotAuthorized();
 
-            _endRent(ids[i]);
+            _endRentAndDeleteOffer(ids[i]);
         }
     }
 
     function acceptOffer(uint256 id) external {
         Offer storage offer = s().activeOffers[id];
 
-        if (block.timestamp - s().lastRentalAcceptance[msg.sender] > RENTAL_ACCEPTANCE_MINIMUM_TIME_DELAY) {
+        if (block.timestamp - s().lastRentalAcceptance[msg.sender] < RENTAL_ACCEPTANCE_MINIMUM_TIME_DELAY) {
             revert MinimumTimeDelayNotReached();
         }
 
@@ -142,7 +146,7 @@ abstract contract GMCMarket {
             if (offer.renter == address(0)) revert InvalidOffer();
 
             if (offer.expiresOnAcceptance) {
-                _endRent(id);
+                _endRentAndDeleteOffer(id);
             } else {
                 delete offer.renter;
 
@@ -156,7 +160,7 @@ abstract contract GMCMarket {
 
     /* ------------- internal ------------- */
 
-    function _endRent(uint256 id) internal {
+    function _endRentAndDeleteOffer(uint256 id) internal {
         Offer storage offer = s().activeOffers[id];
 
         address renter = offer.renter;

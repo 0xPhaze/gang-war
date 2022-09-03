@@ -1,71 +1,243 @@
-// // SPDX-License-Identifier: MIT
-// pragma solidity ^0.8.0;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
 
-// import "forge-std/Test.sol";
+import "forge-std/Test.sol";
 
-// import "futils/futils.sol";
-// import {TestGangWar} from "./Base.t.sol";
-// import "/GMCMarket.sol";
+import "futils/futils.sol";
+import {TestGangWar} from "./Base.t.sol";
+import "/GMCMarket.sol";
 
-// contract TestGangWarMarket is TestGangWar {
-//     using futils for *;
+contract TestGangWarMarket is TestGangWar {
+    using futils for *;
 
-//     /* ------------- upkeep ------------- */
+    /* ------------- helper ------------- */
 
-//     function test_listOffer() public {
-//         Offer[] memory offers = new Offer[](2);
-//         offers[0].renterShare = 40;
-//         offers[1].renterShare = 80;
-//         offers[1].renter = bob;
+    mapping(address => uint256[3]) storedShares;
 
-//         vm.prank(alice);
+    function vaultSharesDiff(address user) private returns (int256[3] memory diff) {
+        uint256[3] memory stored = storedShares[user];
+        uint256[3] memory shares = vault.getUserShares(user);
 
-//         game.listOffer([1, 3].toMemory(), offers);
+        storedShares[user] = shares;
 
-//         assertEq(game.getActiveOffer(1).renter, address(0));
-//         assertEq(game.getActiveOffer(3).renter, bob);
-//         assertEq(game.getActiveOffer(1).renterShare, 40);
-//         assertEq(game.getActiveOffer(3).renterShare, 80);
-//     }
+        diff[0] = int256(shares[0]) - int256(stored[0]);
+        diff[1] = int256(shares[1]) - int256(stored[1]);
+        diff[2] = int256(shares[2]) - int256(stored[2]);
+    }
 
-//     function test_listOffer_fail_NotAuthorized() public {
-//         Offer[] memory offers = new Offer[](1);
+    /* ------------- listOffer ------------- */
 
-//         vm.expectRevert(NotAuthorized.selector);
-//         game.listOffer([1].toMemory(), offers);
-//     }
+    function test_listOffer() public {
+        vaultSharesDiff(alice);
+        vaultSharesDiff(bob);
 
-//     function test_listOffer_fail_InvalidRenterShare() public {
-//         Offer[] memory offers = new Offer[](1);
-//         offers[0].renterShare = 29;
+        Offer[] memory offers = new Offer[](3);
+        offers[0].renterShare = 40;
 
-//         vm.prank(alice);
-//         vm.expectRevert(InvalidRenterShare.selector);
+        offers[1].renter = bob;
+        offers[1].renterShare = 80;
 
-//         game.listOffer([1].toMemory(), offers);
+        offers[2].renterShare = 70;
 
-//         offers[0].renterShare = 101;
+        vm.prank(alice);
+        gmc.listOffer([1, 3, 2].toMemory(), offers);
 
-//         vm.prank(alice);
-//         vm.expectRevert(InvalidRenterShare.selector);
+        assertEq(gmc.getActiveOffer(1).renter, address(0));
+        assertEq(gmc.getActiveOffer(1).renterShare, 40);
+        assertEq(gmc.getActiveOffer(2).renter, address(0));
+        assertEq(gmc.getActiveOffer(2).renterShare, 70);
+        assertEq(gmc.getActiveOffer(3).renter, bob);
+        assertEq(gmc.getActiveOffer(3).renterShare, 80);
 
-//         game.listOffer([1].toMemory(), offers);
-//     }
+        int256[3] memory sharesDiffAlice = vaultSharesDiff(alice);
+        assertEq(sharesDiffAlice[0], 0);
+        assertEq(sharesDiffAlice[1], 0);
+        assertEq(sharesDiffAlice[2], -80); // direct offer
 
-//     // function test_listOffer_fail_ActiveRental() public {
-//     //     Offer[] memory offers = new Offer[](2);
-//     //     offers[0].renterShare = 40;
+        int256[3] memory sharesDiffBob = vaultSharesDiff(bob);
+        assertEq(sharesDiffBob[0], 0);
+        assertEq(sharesDiffBob[1], 0);
+        assertEq(sharesDiffBob[2], 80);
 
-//     //     game.listOffer([1, 3].toMemory(), offers);
+        assertTrue(gmc.getListedOffersIds().includes(1));
+        assertTrue(gmc.getListedOffersIds().includes(2));
+        assertTrue(gmc.getListedOffersIds().includes(3));
+    }
 
-//     //     game.accceptOffer(1);
+    function test_listOffer_revert_NotAuthorized() public {
+        Offer[] memory offers = new Offer[](1);
 
-//     //     vm.prank(alice);
-//     //     vm.expectRevert(ActiveRental.selector);
+        vm.expectRevert(NotAuthorized.selector);
+        gmc.listOffer([1].toMemory(), offers);
+    }
 
-//     //     assertEq(game.getActiveOffer(1).renter, address(0));
-//     //     assertEq(game.getActiveOffer(3).renter, bob);
-//     //     assertEq(game.getActiveOffer(1).renterShare, 40);
-//     //     assertEq(game.getActiveOffer(3).renterShare, 80);
-//     // }
-// }
+    function test_listOffer_revert_InvalidOffer() public {
+        Offer[] memory offers = new Offer[](1);
+        offers[0].renter = alice;
+
+        vm.prank(alice);
+        vm.expectRevert(InvalidOffer.selector);
+
+        gmc.listOffer([1].toMemory(), offers);
+    }
+
+    function test_listOffer_revert_InvalidRenterShare() public {
+        Offer[] memory offers = new Offer[](1);
+        offers[0].renterShare = 29;
+
+        vm.prank(alice);
+        vm.expectRevert(InvalidRenterShare.selector);
+
+        gmc.listOffer([1].toMemory(), offers);
+
+        offers[0].renterShare = 101;
+
+        vm.prank(alice);
+        vm.expectRevert(InvalidRenterShare.selector);
+
+        gmc.listOffer([1].toMemory(), offers);
+    }
+
+    function test_listOffer_revert_AlreadyListed() public {
+        test_listOffer();
+
+        Offer[] memory offers = new Offer[](1);
+        offers[0].renter = address(0);
+        offers[0].renterShare = 40;
+
+        vm.prank(alice);
+        vm.expectRevert(AlreadyListed.selector);
+
+        gmc.listOffer([1].toMemory(), offers);
+    }
+
+    function test_listOffer_revert_AlreadyListed_accepted() public {
+        test_acceptOffer();
+
+        Offer[] memory offers = new Offer[](1);
+        offers[0].renter = address(0);
+        offers[0].renterShare = 40;
+
+        vm.prank(alice);
+        vm.expectRevert(AlreadyListed.selector);
+
+        gmc.listOffer([1].toMemory(), offers);
+    }
+
+    function test_listOffer_revert_AlreadyListed_duplicate() public {
+        Offer[] memory offers = new Offer[](2);
+        offers[0].renterShare = 40;
+        offers[1].renterShare = 40;
+
+        vm.prank(alice);
+        vm.expectRevert(AlreadyListed.selector);
+
+        gmc.listOffer([1, 1].toMemory(), offers);
+    }
+
+    /* ------------- acceptOffer ------------- */
+
+    function test_acceptOffer() public {
+        test_listOffer();
+
+        gmc.acceptOffer(1);
+
+        assertEq(gmc.getActiveOffer(1).renter, tester);
+        assertEq(gmc.getActiveOffer(1).renterShare, 40);
+
+        int256[3] memory sharesDiff = vaultSharesDiff(tester);
+        assertEq(sharesDiff[0], 40);
+        assertEq(sharesDiff[1], 0);
+        assertEq(sharesDiff[2], 0);
+    }
+
+    function test_acceptOffer_revert_MinimumTimeDelayNotReached() public {
+        test_endRent();
+
+        vm.expectRevert(MinimumTimeDelayNotReached.selector);
+        gmc.acceptOffer(1);
+    }
+
+    /* ------------- endRent ------------- */
+
+    function test_endRent() public {
+        test_acceptOffer();
+
+        gmc.endRent([1].toMemory());
+
+        assertEq(gmc.getActiveOffer(1).renter, address(0));
+        assertEq(gmc.getActiveOffer(1).renterShare, 40);
+
+        int256[3] memory sharesDiff = vaultSharesDiff(tester);
+        assertEq(sharesDiff[0], -40);
+        assertEq(sharesDiff[1], 0);
+        assertEq(sharesDiff[2], 0);
+    }
+
+    function test_endRent_byOwner() public {
+        test_acceptOffer();
+
+        vm.prank(alice);
+        gmc.endRent([1].toMemory());
+
+        assertEq(gmc.getActiveOffer(1).renter, address(0));
+        assertEq(gmc.getActiveOffer(1).renterShare, 40);
+
+        int256[3] memory sharesDiff = vaultSharesDiff(tester);
+        assertEq(sharesDiff[0], -40);
+        assertEq(sharesDiff[1], 0);
+        assertEq(sharesDiff[2], 0);
+    }
+
+    function test_endRent_revert_NotAuthorized() public {
+        test_acceptOffer();
+
+        vm.prank(bob);
+        vm.expectRevert(NotAuthorized.selector);
+
+        gmc.endRent([1].toMemory());
+    }
+
+    /* ------------- deleteOffer ------------- */
+
+    function test_deleteOffer() public {
+        test_listOffer();
+
+        vm.prank(alice);
+        gmc.deleteOffer([1].toMemory());
+
+        assertEq(gmc.getActiveOffer(1).renter, address(0));
+        assertEq(gmc.getActiveOffer(1).renterShare, 0);
+    }
+
+    function test_deleteOffer_activeRental() public {
+        test_acceptOffer();
+
+        vm.prank(alice);
+        gmc.deleteOffer([1].toMemory());
+
+        assertEq(gmc.getActiveOffer(1).renter, address(0));
+        assertEq(gmc.getActiveOffer(1).renterShare, 0);
+
+        int256[3] memory sharesDiff = vaultSharesDiff(tester);
+        assertEq(sharesDiff[0], -40);
+        assertEq(sharesDiff[1], 0);
+        assertEq(sharesDiff[2], 0);
+    }
+
+    /* ------------- burn ------------- */
+
+    function test_burn_deleteOffer() public {
+        test_acceptOffer();
+
+        gmc.burn(1);
+
+        assertEq(gmc.getActiveOffer(1).renter, address(0));
+        assertEq(gmc.getActiveOffer(1).renterShare, 0);
+
+        int256[3] memory sharesDiff = vaultSharesDiff(tester);
+        assertEq(sharesDiff[0], -40);
+        assertEq(sharesDiff[1], 0);
+        assertEq(sharesDiff[2], 0);
+    }
+}

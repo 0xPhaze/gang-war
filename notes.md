@@ -1,35 +1,28 @@
 
 # TODO
 
-- fix collect badges
-
 - MockGMC NFT random gang for Demo?
-
-- add validation to using items on districts (attackers / defenders)
-
 - add actual VRF integration!
+- make code pretty
 
 - add Game pause/reset option
+- add global cops lockup time check
 
-- badges
-- call 911
+- blitz state countdown reduction relative?
+- add name entry for gangster profile
+
+- optimize storage
 
 # Frontend
 - add in function getGangAccumulatedBalance() external view returns (uint256[3][3])
 - test market listing
+- add changed getlistedOfferByIndex
 
 
 # Test
-- test market listing
 - test purchaseItems (add delay for barons?)
-- test badges rewards
-- test exchange
 - test outcome statistics fuzz
-
-- test all items usage
-
-- recovery/bribery countdown reduction half of remaining time (disable for barons?)
-- make sure this state is kept even for exit/enter GangWar
+- test vault season reset
 
 - performUpkeep (gas)
     // 21 cold: gas 1400000
