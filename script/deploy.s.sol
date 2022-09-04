@@ -14,11 +14,11 @@ import {GangWarSetup} from "../src/Setup.sol";
 forge test -vvv
 
 # ANVIL
-source .env && UPGRADE_SCRIPTS_DRY_RUN=true forge script deploy --rpc-url $RPC_ANVIL --private-key $PRIVATE_KEY_ANVIL -vvvv --ffi
+source .env && US_DRY_RUN=true forge script deploy --rpc-url $RPC_ANVIL --private-key $PRIVATE_KEY_ANVIL -vvvv --ffi
 source .env && forge script deploy --rpc-url $RPC_ANVIL --private-key $PRIVATE_KEY_ANVIL -vvvv --ffi --broadcast 
 
 # 2: Simulate
-source .env && UPGRADE_SCRIPTS_DRY_RUN=true forge script deploy --rpc-url $RPC_MUMBAI --private-key $PRIVATE_KEY --with-gas-price 38gwei -vvvv --ffi
+source .env && US_DRY_RUN=true forge script deploy --rpc-url $RPC_MUMBAI --private-key $PRIVATE_KEY --with-gas-price 38gwei -vvvv --ffi
 
 3 #: Deploy
 source .env && forge script deploy --rpc-url $RPC_MUMBAI --private-key $PRIVATE_KEY --verify --etherscan-api-key $POLYGONSCAN_KEY --with-gas-price 38gwei -vvvv --ffi --broadcast 
@@ -33,12 +33,7 @@ cp ~/git/eth/GangWar/deployments/80001/deploy-latest.json ~/git/eth/gmc-website/
 */
 
 contract deploy is GangWarSetup {
-    function setUpUpgradeScripts() internal override {
-        UPGRADE_SCRIPTS_BYPASS = true;
-    }
-
     function run() external {
-        // console.log("running run");
         startBroadcastIfNotDryRun();
 
         if (isTestnet()) {

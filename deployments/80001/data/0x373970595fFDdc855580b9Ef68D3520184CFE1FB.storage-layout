@@ -9,15 +9,15 @@
       "type": "t_struct(OwnableDS)528_storage"
     },
     {
-      "astId": 37103,
+      "astId": 37219,
       "contract": "test/mocks/MockGMCChild.sol:MockGMCChild",
       "label": "__storageLayout",
       "offset": 0,
       "slot": "1",
-      "type": "t_struct(GangMarketDS)37072_storage"
+      "type": "t_struct(GangMarketDS)37188_storage"
     },
     {
-      "astId": 45712,
+      "astId": 45898,
       "contract": "test/mocks/MockGMCChild.sol:MockGMCChild",
       "label": "vault",
       "offset": 0,
@@ -25,7 +25,7 @@
       "type": "t_address"
     },
     {
-      "astId": 45714,
+      "astId": 45900,
       "contract": "test/mocks/MockGMCChild.sol:MockGMCChild",
       "label": "baseURI",
       "offset": 0,
@@ -33,7 +33,7 @@
       "type": "t_string_storage"
     },
     {
-      "astId": 55928,
+      "astId": 56116,
       "contract": "test/mocks/MockGMCChild.sol:MockGMCChild",
       "label": "gangsterSupply",
       "offset": 0,
@@ -41,7 +41,7 @@
       "type": "t_uint256"
     },
     {
-      "astId": 55930,
+      "astId": 56118,
       "contract": "test/mocks/MockGMCChild.sol:MockGMCChild",
       "label": "baronSupply",
       "offset": 0,
@@ -73,12 +73,12 @@
       "numberOfBytes": "32",
       "value": "t_uint256"
     },
-    "t_mapping(t_uint256,t_struct(Offer)37057_storage)": {
+    "t_mapping(t_uint256,t_struct(Offer)37173_storage)": {
       "encoding": "mapping",
       "key": "t_uint256",
       "label": "mapping(uint256 => struct Offer)",
       "numberOfBytes": "32",
-      "value": "t_struct(Offer)37057_storage"
+      "value": "t_struct(Offer)37173_storage"
     },
     "t_mapping(t_uint256,t_struct(Uint256Set)620_storage)": {
       "encoding": "mapping",
@@ -99,12 +99,12 @@
       "label": "string",
       "numberOfBytes": "32"
     },
-    "t_struct(GangMarketDS)37072_storage": {
+    "t_struct(GangMarketDS)37188_storage": {
       "encoding": "inplace",
       "label": "struct GangMarketDS",
       "members": [
         {
-          "astId": 37062,
+          "astId": 37178,
           "contract": "test/mocks/MockGMCChild.sol:MockGMCChild",
           "label": "listedOffers",
           "offset": 0,
@@ -112,15 +112,15 @@
           "type": "t_mapping(t_uint256,t_struct(Uint256Set)620_storage)"
         },
         {
-          "astId": 37067,
+          "astId": 37183,
           "contract": "test/mocks/MockGMCChild.sol:MockGMCChild",
           "label": "activeOffers",
           "offset": 0,
           "slot": "1",
-          "type": "t_mapping(t_uint256,t_struct(Offer)37057_storage)"
+          "type": "t_mapping(t_uint256,t_struct(Offer)37173_storage)"
         },
         {
-          "astId": 37071,
+          "astId": 37187,
           "contract": "test/mocks/MockGMCChild.sol:MockGMCChild",
           "label": "lastRentalAcceptance",
           "offset": 0,
@@ -130,12 +130,12 @@
       ],
       "numberOfBytes": "96"
     },
-    "t_struct(Offer)37057_storage": {
+    "t_struct(Offer)37173_storage": {
       "encoding": "inplace",
       "label": "struct Offer",
       "members": [
         {
-          "astId": 37052,
+          "astId": 37168,
           "contract": "test/mocks/MockGMCChild.sol:MockGMCChild",
           "label": "renter",
           "offset": 0,
@@ -143,7 +143,7 @@
           "type": "t_address"
         },
         {
-          "astId": 37054,
+          "astId": 37170,
           "contract": "test/mocks/MockGMCChild.sol:MockGMCChild",
           "label": "renterShare",
           "offset": 20,
@@ -151,7 +151,7 @@
           "type": "t_uint8"
         },
         {
-          "astId": 37056,
+          "astId": 37172,
           "contract": "test/mocks/MockGMCChild.sol:MockGMCChild",
           "label": "expiresOnAcceptance",
           "offset": 21,

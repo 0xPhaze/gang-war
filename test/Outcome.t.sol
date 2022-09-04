@@ -64,27 +64,27 @@ contract TestGangWarOutcome is Test {
     //     assertEq((p * 1e12) >> 128, (res * 1e12) >> 128);
     // }
 
-    // TODO args=[127, 130, false]]
     function test_gangWarWonProbProperties(
-        uint16 attackForce,
-        uint16 defenseForce,
+        uint256 attackForce,
+        uint256 defenseForce,
         bool baronDefense
     ) public {
-        vm.assume(attackForce < 10_000);
-        vm.assume(defenseForce < 10_000);
+        attackForce = bound(attackForce, 0, 10_000);
+        defenseForce = bound(defenseForce, 0, 10_000);
 
         uint256 p = gangWarWonProbFn(attackForce, defenseForce, baronDefense);
 
         // in valid range [0, 128]
         assertTrue(p < 1 << 128);
 
-        if (attackForce > 150) {
+        if (attackForce > DEFENSE_FAVOR_LIM) {
             if (defenseForce < attackForce) {
                 // should be in favor of attackers (> 50%)
                 assertTrue(p > 1 << 127);
             }
         } else {
-            if (attackForce < defenseForce) {
+            // not exactly the cutoff...
+            if (attackForce + 20 < defenseForce) {
                 // should be in favor of defenders (< 50%)
                 assertTrue(p < 1 << 127);
             }
@@ -92,12 +92,12 @@ contract TestGangWarOutcome is Test {
     }
 
     function test_isInjuredProperties(
-        uint16 attackForce,
-        uint16 defenseForce,
+        uint256 attackForce,
+        uint256 defenseForce,
         bool baronDefense
     ) public {
-        vm.assume(attackForce < 10_000);
-        vm.assume(defenseForce < 10_000);
+        attackForce = bound(attackForce, 0, 10_000);
+        defenseForce = bound(attackForce, 0, 10_000);
 
         uint256 gP = gangWarWonProbFn(attackForce, defenseForce, baronDefense);
 

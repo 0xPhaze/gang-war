@@ -17,26 +17,31 @@ forge script attach --rpc-url $RPC_MUMBAI --private-key $PRIVATE_KEY --with-gas-
 forge script attach --rpc-url $RPC_MUMBAI --private-key $PRIVATE_KEY --with-gas-price 38gwei -vvvv --broadcast 
 */
 
+import "futils/futils.sol";
+
 contract attach is GangWarSetup {
     function setUpUpgradeScripts() internal override {
         UPGRADE_SCRIPTS_ATTACH_ONLY = true;
     }
 
+    using futils for *;
+
     function run() external {
-        setUpContractsTestnet();
-
-        vm.startBroadcast();
-        // vm.startPrank(msg.sender);
-
-        uint256[] memory ownedIds = gmc.getOwnedIds(msg.sender);
-        for (uint256 i; i < ownedIds.length; i++) console.log(ownedIds[i]);
-
-        // for (uint256 i; i < 3; i++) {
-        //     vm.prank(address(0));
-        //     uint256[3] memory balances = game.getGangVaultBalance(i);
-        //     console.log(balances[0]);
-        //     console.log(balances[1]);
-        //     console.log(balances[2]);
-        // }
+        // setUpContractsTestnet();
+        // vm.startBroadcast();
+        // // vm.startPrank(msg.sender);
+        // uint256[3] memory shares = vault.getUserShares(msg.sender);
+        // console.log("shares0", shares[0]);
+        // console.log("shares1", shares[1]);
+        // console.log("shares2", shares[2]);
+        // // uint256[] memory ownedIds = gmc.getOwnedIds(msg.sender);
+        // // for (uint256 i; i < ownedIds.length; i++) console.log(ownedIds[i]);
+        // // for (uint256 i; i < 3; i++) {
+        // //     vm.prank(address(0));
+        // //     uint256[3] memory balances = game.getGangVaultBalance(i);
+        // //     console.log(balances[0]);
+        // //     console.log(balances[1]);
+        // //     console.log(balances[2]);
+        // // }
     }
 }

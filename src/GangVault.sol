@@ -128,7 +128,7 @@ contract GangVault is UUPSUpgrade, AccessControlUDS {
     }
 
     function getGangVaultBalance(uint256 gang) external view returns (uint256[3] memory out) {
-        // gang vault balances are stuck in user balances under address 13370, 13371, 13372.
+        // gang vault balances are stuck in user balances under accounts 13370, 13371, 13372.
         address gangVault = address(uint160(13370 + gang));
 
         uint256 totalShares = s().totalShares[gang];

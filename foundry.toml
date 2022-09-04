@@ -2,7 +2,8 @@
 solc = "0.8.15"
 bytecode_hash = "none"
 # optimizer_runs = 100_000
-optimizer_runs = 0
+# optimizer_runs = 0
+# fuzz_runs = 100_000
 # eth_rpc_url = "${RPC_MUMBAI}"
 # eth_rpc_url = "https://rpc.ankr.com/polygon_mumbai"
 # private_key = "${PRIVATE_KEY}"

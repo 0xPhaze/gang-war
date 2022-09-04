@@ -83,11 +83,7 @@ contract GangWarSetup is UpgradeScripts {
         gmc = MockGMCChild(setUpProxy(gmcImpl, abi.encodePacked(GMCChild.init.selector), "GMC"));
 
         bytes memory goudaArgs = abi.encode("Gouda", "GOUDA", 18);
-        gouda = MockERC20(setUpContract("MockERC20", goudaArgs, "GOUDA"));
-
-        vm.label(address(gmc), "GMC");
-        vm.label(address(gouda), "GOUDA");
-        vm.label(address(coordinator), "coordinator");
+        gouda = MockERC20(setUpContract("MockERC20", goudaArgs, "Gouda"));
 
         setUpContractsCommon();
     }
@@ -135,14 +131,6 @@ contract GangWarSetup is UpgradeScripts {
         }
 
         game = MockGangWar(setUpProxy(gangWarImpl, abi.encodeCall(GangWar.init, ()))); // prettier-ignore
-
-        vm.label(address(game), "GangWar");
-        vm.label(address(mice), "Mice");
-        vm.label(address(vault), "GangVault");
-        vm.label(address(badges), "Badges");
-        vm.label(address(tokens[0]), "YakuzaToken");
-        vm.label(address(tokens[1]), "CartelToken");
-        vm.label(address(tokens[2]), "CyberpunkToken");
     }
 
     function setUpContractsTestnet() internal {
@@ -191,8 +179,8 @@ contract GangWarSetup is UpgradeScripts {
         game.reset(occupants, yields);
     }
 
-    bytes32 constant MINT_AUTHORITY = keccak256("MINT_AUTHORITY");
-    bytes32 constant BURN_AUTHORITY = keccak256("BURN_AUTHORITY");
+    bytes32 constant MINT_AUTHORITY = keccak256("MINT.AUTHORITY");
+    bytes32 constant BURN_AUTHORITY = keccak256("BURN.AUTHORITY");
 
     function initContractsCI() internal {
         if (firstTimeDeployed[address(game)]) initContracts();
@@ -202,6 +190,7 @@ contract GangWarSetup is UpgradeScripts {
         initContractsCI();
 
         address lumy = 0x2181838c46bEf020b8Beb756340ad385f5BD82a8;
+        address antoine = 0x4f41aFa6DcF74BD757549CD379CB042C63e66385;
 
         // grant mint authority for test purposes
         if (!tokens[0].hasRole(MINT_AUTHORITY, msg.sender)) tokens[0].grantMintAuthority(msg.sender);
@@ -228,8 +217,19 @@ contract GangWarSetup is UpgradeScripts {
             tokens[2].mint(lumy, 100_000e18);
             badges.mint(lumy, 100_000e18);
 
+            tokens[0].mint(antoine, 100_000e18);
+            tokens[1].mint(antoine, 100_000e18);
+            tokens[2].mint(antoine, 100_000e18);
+            badges.mint(antoine, 100_000e18);
+
             gmc.mintBatch(msg.sender);
+            gmc.mintBatch(antoine);
             gmc.mintBatch(lumy);
+
+            uint256[3] memory shares = vault.getUserShares(msg.sender);
+            require(shares[0] > 0);
+            console.log("shares", shares[0]);
+            // require()
         }
 
         // console.log(block.chainid);

@@ -13,8 +13,8 @@ contract GoudaChild is UUPSUpgrade, OwnableUDS, ERC20BurnableUDS, FxERC20ChildUD
     string public constant override symbol = "GOUDA";
     uint8 public constant override decimals = 18;
 
-    bytes32 private constant MINT_AUTHORITY = keccak256("MINT_AUTHORITY");
-    bytes32 private constant BURN_AUTHORITY = keccak256("BURN_AUTHORITY");
+    bytes32 private constant MINT_AUTHORITY = keccak256("MINT.AUTHORITY");
+    bytes32 private constant BURN_AUTHORITY = keccak256("BURN.AUTHORITY");
 
     constructor(address fxChild) FxERC20ChildUDS(fxChild) {}
 
