@@ -19,8 +19,8 @@ struct Offer {
 }
 
 struct GangMarketDS {
-    // listedOffers is stuck in a mapping at [0],
-    // because nested structs are dangerous!
+    // `listedOffers` is stuck in a mapping at [0],
+    // to avoid nested structs.
     mapping(uint256 => Uint256Set) listedOffers;
     mapping(uint256 => Offer) activeOffers;
     mapping(address => uint256) lastRentalAcceptance;
@@ -154,9 +154,6 @@ abstract contract GMCMarket {
             }
         }
     }
-
-    // function rewardBadges(uint256 id) external onlyRole() {
-    // }
 
     /* ------------- internal ------------- */
 

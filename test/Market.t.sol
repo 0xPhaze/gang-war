@@ -27,9 +27,7 @@ contract TestGangWarMarket is TestGangWar {
 
     /* ------------- listOffer ------------- */
 
-    function test_initial() public {
-
-    }
+    function test_initial() public {}
 
     function test_listOffer() public {
         vaultSharesDiff(alice);

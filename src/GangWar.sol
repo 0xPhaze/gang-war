@@ -260,6 +260,7 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
 
             if (stateCountdown > 0) {
                 uint256 timeReduction = uint256(stateCountdown) / 2;
+
                 if (isBribery) s().gangsters[tokenId].briberyTimeReduction += timeReduction;
                 else s().gangsters[tokenId].recoveryTimeReduction += timeReduction;
             }

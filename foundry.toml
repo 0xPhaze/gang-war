@@ -9,13 +9,13 @@ bytecode_hash = "none"
 # private_key = "${PRIVATE_KEY}"
 
 [rpc_endpoints]
-mumbai = "${RPC_MUMBAI}"
-
 mainnet = "${RPC_MAINNET}"
 rinkeby = "${RPC_RINKEBY}"
-goerli = "${RPC_GOERLI}"
-
 polygon = "${RPC_POLYGON}"
+
+anvil = "${RPC_ANVIL}"
+mumbai = "${RPC_MUMBAI}"
+goerli = "${RPC_GOERLI}"
 
 [etherscan]
 mainnet = { key = "${ETHERSCAN_KEY}" }

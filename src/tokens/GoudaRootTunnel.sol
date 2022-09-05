@@ -6,12 +6,17 @@ import {UUPSUpgrade} from "UDS/proxy/UUPSUpgrade.sol";
 import {AccessControlUDS} from "UDS/auth/AccessControlUDS.sol";
 import {FxERC20RootTunnelUDS} from "fx-contracts/FxERC20RootTunnelUDS.sol";
 
+/// @title Gouda Root Tunnel
+/// @notice Flexible ERC20 Token Tunnel
+/// @author phaze (https://github.com/0xPhaze/fx-contracts)
 contract GoudaRootTunnel is UUPSUpgrade, OwnableUDS, FxERC20RootTunnelUDS {
     constructor(
         address gouda,
         address checkpointManager,
         address fxRoot
-    ) FxERC20RootTunnelUDS(gouda, checkpointManager, fxRoot) {}
+    ) FxERC20RootTunnelUDS(gouda, checkpointManager, fxRoot) {
+        init();
+    }
 
     function init() public initializer {
         __Ownable_init();
@@ -23,6 +28,3 @@ contract GoudaRootTunnel is UUPSUpgrade, OwnableUDS, FxERC20RootTunnelUDS {
 
     function _authorizeTunnelController() internal override onlyOwner {}
 }
-
-// deploy:
-// call init, call setFxChildTunnel
