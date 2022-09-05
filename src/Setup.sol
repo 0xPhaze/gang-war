@@ -106,7 +106,7 @@ contract GangWarSetupRoot is GangWarSetupBase {
 
     function setUpContractsTestnet() internal {
         bytes memory goudaArgs = abi.encode("Gouda", "GOUDA", 18);
-        gouda = MockERC20(setUpContract("MockERC20", goudaArgs, "Gouda"));
+        gouda = MockERC20(setUpContract("MockERC20", goudaArgs, "GoudaRoot"));
 
         setUpContractsCommon();
     }
