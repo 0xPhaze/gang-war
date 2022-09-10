@@ -8,3 +8,4 @@ fx-contracts/=lib/fx-contracts/src/
 fx-portal/=lib/fx-contracts/lib/ERC721M/lib/fx-portal/contracts/
 solmate/=lib/solmate/src/
 upgrade-scripts/=lib/upgrade-scripts/src/
+solady/=lib/solady/src/

@@ -1,57 +1,73 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import {FxERC721MRootUDS} from "fx-contracts/extensions/FxERC721MRootUDS.sol";
 import {OwnableUDS} from "UDS/auth/OwnableUDS.sol";
+import {FxERC721MRoot} from "fx-contracts/extensions/FxERC721MRoot.sol";
 import {ERC20UDS as ERC20} from "UDS/tokens/ERC20UDS.sol";
 
-import "./lib/LibString.sol";
-import "./lib/LibECDSA.sol";
+import "solady/utils/ECDSA.sol";
+import "solady/utils/LibString.sol";
 
+error CallFailed();
 error ExceedsLimit();
 error IncorrectValue();
+error MaxSupplyLocked();
 error InvalidSignature();
 error NonexistentToken();
+error InvalidPriceUnits();
 error WhitelistNotActive();
 error PublicSaleNotActive();
 error SignatureExceedsLimit();
 error ContractCallNotAllowed();
 
-contract GMC is OwnableUDS, FxERC721MRootUDS {
+contract GMC is OwnableUDS, FxERC721MRoot {
     using LibString for uint256;
-    using LibECDSA for bytes32;
+    using ECDSA for bytes32;
 
     event SaleStateUpdate();
-
-    bool public publicSaleActive;
-
-    string public constant override name = "Gangsta Mice City";
-    string public constant override symbol = "GMC";
 
     string private baseURI;
     string private unrevealedURI = "ipfs://QmRuQYxmdzqfVfy8ZhZNTvXsmbN9yLnBFPDeczFvWUS2HU/";
 
-    uint256 private constant MAX_SUPPLY = 5555;
-    uint256 private constant MAX_PER_WALLET = 20;
+    bool public publicSaleActive;
 
-    uint256 private constant price = 0.02 ether;
-    uint256 private constant whitelistPrice = 0.01 ether;
+    uint16 private publicPriceUnits;
+    uint16 private whitelistPriceUnits;
+
+    uint16 public maxSupply = 5555;
+    uint16 public constant MAX_PER_WALLET = 20;
+
     uint256 private constant PURCHASE_LIMIT = 5;
+    uint256 private constant PRICE_UNIT = 0.001 ether;
 
     address private signer = 0x68442589f40E8Fc3a9679dE62884c85C6E524888;
 
-    constructor(address checkpointManager, address fxRoot) FxERC721MRootUDS(checkpointManager, fxRoot) {
+    bool public maxSupplyLocked;
+
+    constructor(address checkpointManager, address fxRoot)
+        FxERC721MRoot("Gangsta Mice City", "GMC", checkpointManager, fxRoot)
+    {
         __Ownable_init();
+
+        publicPriceUnits = toPriceUnits(0.049 ether);
+        whitelistPriceUnits = toPriceUnits(0.039 ether);
+    }
+
+    /* ------------- view ------------- */
+
+    function publicPrice() public view returns (uint256) {
+        return toPrice(publicPriceUnits);
+    }
+
+    function whitelistPrice() public view returns (uint256) {
+        return toPrice(whitelistPriceUnits);
     }
 
     /* ------------- external ------------- */
 
-    function mint(uint256 quantity, bool lock) external payable onlyEOA {
+    function mint(uint256 quantity, bool lock) external payable onlyEOA requireMintable(quantity) {
         if (!publicSaleActive) revert PublicSaleNotActive();
-        if (PURCHASE_LIMIT < quantity) revert ExceedsLimit();
-        if (msg.value != price * quantity) revert IncorrectValue();
-        if (totalSupply() + quantity > MAX_SUPPLY) revert ExceedsLimit();
-        if (numMinted(msg.sender) + quantity > MAX_PER_WALLET) revert ExceedsLimit();
+        if (msg.value != publicPrice() * quantity) revert IncorrectValue();
 
         if (lock) _mintLockedAndTransmit(msg.sender, quantity);
         else _mint(msg.sender, quantity);
@@ -62,11 +78,9 @@ contract GMC is OwnableUDS, FxERC721MRootUDS {
         bool lock,
         uint256 limit,
         bytes calldata signature
-    ) external payable onlyEOA {
+    ) external payable onlyEOA requireMintable(quantity) {
         if (!validSignature(signature, limit)) revert InvalidSignature();
-        if (msg.value != whitelistPrice * quantity) revert IncorrectValue();
-        if (totalSupply() + quantity > MAX_SUPPLY) revert ExceedsLimit();
-        if (numMinted(msg.sender) + quantity > MAX_PER_WALLET) revert ExceedsLimit();
+        if (msg.value != whitelistPrice() * quantity) revert IncorrectValue();
 
         if (lock) _mintLockedAndTransmit(msg.sender, quantity);
         else _mint(msg.sender, quantity);
@@ -89,26 +103,58 @@ contract GMC is OwnableUDS, FxERC721MRootUDS {
 
     function validSignature(bytes calldata signature, uint256 limit) private view returns (bool) {
         bytes32 hash = keccak256(abi.encode(address(this), msg.sender, limit));
-        return hash.toEthSignedMsgHash().isValidSignature(signature, signer);
+        return hash.toEthSignedMessageHash().recover(signature) == signer;
+    }
+
+    function toPrice(uint16 priceUnits) private pure returns (uint256) {
+        unchecked {
+            return uint256(priceUnits) * PRICE_UNIT;
+        }
+    }
+
+    function toPriceUnits(uint256 price) private pure returns (uint16) {
+        unchecked {
+            uint256 units;
+            if (price % PRICE_UNIT != 0) revert InvalidPriceUnits();
+            if ((units = price / PRICE_UNIT) > type(uint16).max) revert InvalidPriceUnits();
+            return uint16(units);
+        }
     }
 
     /* ------------- owner ------------- */
+
+    function lockMaxSupply() external onlyOwner {
+        maxSupplyLocked = true;
+    }
+
+    function setSigner(address addr) external onlyOwner {
+        signer = addr;
+    }
+
+    function setMaxSupply(uint16 value) external onlyOwner {
+        if (maxSupplyLocked) revert MaxSupplyLocked();
+        maxSupply = value;
+    }
+
+    function setPublicPrice(uint256 value) external onlyOwner {
+        publicPriceUnits = toPriceUnits(value);
+    }
+
+    function setBaseURI(string calldata uri) external onlyOwner {
+        baseURI = uri;
+    }
 
     function setPublicSaleActive(bool active) external onlyOwner {
         publicSaleActive = active;
         emit SaleStateUpdate();
     }
 
-    function setBaseURI(string calldata _baseURI) external onlyOwner {
-        baseURI = _baseURI;
+    function setWhitelistPrice(uint256 value) external onlyOwner {
+        whitelistPriceUnits = toPriceUnits(value);
     }
 
-    function setUnrevealedURI(string calldata _uri) external onlyOwner {
-        unrevealedURI = _uri;
-    }
-
-    function setSigner(address signer_) external onlyOwner {
-        signer = signer_;
+    function setUnrevealedURI(string calldata uri) external onlyOwner {
+        unrevealedURI = uri;
     }
 
     function airdrop(
@@ -122,7 +168,8 @@ contract GMC is OwnableUDS, FxERC721MRootUDS {
 
     function withdraw() external onlyOwner {
         uint256 balance = address(this).balance;
-        payable(msg.sender).transfer(balance);
+        (bool success, ) = msg.sender.call{value: balance}("");
+        if (!success) revert CallFailed();
     }
 
     function recoverToken(ERC20 token) external onlyOwner {
@@ -136,6 +183,15 @@ contract GMC is OwnableUDS, FxERC721MRootUDS {
 
     modifier onlyEOA() {
         if (tx.origin != msg.sender) revert ContractCallNotAllowed();
+        _;
+    }
+
+    modifier requireMintable(uint256 quantity) {
+        unchecked {
+            if (quantity > PURCHASE_LIMIT) revert ExceedsLimit();
+            if (totalSupply() + quantity > maxSupply) revert ExceedsLimit();
+            if (numMinted(msg.sender) + quantity > MAX_PER_WALLET) revert ExceedsLimit();
+        }
         _;
     }
 

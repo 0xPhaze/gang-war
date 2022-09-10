@@ -9,14 +9,14 @@ import {GMCMarket, Offer} from "../GMCMarket.sol";
 import {ERC721UDS} from "UDS/tokens/ERC721UDS.sol";
 import {OwnableUDS} from "UDS/auth/OwnableUDS.sol";
 import {UUPSUpgrade} from "UDS/proxy/UUPSUpgrade.sol";
-import {FxERC721ChildTunnelUDS} from "fx-contracts/FxERC721ChildTunnelUDS.sol";
-import {FxERC721EnumerableChildTunnelUDS} from "fx-contracts/extensions/FxERC721EnumerableChildTunnelUDS.sol";
+import {FxERC721Child} from "fx-contracts/FxERC721Child.sol";
+import {FxERC721EnumerableChild} from "fx-contracts/extensions/FxERC721EnumerableChild.sol";
 
 import "./lib/LibString.sol";
 
 import "forge-std/console.sol";
 
-contract GMCChild is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChildTunnelUDS, GMCMarket {
+contract GMCChild is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChild, GMCMarket {
     using LibString for uint256;
 
     string public constant name = "Gangsta Mice City";
@@ -25,7 +25,7 @@ contract GMCChild is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChildTunnelUDS, 
     address public vault;
     string private baseURI;
 
-    constructor(address fxChild) FxERC721EnumerableChildTunnelUDS(fxChild) {}
+    constructor(address fxChild) FxERC721EnumerableChild(fxChild) {}
 
     function init() external initializer {
         __Ownable_init();
@@ -33,8 +33,8 @@ contract GMCChild is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChildTunnelUDS, 
 
     /* ------------- public ------------- */
 
-    function ownerOf(uint256 id) public view override(FxERC721ChildTunnelUDS, GMCMarket) returns (address) {
-        return FxERC721ChildTunnelUDS.ownerOf(id);
+    function ownerOf(uint256 id) public view override(FxERC721Child, GMCMarket) returns (address) {
+        return FxERC721Child.ownerOf(id);
     }
 
     function isAuthorized(address user, uint256 id) public view override returns (bool) {
@@ -69,23 +69,34 @@ contract GMCChild is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChildTunnelUDS, 
 
     /// @dev these hooks are called by Polygon's PoS bridge
     /// extra care must be taken such that these calls never fail!
-    function _afterIdRegistered(address to, uint256 id) internal override {
-        super._afterIdRegistered(to, id);
+    /// only 3 cases:
+    /// - from = 0
+    /// - to = 0
+    /// - from, to != 0
+    function _afterIdRegistered(
+        address from,
+        address to,
+        uint256 id
+    ) internal override {
+        super._afterIdRegistered(from, to, id);
 
-        // GangVault(vault).addShares(to, uint256(gangOf(id)), 100);
-        try GangVault(vault).addShares(to, uint256(gangOf(id)), 100) {} catch {}
-    }
+        // console.log("from", from);
+        // console.log("to", to);
+        if (from != address(0)) {
+            // make sure any active rental is cleaned up
+            // so that shares invariant holds.
+            // calls `_afterEndRent` if rental is active.
+            _cleanUpOffer(from, id);
 
-    function _afterIdDeregistered(address from, uint256 id) internal override {
-        super._afterIdDeregistered(from, id);
+            GangVault(vault).removeShares(from, uint256(gangOf(id)), 100);
+            // TODO
+            // try GangVault(vault).removeShares(from, uint256(gangOf(id)), 100) {} catch {}
+        }
 
-        // make sure any active rental is cleaned up
-        // so that shares invariant holds.
-        // calls `_afterEndRent` if rental is active.
-        _endRentAndDeleteOffer(id);
-
-        // GangVault(vault).removeShares(from, uint256(gangOf(id)), 100);
-        try GangVault(vault).removeShares(from, uint256(gangOf(id)), 100) {} catch {}
+        if (to != address(0)) {
+            GangVault(vault).addShares(to, uint256(gangOf(id)), 100);
+            // try GangVault(vault).addShares(to, uint256(gangOf(id)), 100) {} catch {}
+        }
     }
 
     function _afterStartRent(
@@ -96,8 +107,7 @@ contract GMCChild is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChildTunnelUDS, 
     ) internal override {
         Gang gang = gangOf(id);
 
-        GangVault(vault).addShares(renter, uint256(gang), uint8(renterShares));
-        GangVault(vault).removeShares(owner, uint256(gang), uint8(renterShares));
+        GangVault(vault).transferShares(owner, renter, uint256(gang), uint8(renterShares));
     }
 
     function _afterEndRent(
@@ -108,8 +118,7 @@ contract GMCChild is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChildTunnelUDS, 
     ) internal override {
         Gang gang = gangOf(id);
 
-        GangVault(vault).addShares(owner, uint256(gang), uint8(renterShares));
-        GangVault(vault).removeShares(renter, uint256(gang), uint8(renterShares));
+        GangVault(vault).transferShares(renter, owner, uint256(gang), uint8(renterShares));
     }
 
     /* ------------- owner ------------- */

@@ -8,6 +8,8 @@ bytecode_hash = "none"
 # eth_rpc_url = "https://rpc.ankr.com/polygon_mumbai"
 # private_key = "${PRIVATE_KEY}"
 
+fs_permissions = [{ access = "read-write", path = "./" }]
+
 [rpc_endpoints]
 mainnet = "${RPC_MAINNET}"
 rinkeby = "${RPC_RINKEBY}"

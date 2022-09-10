@@ -340,19 +340,13 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
         emit BaronDefenseDeclared(districtId, gang, tokenId);
     }
 
-    function joinGangAttack(
-        uint256 connectingId,
-        uint256 districtId,
-        uint256[] calldata tokenIds
-    ) external {
+    function joinGangAttack(uint256 districtId, uint256[] calldata tokenIds) external {
         Gang gang = gangOf(tokenIds[0]);
         District storage district = s().districts[districtId];
 
         // @note need to find reliable way to check for attackers
         uint256 baronAttackId = district.baronAttackId;
         if (baronAttackId == 0 || gangOf(baronAttackId) != gang) revert BaronMustDeclareInitialAttack();
-        if (!isConnecting(connectingId, districtId)) revert InvalidConnectingDistrict();
-        if (s().districts[connectingId].occupants != gang) revert InvalidConnectingDistrict();
 
         _enterGangWar(districtId, tokenIds, gang, true);
     }

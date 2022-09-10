@@ -1,0 +1,219 @@
+{
+  "storage": [
+    {
+      "astId": 538,
+      "contract": "src/tokens/GangToken.sol:GangToken",
+      "label": "__storageLayout",
+      "offset": 0,
+      "slot": "0",
+      "type": "t_struct(OwnableDS)528_storage"
+    },
+    {
+      "astId": 381,
+      "contract": "src/tokens/GangToken.sol:GangToken",
+      "label": "__storageLayout",
+      "offset": 0,
+      "slot": "1",
+      "type": "t_struct(EIP2612DS)373_storage"
+    },
+    {
+      "astId": 1251,
+      "contract": "src/tokens/GangToken.sol:GangToken",
+      "label": "__storageLayout",
+      "offset": 0,
+      "slot": "2",
+      "type": "t_struct(ERC20DS)1241_storage"
+    },
+    {
+      "astId": 47,
+      "contract": "src/tokens/GangToken.sol:GangToken",
+      "label": "__storageLayout",
+      "offset": 0,
+      "slot": "8",
+      "type": "t_struct(AccessControlDS)28_storage"
+    }
+  ],
+  "types": {
+    "t_address": {
+      "encoding": "inplace",
+      "label": "address",
+      "numberOfBytes": "20"
+    },
+    "t_bool": {
+      "encoding": "inplace",
+      "label": "bool",
+      "numberOfBytes": "1"
+    },
+    "t_bytes32": {
+      "encoding": "inplace",
+      "label": "bytes32",
+      "numberOfBytes": "32"
+    },
+    "t_mapping(t_address,t_bool)": {
+      "encoding": "mapping",
+      "key": "t_address",
+      "label": "mapping(address => bool)",
+      "numberOfBytes": "32",
+      "value": "t_bool"
+    },
+    "t_mapping(t_address,t_mapping(t_address,t_uint256))": {
+      "encoding": "mapping",
+      "key": "t_address",
+      "label": "mapping(address => mapping(address => uint256))",
+      "numberOfBytes": "32",
+      "value": "t_mapping(t_address,t_uint256)"
+    },
+    "t_mapping(t_address,t_uint256)": {
+      "encoding": "mapping",
+      "key": "t_address",
+      "label": "mapping(address => uint256)",
+      "numberOfBytes": "32",
+      "value": "t_uint256"
+    },
+    "t_mapping(t_bytes32,t_struct(RoleData)35_storage)": {
+      "encoding": "mapping",
+      "key": "t_bytes32",
+      "label": "mapping(bytes32 => struct RoleData)",
+      "numberOfBytes": "32",
+      "value": "t_struct(RoleData)35_storage"
+    },
+    "t_string_storage": {
+      "encoding": "bytes",
+      "label": "string",
+      "numberOfBytes": "32"
+    },
+    "t_struct(AccessControlDS)28_storage": {
+      "encoding": "inplace",
+      "label": "struct AccessControlDS",
+      "members": [
+        {
+          "astId": 27,
+          "contract": "src/tokens/GangToken.sol:GangToken",
+          "label": "roles",
+          "offset": 0,
+          "slot": "0",
+          "type": "t_mapping(t_bytes32,t_struct(RoleData)35_storage)"
+        }
+      ],
+      "numberOfBytes": "32"
+    },
+    "t_struct(EIP2612DS)373_storage": {
+      "encoding": "inplace",
+      "label": "struct EIP2612DS",
+      "members": [
+        {
+          "astId": 372,
+          "contract": "src/tokens/GangToken.sol:GangToken",
+          "label": "nonces",
+          "offset": 0,
+          "slot": "0",
+          "type": "t_mapping(t_address,t_uint256)"
+        }
+      ],
+      "numberOfBytes": "32"
+    },
+    "t_struct(ERC20DS)1241_storage": {
+      "encoding": "inplace",
+      "label": "struct ERC20DS",
+      "members": [
+        {
+          "astId": 1224,
+          "contract": "src/tokens/GangToken.sol:GangToken",
+          "label": "name",
+          "offset": 0,
+          "slot": "0",
+          "type": "t_string_storage"
+        },
+        {
+          "astId": 1226,
+          "contract": "src/tokens/GangToken.sol:GangToken",
+          "label": "symbol",
+          "offset": 0,
+          "slot": "1",
+          "type": "t_string_storage"
+        },
+        {
+          "astId": 1228,
+          "contract": "src/tokens/GangToken.sol:GangToken",
+          "label": "decimals",
+          "offset": 0,
+          "slot": "2",
+          "type": "t_uint8"
+        },
+        {
+          "astId": 1230,
+          "contract": "src/tokens/GangToken.sol:GangToken",
+          "label": "totalSupply",
+          "offset": 0,
+          "slot": "3",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 1234,
+          "contract": "src/tokens/GangToken.sol:GangToken",
+          "label": "balanceOf",
+          "offset": 0,
+          "slot": "4",
+          "type": "t_mapping(t_address,t_uint256)"
+        },
+        {
+          "astId": 1240,
+          "contract": "src/tokens/GangToken.sol:GangToken",
+          "label": "allowance",
+          "offset": 0,
+          "slot": "5",
+          "type": "t_mapping(t_address,t_mapping(t_address,t_uint256))"
+        }
+      ],
+      "numberOfBytes": "192"
+    },
+    "t_struct(OwnableDS)528_storage": {
+      "encoding": "inplace",
+      "label": "struct OwnableDS",
+      "members": [
+        {
+          "astId": 527,
+          "contract": "src/tokens/GangToken.sol:GangToken",
+          "label": "owner",
+          "offset": 0,
+          "slot": "0",
+          "type": "t_address"
+        }
+      ],
+      "numberOfBytes": "32"
+    },
+    "t_struct(RoleData)35_storage": {
+      "encoding": "inplace",
+      "label": "struct RoleData",
+      "members": [
+        {
+          "astId": 30,
+          "contract": "src/tokens/GangToken.sol:GangToken",
+          "label": "adminRole",
+          "offset": 0,
+          "slot": "0",
+          "type": "t_bytes32"
+        },
+        {
+          "astId": 34,
+          "contract": "src/tokens/GangToken.sol:GangToken",
+          "label": "members",
+          "offset": 0,
+          "slot": "1",
+          "type": "t_mapping(t_address,t_bool)"
+        }
+      ],
+      "numberOfBytes": "64"
+    },
+    "t_uint256": {
+      "encoding": "inplace",
+      "label": "uint256",
+      "numberOfBytes": "32"
+    },
+    "t_uint8": {
+      "encoding": "inplace",
+      "label": "uint8",
+      "numberOfBytes": "1"
+    }
+  }
+}

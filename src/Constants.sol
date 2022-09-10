@@ -15,9 +15,9 @@ import {LibPackedMap} from "./lib/LibPackedMap.sol";
 // uint256 constant TIME_RECOVERY = 12 hours;
 // uint256 constant TIME_REINFORCEMENTS = 5 hours;
 uint256 constant TIME_TRUCE = 10 minutes;
-uint256 constant TIME_LOCKUP = 5 minutes;
+uint256 constant TIME_LOCKUP = 20 minutes;
 uint256 constant TIME_GANG_WAR = 10 minutes;
-uint256 constant TIME_RECOVERY = 5 minutes;
+uint256 constant TIME_RECOVERY = 20 minutes;
 uint256 constant TIME_REINFORCEMENTS = 10 minutes;
 
 uint256 constant DEFENSE_FAVOR_LIM = 150;

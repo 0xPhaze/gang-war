@@ -19,12 +19,12 @@ contract TestGangVault is TestGangWar {
     using futils for *;
 
     function setUp() public virtual override {
-        setUpContractsTEST();
+        setUpContracts();
         initContracts();
 
-        tokens[0].grantBurnAuthority(tester);
-        tokens[1].grantBurnAuthority(tester);
-        tokens[2].grantBurnAuthority(tester);
+        tokens[0].grantRole(AUTHORITY, tester);
+        tokens[1].grantRole(AUTHORITY, tester);
+        tokens[2].grantRole(AUTHORITY, tester);
 
         vault.grantRole(GANG_VAULT_CONTROLLER, address(this));
 

@@ -1,0 +1,431 @@
+{
+  "storage": [
+    {
+      "astId": 538,
+      "contract": "test/mocks/MockGangWar.sol:MockGangWar",
+      "label": "__storageLayout",
+      "offset": 0,
+      "slot": "0",
+      "type": "t_struct(OwnableDS)528_storage"
+    },
+    {
+      "astId": 40467,
+      "contract": "test/mocks/MockGangWar.sol:MockGangWar",
+      "label": "__storageLayout",
+      "offset": 0,
+      "slot": "1",
+      "type": "t_struct(GangWarDS)37657_storage"
+    }
+  ],
+  "types": {
+    "t_address": {
+      "encoding": "inplace",
+      "label": "address",
+      "numberOfBytes": "20"
+    },
+    "t_bool": {
+      "encoding": "inplace",
+      "label": "bool",
+      "numberOfBytes": "1"
+    },
+    "t_enum(DISTRICT_STATE)37537": {
+      "encoding": "inplace",
+      "label": "enum DISTRICT_STATE",
+      "numberOfBytes": "1"
+    },
+    "t_enum(Gang)37530": {
+      "encoding": "inplace",
+      "label": "enum Gang",
+      "numberOfBytes": "1"
+    },
+    "t_enum(PLAYER_STATE)37545": {
+      "encoding": "inplace",
+      "label": "enum PLAYER_STATE",
+      "numberOfBytes": "1"
+    },
+    "t_int256": {
+      "encoding": "inplace",
+      "label": "int256",
+      "numberOfBytes": "32"
+    },
+    "t_mapping(t_address,t_uint256)": {
+      "encoding": "mapping",
+      "key": "t_address",
+      "label": "mapping(address => uint256)",
+      "numberOfBytes": "32",
+      "value": "t_uint256"
+    },
+    "t_mapping(t_enum(Gang)37530,t_mapping(t_uint256,t_uint256))": {
+      "encoding": "mapping",
+      "key": "t_enum(Gang)37530",
+      "label": "mapping(enum Gang => mapping(uint256 => uint256))",
+      "numberOfBytes": "32",
+      "value": "t_mapping(t_uint256,t_uint256)"
+    },
+    "t_mapping(t_uint256,t_mapping(t_uint256,t_uint256))": {
+      "encoding": "mapping",
+      "key": "t_uint256",
+      "label": "mapping(uint256 => mapping(uint256 => uint256))",
+      "numberOfBytes": "32",
+      "value": "t_mapping(t_uint256,t_uint256)"
+    },
+    "t_mapping(t_uint256,t_struct(District)37601_storage)": {
+      "encoding": "mapping",
+      "key": "t_uint256",
+      "label": "mapping(uint256 => struct District)",
+      "numberOfBytes": "32",
+      "value": "t_struct(District)37601_storage"
+    },
+    "t_mapping(t_uint256,t_struct(Gangster)37564_storage)": {
+      "encoding": "mapping",
+      "key": "t_uint256",
+      "label": "mapping(uint256 => struct Gangster)",
+      "numberOfBytes": "32",
+      "value": "t_struct(Gangster)37564_storage"
+    },
+    "t_mapping(t_uint256,t_uint256)": {
+      "encoding": "mapping",
+      "key": "t_uint256",
+      "label": "mapping(uint256 => uint256)",
+      "numberOfBytes": "32",
+      "value": "t_uint256"
+    },
+    "t_struct(District)37601_storage": {
+      "encoding": "inplace",
+      "label": "struct District",
+      "members": [
+        {
+          "astId": 37567,
+          "contract": "test/mocks/MockGangWar.sol:MockGangWar",
+          "label": "occupants",
+          "offset": 0,
+          "slot": "0",
+          "type": "t_enum(Gang)37530"
+        },
+        {
+          "astId": 37570,
+          "contract": "test/mocks/MockGangWar.sol:MockGangWar",
+          "label": "attackers",
+          "offset": 1,
+          "slot": "0",
+          "type": "t_enum(Gang)37530"
+        },
+        {
+          "astId": 37573,
+          "contract": "test/mocks/MockGangWar.sol:MockGangWar",
+          "label": "token",
+          "offset": 2,
+          "slot": "0",
+          "type": "t_enum(Gang)37530"
+        },
+        {
+          "astId": 37575,
+          "contract": "test/mocks/MockGangWar.sol:MockGangWar",
+          "label": "roundId",
+          "offset": 0,
+          "slot": "1",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 37577,
+          "contract": "test/mocks/MockGangWar.sol:MockGangWar",
+          "label": "attackDeclarationTime",
+          "offset": 0,
+          "slot": "2",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 37579,
+          "contract": "test/mocks/MockGangWar.sol:MockGangWar",
+          "label": "baronAttackId",
+          "offset": 0,
+          "slot": "3",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 37581,
+          "contract": "test/mocks/MockGangWar.sol:MockGangWar",
+          "label": "baronDefenseId",
+          "offset": 0,
+          "slot": "4",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 37583,
+          "contract": "test/mocks/MockGangWar.sol:MockGangWar",
+          "label": "lastUpkeepTime",
+          "offset": 0,
+          "slot": "5",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 37585,
+          "contract": "test/mocks/MockGangWar.sol:MockGangWar",
+          "label": "lastOutcomeTime",
+          "offset": 0,
+          "slot": "6",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 37587,
+          "contract": "test/mocks/MockGangWar.sol:MockGangWar",
+          "label": "lockupTime",
+          "offset": 0,
+          "slot": "7",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 37589,
+          "contract": "test/mocks/MockGangWar.sol:MockGangWar",
+          "label": "yield",
+          "offset": 0,
+          "slot": "8",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 37591,
+          "contract": "test/mocks/MockGangWar.sol:MockGangWar",
+          "label": "activeItems",
+          "offset": 0,
+          "slot": "9",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 37594,
+          "contract": "test/mocks/MockGangWar.sol:MockGangWar",
+          "label": "state",
+          "offset": 0,
+          "slot": "10",
+          "type": "t_enum(DISTRICT_STATE)37537"
+        },
+        {
+          "astId": 37596,
+          "contract": "test/mocks/MockGangWar.sol:MockGangWar",
+          "label": "stateCountdown",
+          "offset": 0,
+          "slot": "11",
+          "type": "t_int256"
+        },
+        {
+          "astId": 37598,
+          "contract": "test/mocks/MockGangWar.sol:MockGangWar",
+          "label": "attackForces",
+          "offset": 0,
+          "slot": "12",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 37600,
+          "contract": "test/mocks/MockGangWar.sol:MockGangWar",
+          "label": "defenseForces",
+          "offset": 0,
+          "slot": "13",
+          "type": "t_uint256"
+        }
+      ],
+      "numberOfBytes": "448"
+    },
+    "t_struct(GangWarDS)37657_storage": {
+      "encoding": "inplace",
+      "label": "struct GangWarDS",
+      "members": [
+        {
+          "astId": 37603,
+          "contract": "test/mocks/MockGangWar.sol:MockGangWar",
+          "label": "gmc",
+          "offset": 0,
+          "slot": "0",
+          "type": "t_address"
+        },
+        {
+          "astId": 37605,
+          "contract": "test/mocks/MockGangWar.sol:MockGangWar",
+          "label": "vault",
+          "offset": 0,
+          "slot": "1",
+          "type": "t_address"
+        },
+        {
+          "astId": 37607,
+          "contract": "test/mocks/MockGangWar.sol:MockGangWar",
+          "label": "districtConnections",
+          "offset": 0,
+          "slot": "2",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 37609,
+          "contract": "test/mocks/MockGangWar.sol:MockGangWar",
+          "label": "lockupTime",
+          "offset": 0,
+          "slot": "3",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 37614,
+          "contract": "test/mocks/MockGangWar.sol:MockGangWar",
+          "label": "districts",
+          "offset": 0,
+          "slot": "4",
+          "type": "t_mapping(t_uint256,t_struct(District)37601_storage)"
+        },
+        {
+          "astId": 37619,
+          "contract": "test/mocks/MockGangWar.sol:MockGangWar",
+          "label": "gangsters",
+          "offset": 0,
+          "slot": "5",
+          "type": "t_mapping(t_uint256,t_struct(Gangster)37564_storage)"
+        },
+        {
+          "astId": 37623,
+          "contract": "test/mocks/MockGangWar.sol:MockGangWar",
+          "label": "baronItemCost",
+          "offset": 0,
+          "slot": "6",
+          "type": "t_mapping(t_uint256,t_uint256)"
+        },
+        {
+          "astId": 37627,
+          "contract": "test/mocks/MockGangWar.sol:MockGangWar",
+          "label": "briberyFee",
+          "offset": 0,
+          "slot": "7",
+          "type": "t_mapping(t_address,t_uint256)"
+        },
+        {
+          "astId": 37634,
+          "contract": "test/mocks/MockGangWar.sol:MockGangWar",
+          "label": "baronItems",
+          "offset": 0,
+          "slot": "8",
+          "type": "t_mapping(t_enum(Gang)37530,t_mapping(t_uint256,t_uint256))"
+        },
+        {
+          "astId": 37638,
+          "contract": "test/mocks/MockGangWar.sol:MockGangWar",
+          "label": "requestIdToDistrictIds",
+          "offset": 0,
+          "slot": "9",
+          "type": "t_mapping(t_uint256,t_uint256)"
+        },
+        {
+          "astId": 37644,
+          "contract": "test/mocks/MockGangWar.sol:MockGangWar",
+          "label": "gangWarOutcomes",
+          "offset": 0,
+          "slot": "10",
+          "type": "t_mapping(t_uint256,t_mapping(t_uint256,t_uint256))"
+        },
+        {
+          "astId": 37650,
+          "contract": "test/mocks/MockGangWar.sol:MockGangWar",
+          "label": "districtAttackForces",
+          "offset": 0,
+          "slot": "11",
+          "type": "t_mapping(t_uint256,t_mapping(t_uint256,t_uint256))"
+        },
+        {
+          "astId": 37656,
+          "contract": "test/mocks/MockGangWar.sol:MockGangWar",
+          "label": "districtDefenseForces",
+          "offset": 0,
+          "slot": "12",
+          "type": "t_mapping(t_uint256,t_mapping(t_uint256,t_uint256))"
+        }
+      ],
+      "numberOfBytes": "416"
+    },
+    "t_struct(Gangster)37564_storage": {
+      "encoding": "inplace",
+      "label": "struct Gangster",
+      "members": [
+        {
+          "astId": 37547,
+          "contract": "test/mocks/MockGangWar.sol:MockGangWar",
+          "label": "roundId",
+          "offset": 0,
+          "slot": "0",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 37549,
+          "contract": "test/mocks/MockGangWar.sol:MockGangWar",
+          "label": "location",
+          "offset": 0,
+          "slot": "1",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 37551,
+          "contract": "test/mocks/MockGangWar.sol:MockGangWar",
+          "label": "briberyTimeReduction",
+          "offset": 0,
+          "slot": "2",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 37553,
+          "contract": "test/mocks/MockGangWar.sol:MockGangWar",
+          "label": "recoveryTimeReduction",
+          "offset": 0,
+          "slot": "3",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 37555,
+          "contract": "test/mocks/MockGangWar.sol:MockGangWar",
+          "label": "attack",
+          "offset": 0,
+          "slot": "4",
+          "type": "t_bool"
+        },
+        {
+          "astId": 37558,
+          "contract": "test/mocks/MockGangWar.sol:MockGangWar",
+          "label": "gang",
+          "offset": 1,
+          "slot": "4",
+          "type": "t_enum(Gang)37530"
+        },
+        {
+          "astId": 37561,
+          "contract": "test/mocks/MockGangWar.sol:MockGangWar",
+          "label": "state",
+          "offset": 2,
+          "slot": "4",
+          "type": "t_enum(PLAYER_STATE)37545"
+        },
+        {
+          "astId": 37563,
+          "contract": "test/mocks/MockGangWar.sol:MockGangWar",
+          "label": "stateCountdown",
+          "offset": 0,
+          "slot": "5",
+          "type": "t_int256"
+        }
+      ],
+      "numberOfBytes": "192"
+    },
+    "t_struct(OwnableDS)528_storage": {
+      "encoding": "inplace",
+      "label": "struct OwnableDS",
+      "members": [
+        {
+          "astId": 527,
+          "contract": "test/mocks/MockGangWar.sol:MockGangWar",
+          "label": "owner",
+          "offset": 0,
+          "slot": "0",
+          "type": "t_address"
+        }
+      ],
+      "numberOfBytes": "32"
+    },
+    "t_uint256": {
+      "encoding": "inplace",
+      "label": "uint256",
+      "numberOfBytes": "32"
+    }
+  }
+}

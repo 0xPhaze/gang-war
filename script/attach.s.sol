@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "forge-std/Script.sol";
 
 import {ERC1967Proxy} from "UDS/proxy/ERC1967Proxy.sol";
-import {GangWarSetup} from "../src/Setup.sol";
+import {SetupChild} from "../src/SetupChild.sol";
 
 // import "chainlink/contracts/src/v0.8/VRFCoordinatorV2.sol";
 // function addConsumer(uint64 subId, address consumer) external override onlySubOwner(subId) nonReentrant {
@@ -18,15 +18,17 @@ forge script attach --rpc-url $RPC_MUMBAI --private-key $PRIVATE_KEY --with-gas-
 */
 
 import "futils/futils.sol";
+import "forge-std/Script.sol";
 
-contract attach is GangWarSetup {
-    function setUpUpgradeScripts() internal override {
-        UPGRADE_SCRIPTS_ATTACH_ONLY = true;
-    }
+contract attach is Script {
+    // function setUpUpgradeScripts() internal override {
+    //     UPGRADE_SCRIPTS_ATTACH_ONLY = true;
+    // }
 
     using futils for *;
 
     function run() external {
+        // vm.getCode("MockVRFCoordinator.sol");
         // setUpContractsTestnet();
         // vm.startBroadcast();
         // // vm.startPrank(msg.sender);

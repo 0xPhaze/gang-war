@@ -4,21 +4,17 @@ pragma solidity ^0.8.0;
 import {OwnableUDS} from "UDS/auth/OwnableUDS.sol";
 import {UUPSUpgrade} from "UDS/proxy/UUPSUpgrade.sol";
 import {AccessControlUDS} from "UDS/auth/AccessControlUDS.sol";
-import {FxERC20RootTunnelUDS} from "fx-contracts/FxERC20RootTunnelUDS.sol";
+import {FxERC20RelayRoot} from "fx-contracts/FxERC20RelayRoot.sol";
 
 /// @title Gouda Root Tunnel
 /// @notice Flexible ERC20 Token Tunnel
 /// @author phaze (https://github.com/0xPhaze/fx-contracts)
-contract GoudaRootTunnel is UUPSUpgrade, OwnableUDS, FxERC20RootTunnelUDS {
+contract GoudaRootRelay is UUPSUpgrade, OwnableUDS, FxERC20RelayRoot {
     constructor(
         address gouda,
         address checkpointManager,
         address fxRoot
-    ) FxERC20RootTunnelUDS(gouda, checkpointManager, fxRoot) {
-        init();
-    }
-
-    function init() public initializer {
+    ) FxERC20RelayRoot(gouda, checkpointManager, fxRoot) {
         __Ownable_init();
     }
 

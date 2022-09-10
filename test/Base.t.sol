@@ -6,7 +6,8 @@ import "forge-std/Test.sol";
 // base
 import "/GangWar.sol";
 import {GangToken} from "/tokens/GangToken.sol";
-import {GangWarSetup} from "../src/Setup.sol";
+import {SetupChild} from "../src/SetupChild.sol";
+// import {GangWarSetup} from "../src/Setup.sol";
 
 import {ERC1967Proxy} from "UDS/proxy/ERC1967Proxy.sol";
 
@@ -18,7 +19,7 @@ import "/lib/LibPackedMap.sol";
 import {MockVRFCoordinator} from "./mocks/MockVRFCoordinator.sol";
 import "solmate/test/utils/mocks/MockERC721.sol";
 
-contract TestGangWar is Test, GangWarSetup {
+contract TestGangWar is Test, SetupChild {
     using futils for *;
 
     address alice = makeAddr("alice");
@@ -32,20 +33,15 @@ contract TestGangWar is Test, GangWarSetup {
     }
 
     function setUp() public virtual {
-        setUpContractsTEST();
+        setUpContracts();
         initContracts();
 
         vm.label(tester, "tester");
 
-        badges.grantMintAuthority(tester);
-        tokens[0].grantMintAuthority(tester);
-        tokens[1].grantMintAuthority(tester);
-        tokens[2].grantMintAuthority(tester);
-
-        badges.grantBurnAuthority(tester);
-        tokens[0].grantBurnAuthority(tester);
-        tokens[1].grantBurnAuthority(tester);
-        tokens[2].grantBurnAuthority(tester);
+        badges.grantRole(AUTHORITY, tester);
+        tokens[0].grantRole(AUTHORITY, tester);
+        tokens[1].grantRole(AUTHORITY, tester);
+        tokens[2].grantRole(AUTHORITY, tester);
 
         vault.grantRole(GANG_VAULT_CONTROLLER, address(this));
 
@@ -66,12 +62,12 @@ contract TestGangWar is Test, GangWarSetup {
         gmc.mint(bob, BARON_CARTEL_2);
         gmc.mint(bob, BARON_CYBERP_2);
 
+        gouda.grantRole(AUTHORITY, address(this));
+
         gouda.mint(bob, 100e18);
 
         vm.prank(bob);
         gouda.approve(address(game), type(uint256).max);
-
-        // game.scrambleStorage();
     }
 
     function assertEq(Gang a, Gang b) internal {

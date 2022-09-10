@@ -28,6 +28,6 @@ contract MockGMCChild is GMCChild {
     }
 
     function burn(uint256 id) public {
-        _deregisterIds([id].toMemory());
+        _registerIds(address(0), [id].toMemory());
     }
 }

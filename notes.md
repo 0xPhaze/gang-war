@@ -1,6 +1,8 @@
 
 # TODO
 
+- take out connectingId in joinGangAttack
+
 - MockGMC NFT random gang for Demo?
 - add actual VRF integration!
 - make code pretty
@@ -15,8 +17,6 @@
 
 # Frontend
 - add in function getGangAccumulatedBalance() external view returns (uint256[3][3])
-- test market listing
-- add changed getlistedOfferByIndex
 
 
 # Test
@@ -31,7 +31,7 @@
     // 10 warm: gas 384932
 
 # Final
-- restore times (district phases)
+- restore times (district phases, + RENTAL_ACCEPTANCE_MINIMUM_TIME_DELAY )
 - integrate with final VRF
 - what is LOCKUP_FINE?
 

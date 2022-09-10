@@ -6,17 +6,16 @@ import {UUPSUpgrade} from "UDS/proxy/UUPSUpgrade.sol";
 import {AccessControlUDS} from "UDS/auth/AccessControlUDS.sol";
 import {ERC20BurnableUDS} from "UDS/tokens/extensions/ERC20BurnableUDS.sol";
 
-import {FxERC20ChildUDS} from "fx-contracts/FxERC20ChildUDS.sol";
+import {FxERC20UDSChild} from "fx-contracts/FxERC20UDSChild.sol";
 
-contract GoudaChild is UUPSUpgrade, OwnableUDS, ERC20BurnableUDS, FxERC20ChildUDS, AccessControlUDS {
+contract GoudaChild is UUPSUpgrade, OwnableUDS, ERC20BurnableUDS, FxERC20UDSChild, AccessControlUDS {
     string public constant override name = "Gouda";
     string public constant override symbol = "GOUDA";
     uint8 public constant override decimals = 18;
 
-    bytes32 private constant MINT_AUTHORITY = keccak256("MINT.AUTHORITY");
-    bytes32 private constant BURN_AUTHORITY = keccak256("BURN.AUTHORITY");
+    bytes32 private constant AUTHORITY = keccak256("AUTHORITY");
 
-    constructor(address fxChild) FxERC20ChildUDS(fxChild) {}
+    constructor(address fxChild) FxERC20UDSChild(fxChild) {}
 
     function init() public initializer {
         __Ownable_init();
@@ -25,25 +24,21 @@ contract GoudaChild is UUPSUpgrade, OwnableUDS, ERC20BurnableUDS, FxERC20ChildUD
 
     /* ------------- external ------------- */
 
-    function mint(address user, uint256 amount) external onlyRole(MINT_AUTHORITY) {
+    function mint(address user, uint256 amount) external onlyRole(AUTHORITY) {
         _mint(user, amount);
     }
 
     /* ------------- ERC20Burnable ------------- */
 
     function burnFrom(address from, uint256 amount) public override {
-        if (hasRole(BURN_AUTHORITY, msg.sender)) _burn(from, amount);
+        if (hasRole(AUTHORITY, msg.sender)) _burn(from, amount);
         else super.burnFrom(from, amount);
     }
 
     /* ------------- authority ------------- */
 
-    function grantMintAuthority(address operator) external {
-        grantRole(MINT_AUTHORITY, operator);
-    }
-
-    function grantBurnAuthority(address operator) external {
-        grantRole(BURN_AUTHORITY, operator);
+    function grantAuthority(address operator) external {
+        grantRole(AUTHORITY, operator);
     }
 
     /* ------------- owner ------------- */
