@@ -1,14 +1,11 @@
 
 # TODO
 
-- take out connectingId in joinGangAttack
-
 - MockGMC NFT random gang for Demo?
 - add actual VRF integration!
 - make code pretty
 
-- add Game pause/reset option
-- add global cops lockup time check
+- add Game pause/reset option: Test detach!
 
 - blitz state countdown reduction relative?
 - add name entry for gangster profile

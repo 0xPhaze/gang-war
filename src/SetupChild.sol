@@ -10,9 +10,7 @@ import {GMCChild} from "/tokens/GMCChild.sol";
 import {GangVault} from "/GangVault.sol";
 import {GangToken} from "/tokens/GangToken.sol";
 import {GoudaChild} from "/tokens/GoudaChild.sol";
-
-import {MockGMCChild} from "../test/mocks/MockGMCChild.sol";
-import {MockGangWar} from "../test/mocks/MockGangWar.sol";
+import {StaticProxy} from "/utils/StaticProxy.sol";
 
 import "solmate/test/utils/mocks/MockERC721.sol";
 import "solmate/test/utils/mocks/MockERC20.sol";
@@ -21,25 +19,32 @@ import "./SetupBase.sol";
 
 contract SetupChild is SetupBase {
     Mice mice;
-    GoudaChild gouda;
+    GangWar game;
+    GMCChild gmc;
     GangVault vault;
     GangToken badges;
-    MockGangWar game;
-    MockGMCChild gmc;
+    GoudaChild gouda;
     GangToken[3] tokens;
+    StaticProxy staticProxy;
 
     constructor() {
         setUpGangWarConstants();
     }
 
     function setUpContracts() internal {
+        setUpFxPortal();
+        setUpChainlink();
+
+        staticProxy = StaticProxy(setUpContract("StaticProxy")); // placeholder to disable UUPS contracts
+
         if (coordinator == address(0) || linkKeyHash == 0 || linkSubId == 0) revert("Invalid Chainlink setup.");
 
-        address gmcImpl = setUpContract("MockGMCChild", abi.encode(address(0)));
-        gmc = MockGMCChild(setUpProxy(gmcImpl, abi.encodePacked(GMCChild.init.selector), "GMCChild"));
+        address gmcImpl = setUpContract("GMCChild", abi.encode(address(0)), "GMCChildImplementation");
+        console.log("gmcImpl", gmcImpl);
+        gmc = GMCChild(setUpProxy(gmcImpl, abi.encodeWithSelector(GMCChild.init.selector), "GMCChild"));
 
         bytes memory goudaArgs = abi.encode(fxChild);
-        bytes memory goudaInit = abi.encodePacked(GoudaChild.init.selector);
+        bytes memory goudaInit = abi.encodeWithSelector(GoudaChild.init.selector);
 
         address goudaChildImplementation = setUpContract("GoudaChild", goudaArgs, "GoudaChildImplementation");
         gouda = GoudaChild(setUpProxy(goudaChildImplementation, goudaInit, "GoudaChild"));
@@ -80,12 +85,12 @@ contract SetupChild is SetupBase {
         address gangWarImpl;
 
         if (isTestnet()) {
-            gangWarImpl = setUpContract("MockGangWar", gangWarArgs, "GangWarImplementation");
+            gangWarImpl = setUpContract("GangWar", gangWarArgs, "GangWarImplementation");
         } else {
             gangWarImpl = setUpContract("GangWar", gangWarArgs, "GangWarImplementation");
         }
 
-        game = MockGangWar(setUpProxy(gangWarImpl, abi.encodeCall(GangWar.init, ()), "GangWar")); // prettier-ignore
+        game = GangWar(setUpProxy(gangWarImpl, abi.encodeCall(GangWar.init, ()), "GangWar")); // prettier-ignore
     }
 
     bytes32 constant AUTHORITY = keccak256("AUTHORITY");
@@ -130,7 +135,7 @@ contract SetupChild is SetupBase {
             if (!tokens[0].hasRole(AUTHORITY, address(vault))) tokens[0].grantRole(AUTHORITY, address(vault));
             if (!tokens[1].hasRole(AUTHORITY, address(vault))) tokens[1].grantRole(AUTHORITY, address(vault));
             if (!tokens[2].hasRole(AUTHORITY, address(vault))) tokens[2].grantRole(AUTHORITY, address(vault));
-            if (!badges.hasRole(AUTHORITY, address(vault))) badges.grantRole(AUTHORITY, address(game));
+            if (!badges.hasRole(AUTHORITY, address(game))) badges.grantRole(AUTHORITY, address(game));
 
             if (!tokens[0].hasRole(AUTHORITY, address(mice))) tokens[0].grantRole(AUTHORITY, address(mice));
             if (!tokens[1].hasRole(AUTHORITY, address(mice))) tokens[1].grantRole(AUTHORITY, address(mice));
@@ -145,6 +150,7 @@ contract SetupChild is SetupBase {
             if (isTestnet()) {
                 if (!gouda.hasRole(AUTHORITY, msg.sender)) gouda.grantRole(AUTHORITY, msg.sender);
             }
+            if (game.briberyFee(address(gouda)) == 0) game.setBriberyFee(address(gouda), 2e18);
         }
 
         // TODO link via bridge

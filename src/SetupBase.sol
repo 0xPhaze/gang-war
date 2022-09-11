@@ -39,14 +39,7 @@ contract SetupBase is UpgradeScripts {
             vm.roll(27702338);
         }
 
-        setUpChainlink();
-        setUpFxPortal();
-
         vm.label(GOUDA_ROOT, "GOUDA_ROOT");
-
-        if (fxRoot != address(0)) vm.label(fxRoot, "FXROOT");
-        if (fxChild != address(0)) vm.label(fxChild, "FXCHILD");
-        if (fxRootCheckpointManager != address(0)) vm.label(fxChild, "FXROOTCHKPT");
     }
 
     function setUpChainlink() internal {
@@ -93,7 +86,14 @@ contract SetupBase is UpgradeScripts {
         } else if (block.chainid == CHAINID_TEST) {
             chainIdRoot = CHAINID_TEST;
             chainIdChild = CHAINID_TEST;
+        } else if (block.chainid == CHAINID_RINKEBY) {
+            chainIdRoot = CHAINID_RINKEBY;
+            chainIdChild = CHAINID_RINKEBY;
         }
+
+        if (fxRoot != address(0)) vm.label(fxRoot, "FXROOT");
+        if (fxChild != address(0)) vm.label(fxChild, "FXCHILD");
+        if (fxRootCheckpointManager != address(0)) vm.label(fxChild, "FXROOTCHKPT");
     }
 
     function linkWithChild(address root, string memory childKey) internal {

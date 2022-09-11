@@ -3,15 +3,16 @@ pragma solidity ^0.8.0;
 
 import {OwnableUDS} from "UDS/auth/OwnableUDS.sol";
 import {UUPSUpgrade} from "UDS/proxy/UUPSUpgrade.sol";
+import {FxERC20UDSChild} from "fx-contracts/FxERC20UDSChild.sol";
 import {AccessControlUDS} from "UDS/auth/AccessControlUDS.sol";
 import {ERC20BurnableUDS} from "UDS/tokens/extensions/ERC20BurnableUDS.sol";
 
-import {FxERC20UDSChild} from "fx-contracts/FxERC20UDSChild.sol";
-
+/// @title Gouda Child
+/// @author phaze (https://github.com/0xPhaze/fx-contracts)
 contract GoudaChild is UUPSUpgrade, OwnableUDS, ERC20BurnableUDS, FxERC20UDSChild, AccessControlUDS {
+    uint8 public constant override decimals = 18;
     string public constant override name = "Gouda";
     string public constant override symbol = "GOUDA";
-    uint8 public constant override decimals = 18;
 
     bytes32 private constant AUTHORITY = keccak256("AUTHORITY");
 

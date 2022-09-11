@@ -273,7 +273,7 @@ contract TestGangWarMarket is TestGangWar {
 
         vaultSharesDiff(alice);
 
-        gmc.burn(1);
+        gmc.resyncId(address(0), 1);
 
         assertEq(gmc.getActiveOffer(1).renter, address(0));
         assertEq(gmc.getActiveOffer(1).renterShare, 0);
@@ -291,7 +291,7 @@ contract TestGangWarMarket is TestGangWar {
         vaultSharesDiff(alice);
         vaultSharesDiff(tester);
 
-        gmc.burn(1);
+        gmc.resyncId(address(0), 1);
 
         assertEq(gmc.getActiveOffer(1).renter, address(0));
         assertEq(gmc.getActiveOffer(1).renterShare, 0);

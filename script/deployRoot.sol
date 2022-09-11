@@ -6,9 +6,6 @@ import "forge-std/Script.sol";
 import {ERC1967Proxy} from "UDS/proxy/ERC1967Proxy.sol";
 import {SetupRoot} from "../src/SetupRoot.sol";
 
-// import "chainlink/contracts/src/v0.8/VRFCoordinatorV2.sol";
-// function addConsumer(uint64 subId, address consumer) external override onlySubOwner(subId) nonReentrant {
-
 /* 
 # 1: Run Tests
 forge test -vvv
@@ -23,7 +20,7 @@ source .env && US_DRY_RUN=true forge script deployRoot --rpc-url $RPC_GOERLI --p
 3 #: Deploy
 source .env && forge script deployRoot --rpc-url $RPC_GOERLI --private-key $PRIVATE_KEY --verify --etherscan-api-key $ETHERSCAN_KEY -vvvv --ffi --broadcast 
 
-cp ~/git/eth/GangWar/out/MockGMCRoot.sol/MockGMCRoot.json ~/git/eth/gmc-website/data/abi
+cp ~/git/eth/GangWar/out/GMCRoot.sol/GMC.json ~/git/eth/gmc-website/data/abi/GMCRoot.json
 cp ~/git/eth/GangWar/out/MockERC20.sol/MockERC20.json ~/git/eth/gmc-website/data/abi
 cp ~/git/eth/GangWar/out/GoudaRootRelay.sol/GoudaRootRelay.json ~/git/eth/gmc-website/data/abi
 cp ~/git/eth/GangWar/deployments/5/deploy-latest.json ~/git/eth/gmc-website/data/deployments_5.json

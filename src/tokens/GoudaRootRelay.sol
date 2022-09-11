@@ -6,8 +6,8 @@ import {UUPSUpgrade} from "UDS/proxy/UUPSUpgrade.sol";
 import {AccessControlUDS} from "UDS/auth/AccessControlUDS.sol";
 import {FxERC20RelayRoot} from "fx-contracts/FxERC20RelayRoot.sol";
 
-/// @title Gouda Root Tunnel
-/// @notice Flexible ERC20 Token Tunnel
+/// @title Gouda Root Relay
+/// @notice Flexible ERC20 Token Relay
 /// @author phaze (https://github.com/0xPhaze/fx-contracts)
 contract GoudaRootRelay is UUPSUpgrade, OwnableUDS, FxERC20RelayRoot {
     constructor(

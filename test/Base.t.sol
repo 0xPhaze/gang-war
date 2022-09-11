@@ -45,22 +45,22 @@ contract TestGangWar is Test, SetupChild {
 
         vault.grantRole(GANG_VAULT_CONTROLLER, address(this));
 
-        gmc.mint(alice, GANGSTER_YAKUZA_1);
-        gmc.mint(alice, GANGSTER_CARTEL_1);
-        gmc.mint(alice, GANGSTER_CYBERP_1);
-        gmc.mint(alice, GANGSTER_YAKUZA_2);
-        gmc.mint(alice, GANGSTER_CARTEL_2);
-        gmc.mint(alice, GANGSTER_CYBERP_2);
-        gmc.mint(eve, GANGSTER_YAKUZA_3);
-        gmc.mint(eve, GANGSTER_CARTEL_3);
-        gmc.mint(eve, GANGSTER_CYBERP_3);
+        gmc.resyncId(alice, GANGSTER_YAKUZA_1);
+        gmc.resyncId(alice, GANGSTER_CARTEL_1);
+        gmc.resyncId(alice, GANGSTER_CYBERP_1);
+        gmc.resyncId(alice, GANGSTER_YAKUZA_2);
+        gmc.resyncId(alice, GANGSTER_CARTEL_2);
+        gmc.resyncId(alice, GANGSTER_CYBERP_2);
+        gmc.resyncId(eve, GANGSTER_YAKUZA_3);
+        gmc.resyncId(eve, GANGSTER_CARTEL_3);
+        gmc.resyncId(eve, GANGSTER_CYBERP_3);
 
-        gmc.mint(bob, BARON_YAKUZA_1);
-        gmc.mint(bob, BARON_CARTEL_1);
-        gmc.mint(bob, BARON_CYBERP_1);
-        gmc.mint(bob, BARON_YAKUZA_2);
-        gmc.mint(bob, BARON_CARTEL_2);
-        gmc.mint(bob, BARON_CYBERP_2);
+        gmc.resyncId(bob, BARON_YAKUZA_1);
+        gmc.resyncId(bob, BARON_CARTEL_1);
+        gmc.resyncId(bob, BARON_CYBERP_1);
+        gmc.resyncId(bob, BARON_YAKUZA_2);
+        gmc.resyncId(bob, BARON_CARTEL_2);
+        gmc.resyncId(bob, BARON_CYBERP_2);
 
         gouda.grantRole(AUTHORITY, address(this));
 
@@ -83,12 +83,10 @@ contract TestGangWar is Test, SetupChild {
     }
 
     function test_setUp() public virtual {
-        uint256 packedConnections = game.getDistrictConnections();
-
         for (uint256 i; i < 21; i++) {
             for (uint256 j; j < 21; j++) {
                 (uint256 a, uint256 b) = (i < j) ? (i, j) : (j, i);
-                assertEq(connections[a][b], LibPackedMap.isConnecting(packedConnections, i, j));
+                assertEq(connections[a][b], LibPackedMap.isConnecting(connectionsPacked, i, j));
             }
         }
 

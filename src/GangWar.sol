@@ -47,17 +47,17 @@ error ItemAlreadyActive();
 contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
     GangWarDS private __storageLayout;
 
+    event CopsLockup(uint256 indexed districtId);
+    event GangWarWon(uint256 indexed districtId, Gang indexed losers, Gang indexed winners);
+    event ExitGangWar(uint256 indexed districtId, Gang indexed gang, uint256 tokenId);
+    event EnterGangWar(uint256 indexed districtId, Gang indexed gang, uint256 tokenId);
+    event BaronDefenseDeclared(uint256 indexed districtId, Gang indexed gang, uint256 tokenId);
     event BaronAttackDeclared(
         uint256 indexed connectingId,
         uint256 indexed districtId,
         Gang indexed gang,
         uint256 tokenId
     );
-    event EnterGangWar(uint256 indexed districtId, Gang indexed gang, uint256 tokenId);
-    event ExitGangWar(uint256 indexed districtId, Gang indexed gang, uint256 tokenId);
-    event BaronDefenseDeclared(uint256 indexed districtId, Gang indexed gang, uint256 tokenId);
-    event GangWarWon(uint256 indexed districtId, Gang indexed losers, Gang indexed winners);
-    event CopsLockup(uint256 indexed districtId);
 
     GMC public immutable gmc;
     GangToken public immutable badges;
@@ -208,34 +208,44 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
         District storage district = s().districts[districtId];
         (DISTRICT_STATE districtState, ) = _districtStateAndCountdown(district);
 
-        if (districtState != DISTRICT_STATE.IDLE && districtState != DISTRICT_STATE.REINFORCEMENT)
+        if (districtState != DISTRICT_STATE.IDLE && districtState != DISTRICT_STATE.REINFORCEMENT) {
             revert DistrictInvalidState();
+        }
         if (itemId == ITEM_BLITZ) {
-            // require attacking/defending
             if (
+                // require attacking/defending
                 (district.attackers != gang && district.occupants != gang) ||
                 districtState != DISTRICT_STATE.REINFORCEMENT
-            ) revert InvalidItemUsage();
+            ) {
+                revert InvalidItemUsage();
+            }
         } else if (itemId == ITEM_BARRICADES) {
-            // require defending
             if (
+                // require defending
                 district.occupants != gang ||
                 (districtState != DISTRICT_STATE.REINFORCEMENT && districtState != DISTRICT_STATE.GANG_WAR)
-            ) revert InvalidItemUsage();
+            ) {
+                revert InvalidItemUsage();
+            }
         } else if (itemId == ITEM_SMOKE) {
-            // require attacking
             if (
+                // require attacking
                 district.attackers != gang ||
                 (districtState != DISTRICT_STATE.REINFORCEMENT && districtState != DISTRICT_STATE.GANG_WAR)
-            ) revert InvalidItemUsage();
+            ) {
+                revert InvalidItemUsage();
+            }
         } else if (itemId == ITEM_911) {
             uint256 requestId = requestRandomWords(1);
+
             s().requestIdToDistrictIds[requestId] = ITEM_911_REQUEST;
         }
 
         s().baronItems[gang][itemId] -= 1;
 
-        _applyBaronItemToDistrict(itemId, districtId);
+        if (itemId != ITEM_911) {
+            _applyBaronItemToDistrict(itemId, districtId);
+        }
     }
 
     function bribery(
@@ -663,15 +673,19 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
 
         if (lockup) {
             uint256 i;
+
             for (; i < 16 && block.timestamp - s().districts[lockupDistrictId].lockupTime < TIME_LOCKUP; ++i) {
                 rand = rand >> 16;
                 lockupDistrictId = rand % 21; // first 16 districts have chance of 3121 in 2^16 (vs. 3120)
             }
             // we give up after 16 tries; tough luck
-            if (i == 16) {
-                lockup = false;
-            } else {
+            if (lockup = i != 16) {
                 call911Now(lockupDistrictId);
+
+                // signal that it was triggered by an item
+                if (copsLockupRequest) {
+                    _applyBaronItemToDistrict(ITEM_911, lockupDistrictId);
+                }
             }
         }
 
@@ -779,6 +793,8 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
         advanceDistrictRound(districtId);
 
         district.lockupTime = block.timestamp;
+
+        emit CopsLockup(districtId);
     }
 
     function _applyBaronItemToDistrict(uint256 itemId, uint256 districtId) private {

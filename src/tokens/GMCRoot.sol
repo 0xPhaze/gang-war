@@ -8,8 +8,8 @@ import {ERC20UDS as ERC20} from "UDS/tokens/ERC20UDS.sol";
 import "solady/utils/ECDSA.sol";
 import "solady/utils/LibString.sol";
 
-error CallFailed();
 error ExceedsLimit();
+error TransferFailed();
 error IncorrectValue();
 error MaxSupplyLocked();
 error InvalidSignature();
@@ -169,7 +169,7 @@ contract GMC is OwnableUDS, FxERC721MRoot {
     function withdraw() external onlyOwner {
         uint256 balance = address(this).balance;
         (bool success, ) = msg.sender.call{value: balance}("");
-        if (!success) revert CallFailed();
+        if (!success) revert TransferFailed();
     }
 
     function recoverToken(ERC20 token) external onlyOwner {

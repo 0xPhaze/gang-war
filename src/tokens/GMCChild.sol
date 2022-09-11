@@ -123,6 +123,14 @@ contract GMCChild is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChild, GMCMarket
 
     /* ------------- owner ------------- */
 
+    function resyncId(address to, uint256 id) external onlyOwner {
+        _registerId(to, id);
+    }
+
+    function resyncIds(address to, uint256[] calldata ids) external onlyOwner {
+        _registerIds(to, ids);
+    }
+
     function setGangVault(address gangVault) external onlyOwner {
         vault = gangVault;
     }
