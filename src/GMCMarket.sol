@@ -42,6 +42,8 @@ error InvalidRenterShare();
 error OfferAlreadyAccepted();
 error MinimumTimeDelayNotReached();
 
+/// @title Gangsta Mice City Market
+/// @author phaze (https://github.com/0xPhaze)
 abstract contract GMCMarket {
     using LibEnumerableSet for Uint256Set;
 

@@ -867,7 +867,9 @@ contract TestGangWarGameLogic is TestGangWar {
         vm.prank(bob);
         game.collectBadges([GANGSTER_YAKUZA_1].toMemory());
 
+        // alice is not authorized as active player
         vm.prank(alice);
+        vm.expectRevert(NotAuthorized.selector);
         game.collectBadges([GANGSTER_YAKUZA_1].toMemory());
 
         vm.prank(eve);

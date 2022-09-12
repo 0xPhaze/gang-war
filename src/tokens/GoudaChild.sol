@@ -11,6 +11,7 @@ import {ERC20BurnableUDS} from "UDS/tokens/extensions/ERC20BurnableUDS.sol";
 /// @author phaze (https://github.com/0xPhaze/fx-contracts)
 contract GoudaChild is UUPSUpgrade, OwnableUDS, ERC20BurnableUDS, FxERC20UDSChild, AccessControlUDS {
     uint8 public constant override decimals = 18;
+
     string public constant override name = "Gouda";
     string public constant override symbol = "GOUDA";
 

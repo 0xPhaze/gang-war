@@ -42,22 +42,14 @@ contract deploy is SetupChild {
     function run() external {
         startBroadcastIfNotDryRun();
 
-        isUpgradeSafe[80001][0x4155935E9E4751c772598E32e108Dc97c0679b38][
-            0xc6aC70bEE1437d21d735f4011542cBcED8D977D5
-        ] = true;
-        isUpgradeSafe[80001][0x7D20643C0b9d091998d49d5224dc968b41f489B4][
-            0x9c796eddC535F4D5f4E42c1eA24C04B38dCfac63
-        ] = true;
-
         setUpContracts();
         initContracts();
 
-        if (isTestnet()) initContractsTestnet();
+        // if (isTestnet()) initContractsTestnet();
 
         vm.stopBroadcast();
 
-        logDeployments();
-        storeLatestDeployments();
+        storeDeployments();
     }
 
     function initContractsTestnet() internal {

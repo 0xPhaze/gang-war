@@ -40,7 +40,6 @@ contract SetupChild is SetupBase {
         if (coordinator == address(0) || linkKeyHash == 0 || linkSubId == 0) revert("Invalid Chainlink setup.");
 
         address gmcImpl = setUpContract("GMCChild", abi.encode(address(0)), "GMCChildImplementation");
-        console.log("gmcImpl", gmcImpl);
         gmc = GMCChild(setUpProxy(gmcImpl, abi.encodeWithSelector(GMCChild.init.selector), "GMCChild"));
 
         bytes memory goudaArgs = abi.encode(fxChild);
@@ -127,9 +126,8 @@ contract SetupChild is SetupBase {
             game.reset(occupants, yields);
         }
 
-        // CI Init
+        // CI: make sure permissions are good
         if (!firstDeployment) {
-            // double check permissions
             if (gmc.vault() != address(vault)) gmc.setGangVault(address(vault));
 
             if (!tokens[0].hasRole(AUTHORITY, address(vault))) tokens[0].grantRole(AUTHORITY, address(vault));
@@ -153,7 +151,7 @@ contract SetupChild is SetupBase {
             if (game.briberyFee(address(gouda)) == 0) game.setBriberyFee(address(gouda), 2e18);
         }
 
-        // TODO link via bridge
+        // TODO link via bridge on test
         if (block.chainid != CHAINID_TEST) {
             linkWithRoot(address(gmc), "GMCRoot");
             linkWithRoot(address(gouda), "GoudaRootRelay");

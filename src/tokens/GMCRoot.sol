@@ -20,6 +20,8 @@ error PublicSaleNotActive();
 error SignatureExceedsLimit();
 error ContractCallNotAllowed();
 
+/// @title Gangsta Mice City Root
+/// @author phaze (https://github.com/0xPhaze)
 contract GMC is OwnableUDS, FxERC721MRoot {
     using LibString for uint256;
     using ECDSA for bytes32;

@@ -42,7 +42,7 @@ function max(uint256 a, uint256 b) pure returns (uint256) {
     return a < b ? b : a;
 }
 
-/// @title Gang Vault Game Rewards
+/// @title Gangsta Mice City Gang Vault Rewards
 /// @author phaze (https://github.com/0xPhaze)
 contract GangVault is UUPSUpgrade, AccessControlUDS {
     event Burn(address indexed from, uint256 indexed token, uint256 amount);

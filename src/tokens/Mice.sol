@@ -3,6 +3,8 @@ pragma solidity ^0.8.0;
 
 import {GangToken} from "./GangToken.sol";
 
+/// @title Mice Token
+/// @author phaze (https://github.com/0xPhaze)
 contract Mice is GangToken {
     string public constant override name = "MICE";
     string public constant override symbol = "MICE";

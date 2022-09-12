@@ -6,6 +6,8 @@ import {UUPSUpgrade} from "UDS/proxy/UUPSUpgrade.sol";
 import {ERC20BurnableUDS} from "UDS/tokens/extensions/ERC20BurnableUDS.sol";
 import {AccessControlUDS} from "UDS/auth/AccessControlUDS.sol";
 
+/// @title Gang Token
+/// @author phaze (https://github.com/0xPhaze)
 contract GangToken is UUPSUpgrade, OwnableUDS, ERC20BurnableUDS, AccessControlUDS {
     uint8 public constant override decimals = 18;
 

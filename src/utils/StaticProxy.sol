@@ -1,9 +1,11 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import {OwnableUDS, s as ownableDS} from "UDS/auth/OwnableUDS.sol";
 import {UUPSUpgrade} from "UDS/proxy/UUPSUpgrade.sol";
+import {OwnableUDS, s as ownableDS} from "UDS/auth/OwnableUDS.sol";
 import {ERC1967_PROXY_STORAGE_SLOT} from "UDS/proxy/ERC1967Proxy.sol";
+
+// ------------- storage
 
 bytes32 constant DIAMOND_STORAGE_STATIC_PROXY = keccak256("diamond.storage.static.proxy");
 
@@ -16,6 +18,8 @@ function s() pure returns (StaticProxyDS storage diamondStorage) {
     assembly { diamondStorage.slot := slot } // prettier-ignore
 }
 
+// ------------- errors
+
 error NotAuthorized();
 
 /// @title Static Proxy
@@ -23,6 +27,8 @@ error NotAuthorized();
 /// @notice Allows for continued staticcalls to implementation
 ///         contract. Disables all non-static calls.
 contract StaticProxy is UUPSUpgrade, OwnableUDS {
+    /* ------------- init ------------- */
+
     function init(address implementation) public reinitializer {
         if (owner() == address(0)) {
             ownableDS().owner = msg.sender;
@@ -31,9 +37,16 @@ contract StaticProxy is UUPSUpgrade, OwnableUDS {
         s().staticImplementation = implementation;
     }
 
+    /* ------------- upkeep ------------- */
+
+    function checkUpkeep(bytes calldata) external view returns (bool upkeepNeeded, bytes memory data) {}
+
+    /* ------------- fallback ------------- */
+
     fallback() external {
         if (msg.sender != address(this)) {
-            // open static-call context and continue with 'else' control-flow
+            // open static-call context, loop back in
+            // and continue with 'else' control-flow
             assembly {
                 calldatacopy(0, 0, calldatasize())
 
@@ -49,12 +62,14 @@ contract StaticProxy is UUPSUpgrade, OwnableUDS {
             }
         } else {
             // must be in static-call context now
-            address implementation = s().staticImplementation;
+            // and we can safely perform delegatecalls
+
+            address target = s().staticImplementation;
 
             assembly {
                 calldatacopy(0, 0, calldatasize())
 
-                let success := delegatecall(gas(), implementation, 0, calldatasize(), 0, 0)
+                let success := delegatecall(gas(), target, 0, calldatasize(), 0, 0)
 
                 returndatacopy(0, 0, returndatasize())
 
@@ -66,6 +81,8 @@ contract StaticProxy is UUPSUpgrade, OwnableUDS {
             }
         }
     }
+
+    /* ------------- override ------------- */
 
     function _authorizeUpgrade() internal override onlyOwner {}
 }

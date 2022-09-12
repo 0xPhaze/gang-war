@@ -12,38 +12,29 @@ import {ERC721UDS} from "UDS/tokens/ERC721UDS.sol";
 import {OwnableUDS} from "UDS/auth/OwnableUDS.sol";
 import {UUPSUpgrade} from "UDS/proxy/UUPSUpgrade.sol";
 
-import "forge-std/console.sol";
-
-// ------------- error
-
+error InvalidToken();
+error InvalidUpkeep();
 error NotAuthorized();
 error InvalidItemId();
-
-error BaronMustDeclareInitialAttack();
-error IdsMustBeOfSameGang();
-error ConnectingDistrictNotOwnedByGang();
-error GangsterInactionable();
-error BaronInactionable();
-error InvalidConnectingDistrict();
+error InvalidItemUsage();
+error TokenMustBeBaron();
+error InvalidVRFRequest();
+error ItemAlreadyActive();
 error AlreadyInDistrict();
+error BaronInactionable();
+error TokenMustBeGangster();
+error IdsMustBeOfSameGang();
+error GangsterInactionable();
 error DistrictInvalidState();
 error GangsterInvalidState();
-
-error MoveOnCooldown();
-error TokenMustBeGangster();
-error TokenMustBeBaron();
-error BaronAttackAlreadyDeclared();
-error CannotAttackDistrictOwnedByGang();
 error DistrictNotOwnedByGang();
-error InvalidToken();
-error InvalidItemUsage();
+error InvalidConnectingDistrict();
+error BaronMustDeclareInitialAttack();
+error CannotAttackDistrictOwnedByGang();
+error ConnectingDistrictNotOwnedByGang();
 
-error InvalidUpkeep();
-error InvalidVRFRequest();
-
-error CallerNotOwner();
-error ItemAlreadyActive();
-
+/// @title Gangsta Mice City's Gang Wars
+/// @author phaze (https://github.com/0xPhaze)
 contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
     GangWarDS private __storageLayout;
 
@@ -63,13 +54,13 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
     GangToken public immutable badges;
     GangVault public immutable vault;
 
-    uint256 immutable districtConnections;
+    uint256 immutable packedDistrictConnections;
 
     constructor(
         GMC gmc_,
         GangVault vault_,
         GangToken badges_,
-        uint256 connections_,
+        uint256 connections,
         address coordinator,
         bytes32 keyHash,
         uint64 subscriptionId,
@@ -79,7 +70,7 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
         gmc = gmc_;
         vault = vault_;
         badges = badges_;
-        districtConnections = connections_;
+        packedDistrictConnections = connections;
     }
 
     /* ------------- init ------------- */
@@ -126,7 +117,7 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
     }
 
     function isConnecting(uint256 districtA, uint256 districtB) public view returns (bool) {
-        return LibPackedMap.isConnecting(districtConnections, districtA, districtB);
+        return LibPackedMap.isConnecting(packedDistrictConnections, districtA, districtB);
     }
 
     function gangWarOutcome(uint256 districtId, uint256 roundId) public view returns (uint256) {
@@ -176,7 +167,7 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
     /* ------------- external ------------- */
 
     function purchaseBaronItem(uint256 baronId, uint256 itemId) external {
-        _verifyAuthorized(msg.sender, baronId);
+        _verifyAuthorizedUser(msg.sender, baronId);
 
         if (!isBaron(baronId)) revert TokenMustBeBaron();
 
@@ -198,7 +189,7 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
         uint256 itemId,
         uint256 districtId
     ) external {
-        _verifyAuthorized(msg.sender, baronId);
+        _verifyAuthorizedUser(msg.sender, baronId);
 
         if (!isBaron(baronId)) revert TokenMustBeBaron();
         if (itemId == ITEM_SEWER) revert InvalidItemId();
@@ -236,7 +227,7 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
                 revert InvalidItemUsage();
             }
         } else if (itemId == ITEM_911) {
-            uint256 requestId = requestRandomWords(1);
+            uint256 requestId = requestVRF();
 
             s().requestIdToDistrictIds[requestId] = ITEM_911_REQUEST;
         }
@@ -288,7 +279,7 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
 
         (DISTRICT_STATE districtState, ) = _districtStateAndCountdown(district);
 
-        _verifyAuthorized(msg.sender, tokenId);
+        _verifyAuthorizedUser(msg.sender, tokenId);
 
         if (!isBaron(tokenId)) revert TokenMustBeBaron();
         if (districtState != DISTRICT_STATE.IDLE) revert DistrictInvalidState();
@@ -328,7 +319,7 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
 
         (DISTRICT_STATE districtState, ) = _districtStateAndCountdown(district);
 
-        _verifyAuthorized(msg.sender, tokenId);
+        _verifyAuthorizedUser(msg.sender, tokenId);
 
         if (!isBaron(tokenId)) revert TokenMustBeBaron();
         if (districtState != DISTRICT_STATE.REINFORCEMENT) revert DistrictInvalidState();
@@ -370,7 +361,7 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
         _enterGangWar(districtId, tokenIds, gang, false);
     }
 
-    function exitGangWar(uint256[] calldata tokenIds) public {
+    function exitGangWar(uint256[] calldata tokenIds) external {
         for (uint256 i; i < tokenIds.length; ++i) {
             uint256 tokenId = tokenIds[i];
 
@@ -382,7 +373,7 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
 
             bool attacking = state == PLAYER_STATE.ATTACK;
 
-            _verifyAuthorized(msg.sender, tokenId);
+            _verifyAuthorizedUser(msg.sender, tokenId);
 
             Gangster storage gangster = s().gangsters[tokenId];
 
@@ -399,6 +390,16 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
             emit ExitGangWar(districtId, gang, tokenId);
 
             delete s().gangsters[tokenId];
+        }
+    }
+
+    function collectBadges(uint256[] calldata tokenIds) external {
+        for (uint256 i; i < tokenIds.length; ++i) {
+            uint256 tokenId = tokenIds[i];
+
+            _verifyAuthorizedUser(msg.sender, tokenId);
+
+            _collectBadges(tokenId);
         }
     }
 
@@ -425,7 +426,7 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
             if (isBaron(tokenId)) revert TokenMustBeGangster();
             if (gang != gangOf(tokenId)) revert IdsMustBeOfSameGang();
 
-            _verifyAuthorized(msg.sender, tokenId);
+            _verifyAuthorizedUser(msg.sender, tokenId);
 
             Gangster storage gangster = s().gangsters[tokenId];
 
@@ -465,7 +466,41 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
 
     /* ------------- state ------------- */
 
-    function _gangsterStateAndCountdown(uint256 gangsterId) internal view returns (PLAYER_STATE, int256) {
+    function _isInjured(
+        uint256 gangsterId,
+        uint256 districtId,
+        uint256 roundId
+    ) private view returns (bool) {
+        uint256 gRand = s().gangWarOutcomes[districtId][roundId];
+
+        uint256 wonP = _gangWarWonDistrictProb(districtId, roundId);
+
+        bool won = gRand >> 128 < wonP;
+
+        uint256 p = isInjuredProbFn(wonP, won);
+
+        uint256 pRand = uint256(keccak256(abi.encode(gRand, gangsterId)));
+
+        return pRand >> 128 < p;
+    }
+
+    function _gangWarWonDistrictProb(uint256 districtId, uint256 roundId) private view returns (uint256) {
+        uint256 attackForce = s().districtAttackForces[districtId][roundId];
+        uint256 defenseForce = s().districtDefenseForces[districtId][roundId];
+
+        District storage district = s().districts[districtId];
+
+        uint256 items = district.activeItems;
+
+        attackForce += ((items >> ITEM_SMOKE) & 1) * attackForce * ITEM_SMOKE_ATTACK_INCREASE;
+        defenseForce += ((items >> ITEM_BARRICADES) & 1) * defenseForce * ITEM_BARRICADES_DEFENSE_INCREASE;
+
+        bool baronDefense = district.baronDefenseId != 0;
+
+        return gangWarWonProbFn(attackForce, defenseForce, baronDefense);
+    }
+
+    function _gangsterStateAndCountdown(uint256 gangsterId) private view returns (PLAYER_STATE, int256) {
         Gangster storage gangster = s().gangsters[gangsterId];
 
         uint256 districtId = gangster.location;
@@ -530,11 +565,11 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
         return (PLAYER_STATE.IDLE, 0);
     }
 
-    function _districtStateAndCountdown(uint256 districtId) internal view returns (DISTRICT_STATE, int256) {
+    function _districtStateAndCountdown(uint256 districtId) private view returns (DISTRICT_STATE, int256) {
         return _districtStateAndCountdown(s().districts[districtId]);
     }
 
-    function _districtStateAndCountdown(District storage district) internal view returns (DISTRICT_STATE, int256) {
+    function _districtStateAndCountdown(District storage district) private view returns (DISTRICT_STATE, int256) {
         int256 stateCountdown = int256(TIME_LOCKUP) - int256(block.timestamp - district.lockupTime);
 
         if (stateCountdown > 0) return (DISTRICT_STATE.LOCKUP, stateCountdown);
@@ -556,16 +591,55 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
         return (DISTRICT_STATE.POST_GANG_WAR, stateCountdown);
     }
 
-    /* ------------- badges ------------- */
+    function _advanceDistrictRound(uint256 districtId) private {
+        District storage district = s().districts[districtId];
 
-    function collectBadges(uint256[] calldata tokenIds) external {
-        for (uint256 i; i < tokenIds.length; ++i) {
-            uint256 tokenId = tokenIds[i];
+        district.attackers = Gang.NONE;
+        district.activeItems = 0;
+        district.baronAttackId = 0;
+        district.baronDefenseId = 0;
+        district.lastOutcomeTime = block.timestamp;
+        district.attackDeclarationTime = 0;
 
-            _verifyAuthorized(msg.sender, tokenId);
+        ++district.roundId;
+    }
 
-            _collectBadges(tokenId);
+    function _call911Now(uint256 districtId) private {
+        District storage district = s().districts[districtId];
+
+        Gang token = district.token;
+
+        uint256 lockupAmount_0;
+        uint256 lockupAmount_1;
+        uint256 lockupAmount_2;
+
+        if (token == Gang.YAKUZA) lockupAmount_0 = LOCKUP_FINE;
+        else if (token == Gang.CARTEL) lockupAmount_1 = LOCKUP_FINE;
+        else if (token == Gang.CYBERP) lockupAmount_2 = LOCKUP_FINE;
+
+        uint256 lockupOccupants = uint256(district.occupants);
+        uint256 lockupAttackers = uint256(district.attackDeclarationTime != 0 ? district.attackers : Gang.NONE);
+
+        vault.spendGangVaultBalance(lockupOccupants, lockupAmount_0, lockupAmount_1, lockupAmount_2, false);
+
+        // if attackers are present
+        if (lockupAttackers != uint256(Gang.NONE)) {
+            vault.spendGangVaultBalance(lockupAttackers, lockupAmount_0, lockupAmount_1, lockupAmount_2, false);
         }
+
+        _advanceDistrictRound(districtId);
+
+        district.lockupTime = block.timestamp;
+
+        emit CopsLockup(districtId);
+    }
+
+    function _applyBaronItemToDistrict(uint256 itemId, uint256 districtId) private {
+        uint256 items = s().districts[districtId].activeItems;
+
+        if (items & (1 << itemId) != 0) revert ItemAlreadyActive();
+
+        s().districts[districtId].activeItems = items | (1 << itemId);
     }
 
     function _collectBadges(uint256 gangsterId) private {
@@ -604,8 +678,8 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
         }
     }
 
-    function _verifyAuthorized(address owner, uint256 tokenId) private view {
-        if (!gmc.isAuthorized(owner, tokenId)) revert NotAuthorized();
+    function _verifyAuthorizedUser(address owner, uint256 tokenId) private view {
+        if (!gmc.isAuthorizedUser(owner, tokenId)) revert NotAuthorized();
     }
 
     /* ------------- upkeep ------------- */
@@ -632,6 +706,7 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
 
     function performUpkeep(bytes calldata performData) external {
         uint256 ids = abi.decode(performData, (uint256));
+
         District storage district;
 
         uint256 upkeepIds;
@@ -653,7 +728,7 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
         }
 
         if (upkeepIds != 0) {
-            uint256 requestId = requestRandomWords(1);
+            uint256 requestId = requestVRF();
             s().requestIdToDistrictIds[requestId] = upkeepIds;
         }
     }
@@ -680,7 +755,7 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
             }
             // we give up after 16 tries; tough luck
             if (lockup = i != 16) {
-                call911Now(lockupDistrictId);
+                _call911Now(lockupDistrictId);
 
                 // signal that it was triggered by an item
                 if (copsLockupRequest) {
@@ -733,7 +808,7 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
                             emit GangWarWon(id, attackers, occupants);
                         }
 
-                        advanceDistrictRound(id);
+                        _advanceDistrictRound(id);
                     }
 
                     validUpkeep = true;
@@ -750,93 +825,6 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
         }
 
         delete s().requestIdToDistrictIds[requestId];
-    }
-
-    /* ------------- private ------------- */
-
-    function advanceDistrictRound(uint256 districtId) private {
-        District storage district = s().districts[districtId];
-
-        district.attackers = Gang.NONE;
-        district.activeItems = 0;
-        district.baronAttackId = 0;
-        district.baronDefenseId = 0;
-        district.lastOutcomeTime = block.timestamp;
-        district.attackDeclarationTime = 0;
-
-        ++district.roundId;
-    }
-
-    function call911Now(uint256 districtId) private {
-        District storage district = s().districts[districtId];
-
-        Gang token = district.token;
-
-        uint256 lockupAmount_0;
-        uint256 lockupAmount_1;
-        uint256 lockupAmount_2;
-
-        if (token == Gang.YAKUZA) lockupAmount_0 = LOCKUP_FINE;
-        else if (token == Gang.CARTEL) lockupAmount_1 = LOCKUP_FINE;
-        else if (token == Gang.CYBERP) lockupAmount_2 = LOCKUP_FINE;
-
-        uint256 lockupOccupants = uint256(district.occupants);
-        uint256 lockupAttackers = uint256(district.attackDeclarationTime != 0 ? district.attackers : Gang.NONE);
-
-        vault.spendGangVaultBalance(lockupOccupants, lockupAmount_0, lockupAmount_1, lockupAmount_2, false);
-
-        // if attackers are present
-        if (lockupAttackers != uint256(Gang.NONE)) {
-            vault.spendGangVaultBalance(lockupAttackers, lockupAmount_0, lockupAmount_1, lockupAmount_2, false);
-        }
-
-        advanceDistrictRound(districtId);
-
-        district.lockupTime = block.timestamp;
-
-        emit CopsLockup(districtId);
-    }
-
-    function _applyBaronItemToDistrict(uint256 itemId, uint256 districtId) private {
-        uint256 items = s().districts[districtId].activeItems;
-
-        if (items & (1 << itemId) != 0) revert ItemAlreadyActive();
-
-        s().districts[districtId].activeItems = items | (1 << itemId);
-    }
-
-    function _gangWarWonDistrictProb(uint256 districtId, uint256 roundId) private view returns (uint256) {
-        uint256 attackForce = s().districtAttackForces[districtId][roundId];
-        uint256 defenseForce = s().districtDefenseForces[districtId][roundId];
-
-        District storage district = s().districts[districtId];
-
-        uint256 items = district.activeItems;
-
-        attackForce += ((items >> ITEM_SMOKE) & 1) * attackForce * ITEM_SMOKE_ATTACK_INCREASE;
-        defenseForce += ((items >> ITEM_BARRICADES) & 1) * defenseForce * ITEM_BARRICADES_DEFENSE_INCREASE;
-
-        bool baronDefense = district.baronDefenseId != 0;
-
-        return gangWarWonProbFn(attackForce, defenseForce, baronDefense);
-    }
-
-    function _isInjured(
-        uint256 gangsterId,
-        uint256 districtId,
-        uint256 roundId
-    ) private view returns (bool) {
-        uint256 gRand = s().gangWarOutcomes[districtId][roundId];
-
-        uint256 wonP = _gangWarWonDistrictProb(districtId, roundId);
-
-        bool won = gRand >> 128 < wonP;
-
-        uint256 p = isInjuredProbFn(wonP, won);
-
-        uint256 pRand = uint256(keccak256(abi.encode(gRand, gangsterId)));
-
-        return pRand >> 128 < p;
     }
 
     /* ------------- owner ------------- */

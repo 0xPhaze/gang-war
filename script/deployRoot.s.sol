@@ -34,7 +34,6 @@ contract deployRoot is SetupRoot {
 
         vm.stopBroadcast();
 
-        logDeployments();
-        storeLatestDeployments();
+        storeDeployments();
     }
 }

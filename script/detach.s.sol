@@ -6,8 +6,6 @@ import "forge-std/Script.sol";
 import {SetupChild} from "../src/SetupChild.sol";
 import {StaticProxy} from "/utils/StaticProxy.sol";
 
-import {GangToken} from "/tokens/GangToken.sol";
-
 /* 
 # ANVIL
 source .env && US_DRY_RUN=true forge script detach --rpc-url $RPC_ANVIL --private-key $PRIVATE_KEY_ANVIL -vvvv --ffi
@@ -51,7 +49,6 @@ contract detach is SetupChild {
 
         vm.stopBroadcast();
 
-        logDeployments();
-        storeLatestDeployments();
+        storeDeployments();
     }
 }
