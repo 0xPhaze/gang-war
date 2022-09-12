@@ -22,6 +22,7 @@ source .env && US_DRY_RUN=true forge script deploy --rpc-url $RPC_MUMBAI --priva
 source .env && forge script deploy --rpc-url $RPC_MUMBAI --private-key $PRIVATE_KEY --verify --etherscan-api-key $POLYGONSCAN_KEY --with-gas-price 38gwei -vvvv --ffi --broadcast 
 
 source .env && forge script deploy --rpc-url $RPC_RINKEBY --private-key $PRIVATE_KEY --verify --etherscan-api-key $ETHERSCAN_KEY -vvvv --ffi --broadcast 
+source .env && forge script deploy --rpc-url $RPC_POLYGON --private-key $PRIVATE_KEY_2 --verify --etherscan-api-key $POLYGONSCAN_KEY --with-gas-price 38gwei -vvvv --ffi --broadcast 
 
 cp ~/git/eth/GangWar/out/GMCChild.sol/GMCChild.json ~/git/eth/gmc-website/data/abi
 cp ~/git/eth/GangWar/out/MockERC20.sol/MockERC20.json ~/git/eth/gmc-website/data/abi

@@ -339,11 +339,11 @@ contract SetupChild is SetupBase {
         yields_1[19] = 1_700_000;
 
         yields_1[5] = 1_000_000;
-        yields_1[6] = 1_700_000;
+        yields_1[6] = 1_300_000;
         yields_1[7] = 700_000;
         yields_1[8] = 1_000_000;
         yields_1[15] = 1_300_000;
-        yields_1[16] = 700_000;
-        yields_1[17] = 1_300_000;
+        yields_1[16] = 1_700_000;
+        yields_1[17] = 700_000;
     }
 }
