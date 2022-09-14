@@ -15,7 +15,7 @@ import {LibPackedMap} from "./lib/LibPackedMap.sol";
 // uint256 constant TIME_RECOVERY = 12 hours;
 // uint256 constant TIME_REINFORCEMENTS = 5 hours;
 uint256 constant TIME_TRUCE = 10 minutes;
-uint256 constant TIME_LOCKUP = 20 minutes;
+uint256 constant TIME_LOCKUP = 5 minutes;
 uint256 constant TIME_GANG_WAR = 10 minutes;
 uint256 constant TIME_RECOVERY = 20 minutes;
 uint256 constant TIME_REINFORCEMENTS = 10 minutes;
@@ -36,7 +36,6 @@ uint256 constant GANG_VAULT_FEE = 20;
 uint256 constant BADGES_EARNED_VICTORY = 6e18;
 uint256 constant BADGES_EARNED_DEFEAT = 2e18;
 
-// TODO change to 5 minutes
 uint256 constant UPKEEP_INTERVAL = 1 minutes;
 
 uint256 constant ITEM_SEWER = 0;
@@ -143,7 +142,7 @@ struct GangWarDS {
 
 // ------------- storage
 
-bytes32 constant DIAMOND_STORAGE_GANG_WAR = keccak256("diamond.storage.gang.war");
+bytes32 constant DIAMOND_STORAGE_GANG_WAR = keccak256("diamond.storage.gang.war.sxxx1");
 
 function s() pure returns (GangWarDS storage diamondStorage) {
     bytes32 slot = DIAMOND_STORAGE_GANG_WAR;

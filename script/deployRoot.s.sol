@@ -7,23 +7,20 @@ import {ERC1967Proxy} from "UDS/proxy/ERC1967Proxy.sol";
 import {SetupRoot} from "../src/SetupRoot.sol";
 
 /* 
-# 1: Run Tests
-forge test -vvv
 
-# ANVIL
+# Anvil
 source .env && US_DRY_RUN=true forge script deployRoot --rpc-url $RPC_ANVIL --private-key $PRIVATE_KEY_ANVIL -vvvv --ffi
 source .env && forge script deployRoot --rpc-url $RPC_ANVIL --private-key $PRIVATE_KEY_ANVIL -vvvv --ffi --broadcast 
 
-# 2: Simulate
+# Goerli
 source .env && US_DRY_RUN=true forge script deployRoot --rpc-url $RPC_GOERLI --private-key $PRIVATE_KEY -vvvv --ffi
-
-3 #: Deploy
 source .env && forge script deployRoot --rpc-url $RPC_GOERLI --private-key $PRIVATE_KEY --verify --etherscan-api-key $ETHERSCAN_KEY -vvvv --ffi --broadcast 
 
 cp ~/git/eth/GangWar/out/GMCRoot.sol/GMC.json ~/git/eth/gmc-website/data/abi/GMCRoot.json
 cp ~/git/eth/GangWar/out/MockERC20.sol/MockERC20.json ~/git/eth/gmc-website/data/abi
 cp ~/git/eth/GangWar/out/GoudaRootRelay.sol/GoudaRootRelay.json ~/git/eth/gmc-website/data/abi
 cp ~/git/eth/GangWar/deployments/5/deploy-latest.json ~/git/eth/gmc-website/data/deployments_5.json
+
 */
 
 contract deployRoot is SetupRoot {

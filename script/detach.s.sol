@@ -7,15 +7,13 @@ import {SetupChild} from "../src/SetupChild.sol";
 import {StaticProxy} from "/utils/StaticProxy.sol";
 
 /* 
-# ANVIL
+# Anvil
 source .env && US_DRY_RUN=true forge script detach --rpc-url $RPC_ANVIL --private-key $PRIVATE_KEY_ANVIL -vvvv --ffi
-source .env && forge script detach --rpc-url $RPC_ANVIL --private-key $PRIVATE_KEY_ANVIL -vvvv --ffi --broadcast 
+source .env && US_DRY_RUN=false forge script detach --rpc-url $RPC_ANVIL --private-key $PRIVATE_KEY_ANVIL -vvvv --ffi --broadcast 
 
-# 2: Simulate
+# Mumbai
 source .env && US_DRY_RUN=true forge script detach --rpc-url $RPC_MUMBAI --private-key $PRIVATE_KEY --with-gas-price 38gwei -vvvv --ffi
-
-# 3: Deploy
-source .env && forge script detach --rpc-url $RPC_MUMBAI --private-key $PRIVATE_KEY --verify --etherscan-api-key $POLYGONSCAN_KEY --with-gas-price 38gwei -vvvv --ffi --broadcast 
+source .env && US_DRY_RUN=false forge script detach --rpc-url $RPC_MUMBAI --private-key $PRIVATE_KEY --verify --etherscan-api-key $POLYGONSCAN_KEY --with-gas-price 38gwei -vvvv --ffi --broadcast 
 
 */
 

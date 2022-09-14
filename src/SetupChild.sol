@@ -78,7 +78,7 @@ contract SetupChild is SetupBase {
             linkKeyHash,
             linkSubId,
             3,
-            200_000
+            1_500_000
         );
 
         address gangWarImpl;
@@ -89,7 +89,9 @@ contract SetupChild is SetupBase {
             gangWarImpl = setUpContract("GangWar", gangWarArgs, "GangWarImplementation");
         }
 
-        game = GangWar(setUpProxy(gangWarImpl, abi.encodeCall(GangWar.init, ()), "GangWar")); // prettier-ignore
+        game = GangWar(setUpProxy(gangWarImpl, abi.encodeWithSelector(GangWar.init.selector), "GangWar")); // prettier-ignore
+
+        initContracts();
     }
 
     bytes32 constant AUTHORITY = keccak256("AUTHORITY");
@@ -145,9 +147,6 @@ contract SetupChild is SetupBase {
             if (!vault.hasRole(GANG_VAULT_CONTROLLER, address(game)))
                 vault.grantRole(GANG_VAULT_CONTROLLER, address(game));
 
-            if (isTestnet()) {
-                if (!gouda.hasRole(AUTHORITY, msg.sender)) gouda.grantRole(AUTHORITY, msg.sender);
-            }
             if (game.briberyFee(address(gouda)) == 0) game.setBriberyFee(address(gouda), 2e18);
         }
 

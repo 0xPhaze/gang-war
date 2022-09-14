@@ -97,13 +97,14 @@ contract GMCChild is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChild, GMCMarket
             // calls `_afterEndRent` if rental is active.
             _cleanUpOffer(from, id);
 
-            GangVault(vault).removeShares(from, uint256(gangOf(id)), 100);
-            // try GangVault(vault).removeShares(from, uint256(gangOf(id)), 100) {} catch {}
+            // @dev: this call seems like a danger point that could possibly
+            // fail in rare cases. Wrapping in try...catch since bridge call should not fail.
+            // Fails when resetting the gang vault and all its shares (here it's fine).
+            try GangVault(vault).removeShares(from, uint256(gangOf(id)), 100) {} catch {}
         }
 
         if (to != address(0)) {
             GangVault(vault).addShares(to, uint256(gangOf(id)), 100);
-            // try GangVault(vault).addShares(to, uint256(gangOf(id)), 100) {} catch {}
         }
 
         emit Transfer(from, to, id);
@@ -130,7 +131,8 @@ contract GMCChild is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChild, GMCMarket
     ) internal override {
         Gang gang = gangOf(id);
 
-        GangVault(vault).transferShares(renter, owner, uint256(gang), uint8(renterShares));
+        // @dev: really don't like the use of try...catch for vault resets
+        try GangVault(vault).transferShares(renter, owner, uint256(gang), uint8(renterShares)) {} catch {}
 
         emit Transfer(renter, owner, id);
     }

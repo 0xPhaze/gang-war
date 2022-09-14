@@ -6,7 +6,7 @@ import {OwnableUDS} from "UDS/auth/OwnableUDS.sol";
 import {UUPSUpgrade} from "UDS/proxy/UUPSUpgrade.sol";
 import {LibEnumerableSet, Uint256Set} from "UDS/lib/LibEnumerableSet.sol";
 
-// TODO
+// TODO change
 uint256 constant RENTAL_ACCEPTANCE_MINIMUM_TIME_DELAY = 1 minutes;
 
 // ------------- storage

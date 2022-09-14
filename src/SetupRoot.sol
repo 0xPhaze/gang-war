@@ -20,7 +20,10 @@ contract SetupRoot is SetupBase {
         setUpFxPortal();
         setUpChainlink();
 
+        console.log("aa");
+
         staticProxy = StaticProxy(setUpContract("StaticProxy")); // placeholder to disable UUPS contracts
+        console.log("bb");
 
         if (isTestnet()) {
             bytes memory goudaArgs = abi.encode("Gouda", "GOUDA", 18);
@@ -31,6 +34,7 @@ contract SetupRoot is SetupBase {
             // @note Gouda Mainnet needs MINT.AUTHORITY?
             gouda = MockERC20(GOUDA_ROOT);
         }
+        console.log("cc");
 
         bytes memory goudaTunnelArgs = abi.encode(address(gouda), fxRootCheckpointManager, fxRoot);
         goudaTunnel = GoudaRootRelay(setUpContract("GoudaRootRelay", goudaTunnelArgs));

@@ -49,8 +49,6 @@ contract SetupBase is UpgradeScripts {
             linkSubId = 133;
         } else if (block.chainid == CHAINID_MUMBAI) {
             coordinator = COORDINATOR_MUMBAI;
-            // @note should set up with real vrf
-            coordinator = setUpContract("MockVRFCoordinator");
             linkKeyHash = KEYHASH_MUMBAI;
             linkSubId = 862;
         } else if (block.chainid == CHAINID_RINKEBY) {
@@ -113,7 +111,7 @@ contract SetupBase is UpgradeScripts {
 
                 FxBaseRootTunnel(root).setFxChildTunnel(latestFxChildTunnel);
             } else {
-                console.log("Child tunnel up-to-date: %s::%s(%s)", chainIdChild, childKey, fxChildTunnel);
+                console.log("Child tunnel linked: %s::%s(%s)", chainIdChild, childKey, fxChildTunnel);
             }
         }
     }
@@ -126,7 +124,7 @@ contract SetupBase is UpgradeScripts {
 
         if (latestFxRootTunnel == address(0)) {
             console.log("\nWARNING: No latest %s deployment found for root chain %s:", rootKey, chainIdRoot);
-            console.log("!! current fxRootTunnel (%s) not up-to-date !!", fxRootTunnel);
+            console.log("!! current fxRootTunnel (%s) not linked !!", fxRootTunnel);
         } else {
             if (fxRootTunnel != latestFxRootTunnel) {
                 console.log("\nLinking tunnel on chains %s -> %s", block.chainid, chainIdRoot);
@@ -134,7 +132,7 @@ contract SetupBase is UpgradeScripts {
 
                 FxBaseChildTunnel(child).setFxRootTunnel(latestFxRootTunnel);
             } else {
-                console.log("Root tunnel up-to-date: %s::%s(%s)", chainIdRoot, rootKey, fxRootTunnel);
+                console.log("Root tunnel linked: %s::%s(%s)", chainIdRoot, rootKey, fxRootTunnel);
             }
         }
     }

@@ -31,12 +31,14 @@ interface IVRFCoordinatorV2 {
 
 error CallerNotCoordinator();
 
+/// @title VRFConsumerV2
+/// @author phaze (https://github.com/0xPhaze)
 abstract contract VRFConsumerV2 {
-    address private immutable coordinator;
     bytes32 private immutable keyHash;
+    address private immutable coordinator;
     uint64 private immutable subscriptionId;
-    uint16 private immutable requestConfirmations;
     uint32 private immutable callbackGasLimit;
+    uint16 private immutable requestConfirmations;
 
     constructor(
         address coordinator_,
@@ -45,12 +47,28 @@ abstract contract VRFConsumerV2 {
         uint16 requestConfirmations_,
         uint32 callbackGasLimit_
     ) {
+        keyHash = keyHash_;
         coordinator = coordinator_;
         subscriptionId = subscriptionId_;
-        keyHash = keyHash_;
-        requestConfirmations = requestConfirmations_;
         callbackGasLimit = callbackGasLimit_;
+        requestConfirmations = requestConfirmations_;
     }
+
+    /* ------------- virtual ------------- */
+
+    function fulfillRandomWords(uint256 requestId, uint256[] calldata randomWords) internal virtual;
+
+    /* ------------- external ------------- */
+
+    function rawFulfillRandomWords(uint256 requestId, uint256[] calldata randomWords) external payable {
+        if (msg.sender != coordinator) {
+            revert CallerNotCoordinator();
+        }
+
+        fulfillRandomWords(requestId, randomWords);
+    }
+
+    /* ------------- internal ------------- */
 
     function requestVRF() internal virtual returns (uint256) {
         return
@@ -62,14 +80,4 @@ abstract contract VRFConsumerV2 {
                 1
             );
     }
-
-    function rawFulfillRandomWords(uint256 requestId, uint256[] calldata randomWords) external payable {
-        if (msg.sender != coordinator) {
-            revert CallerNotCoordinator();
-        }
-
-        fulfillRandomWords(requestId, randomWords);
-    }
-
-    function fulfillRandomWords(uint256 requestId, uint256[] calldata randomWords) internal virtual;
 }

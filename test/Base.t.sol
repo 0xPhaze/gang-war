@@ -34,7 +34,6 @@ contract TestGangWar is Test, SetupChild {
 
     function setUp() public virtual {
         setUpContracts();
-        initContracts();
 
         vm.label(tester, "tester");
 

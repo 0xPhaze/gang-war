@@ -140,9 +140,9 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
         return s().baronItemCost[id];
     }
 
-    function getBaronItemBalances(Gang gang) external view returns (uint256[] memory items) {
+    function getBaronItemBalances(uint256 gang) external view returns (uint256[] memory items) {
         items = new uint256[](NUM_BARON_ITEMS);
-        for (uint256 i; i < NUM_BARON_ITEMS; ++i) items[i] = s().baronItems[gang][i];
+        for (uint256 i; i < NUM_BARON_ITEMS; ++i) items[i] = s().baronItems[Gang(gang)][i];
     }
 
     function getGangster(uint256 tokenId) external view returns (Gangster memory gangster) {
@@ -282,8 +282,8 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
         _verifyAuthorizedUser(msg.sender, tokenId);
 
         if (!isBaron(tokenId)) revert TokenMustBeBaron();
-        if (districtState != DISTRICT_STATE.IDLE) revert DistrictInvalidState();
         if (district.occupants == gang) revert CannotAttackDistrictOwnedByGang();
+        if (districtState != DISTRICT_STATE.IDLE) revert DistrictInvalidState();
         if (s().districts[connectingId].occupants != gang) revert ConnectingDistrictNotOwnedByGang();
 
         if (!isConnecting(connectingId, districtId)) {
@@ -297,7 +297,6 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
         (PLAYER_STATE baronState, ) = _gangsterStateAndCountdown(tokenId);
         if (baronState != PLAYER_STATE.IDLE) revert BaronInactionable();
 
-        // collect badges from previous gang war
         _collectBadges(tokenId);
 
         Gangster storage baron = s().gangsters[tokenId];
@@ -317,17 +316,15 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
         Gang gang = gangOf(tokenId);
         District storage district = s().districts[districtId];
 
+        (PLAYER_STATE gangsterState, ) = _gangsterStateAndCountdown(tokenId);
         (DISTRICT_STATE districtState, ) = _districtStateAndCountdown(district);
 
-        _verifyAuthorizedUser(msg.sender, tokenId);
-
         if (!isBaron(tokenId)) revert TokenMustBeBaron();
-        if (districtState != DISTRICT_STATE.REINFORCEMENT) revert DistrictInvalidState();
         if (district.occupants != gang) revert DistrictNotOwnedByGang();
-
-        (PLAYER_STATE gangsterState, ) = _gangsterStateAndCountdown(tokenId);
         if (gangsterState != PLAYER_STATE.IDLE) revert BaronInactionable();
+        if (districtState != DISTRICT_STATE.REINFORCEMENT) revert DistrictInvalidState();
 
+        _verifyAuthorizedUser(msg.sender, tokenId);
         _collectBadges(tokenId);
 
         Gangster storage baron = s().gangsters[tokenId];
@@ -345,8 +342,8 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
         Gang gang = gangOf(tokenIds[0]);
         District storage district = s().districts[districtId];
 
-        // @note need to find reliable way to check for attackers
         uint256 baronAttackId = district.baronAttackId;
+
         if (baronAttackId == 0 || gangOf(baronAttackId) != gang) revert BaronMustDeclareInitialAttack();
 
         _enterGangWar(districtId, tokenIds, gang, true);
@@ -365,29 +362,25 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
         for (uint256 i; i < tokenIds.length; ++i) {
             uint256 tokenId = tokenIds[i];
 
-            if (isBaron(tokenId)) revert TokenMustBeGangster();
-
             (PLAYER_STATE state, ) = _gangsterStateAndCountdown(tokenId);
 
+            if (isBaron(tokenId)) revert TokenMustBeGangster();
             if (state != PLAYER_STATE.ATTACK && state != PLAYER_STATE.DEFEND) revert GangsterInvalidState();
 
-            bool attacking = state == PLAYER_STATE.ATTACK;
-
             _verifyAuthorizedUser(msg.sender, tokenId);
+            _collectBadges(tokenId);
+
+            bool attacking = state == PLAYER_STATE.ATTACK;
 
             Gangster storage gangster = s().gangsters[tokenId];
 
             uint256 roundId = gangster.roundId;
             uint256 districtId = gangster.location;
 
-            Gang gang = gangOf(tokenId);
-
             if (attacking) s().districtAttackForces[districtId][roundId]--;
             else s().districtDefenseForces[districtId][roundId]--;
 
-            _collectBadges(tokenId);
-
-            emit ExitGangWar(districtId, gang, tokenId);
+            emit ExitGangWar(districtId, gangOf(tokenId), tokenId);
 
             delete s().gangsters[tokenId];
         }
@@ -395,11 +388,9 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
 
     function collectBadges(uint256[] calldata tokenIds) external {
         for (uint256 i; i < tokenIds.length; ++i) {
-            uint256 tokenId = tokenIds[i];
+            _verifyAuthorizedUser(msg.sender, tokenIds[i]);
 
-            _verifyAuthorizedUser(msg.sender, tokenId);
-
-            _collectBadges(tokenId);
+            _collectBadges(tokenIds[i]);
         }
     }
 
@@ -438,6 +429,7 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
             // already attacking/defending in another district
             if (state == PLAYER_STATE.ATTACK || state == PLAYER_STATE.DEFEND) {
                 uint256 gangsterLocation = gangster.location;
+
                 if (gangsterLocation == districtId) revert AlreadyInDistrict();
 
                 uint256 oldDistrictRoundId = s().districts[gangsterLocation].roundId;
@@ -828,6 +820,14 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
     }
 
     /* ------------- owner ------------- */
+
+    function addBaronItem(
+        uint256 gang,
+        uint256 itemId,
+        uint256 amount
+    ) external payable onlyOwner {
+        s().baronItems[Gang(gang)][itemId] += amount;
+    }
 
     function setBaronItemCost(uint256 itemId, uint256 cost) external payable onlyOwner {
         s().baronItemCost[itemId] = cost;

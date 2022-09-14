@@ -20,7 +20,6 @@ contract TestGangVault is TestGangWar {
 
     function setUp() public virtual override {
         setUpContracts();
-        initContracts();
 
         tokens[0].grantRole(AUTHORITY, tester);
         tokens[1].grantRole(AUTHORITY, tester);

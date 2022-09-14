@@ -13,7 +13,7 @@ contract TestBaronItems is TestGangWar {
 
     function itemBalancesDiff(Gang gang) private returns (int256[] memory diff) {
         uint256[] memory stored = storedBalances[gang];
-        uint256[] memory balances = game.getBaronItemBalances(gang);
+        uint256[] memory balances = game.getBaronItemBalances(uint256(gang));
 
         storedBalances[gang] = balances;
 

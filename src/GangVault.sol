@@ -8,14 +8,12 @@ import {AccessControlUDS} from "UDS/auth/AccessControlUDS.sol";
 
 // ------------- storage
 
-bytes32 constant DIAMOND_STORAGE_GANG_VAULT = keccak256("diamond.storage.gang.vault");
-bytes32 constant DIAMOND_STORAGE_GANG_VAULT_FX = keccak256("diamond.storage.gang.vault.season1");
+bytes32 constant DIAMOND_STORAGE_GANG_VAULT = keccak256("diamond.storage.gang.vault.persistent.sxxx1");
+bytes32 constant DIAMOND_STORAGE_GANG_VAULT_FX = keccak256("diamond.storage.gang.vault.flexible.sxxx1");
 
 struct GangVaultPersistentDS {
     uint40[3] totalShares;
-    uint40[3] lastUpdateTime;
     uint80[3][3] yield;
-    uint80[3][3] accruedYieldPerShare;
     mapping(address => uint40[3]) userShares;
     mapping(address => uint80[3]) userBalance;
     mapping(address => uint80[3]) accruedBalances;
@@ -25,6 +23,8 @@ struct GangVaultPersistentDS {
 // if we want to "wipe" it clean, we can change the storage slot
 // if this is reset, `accruedYieldPerShare` and `lastUpdateTime` MUST also be reset
 struct GangVaultFlexibleDS {
+    uint40[3] lastUpdateTime;
+    uint80[3][3] accruedYieldPerShare;
     mapping(address => uint80[3][3]) lastUserYieldPerShare;
 }
 
@@ -45,10 +45,10 @@ function max(uint256 a, uint256 b) pure returns (uint256) {
 /// @title Gangsta Mice City Gang Vault Rewards
 /// @author phaze (https://github.com/0xPhaze)
 contract GangVault is UUPSUpgrade, AccessControlUDS {
-    event Burn(address indexed from, uint256 indexed token, uint256 amount);
-
     GangVaultFlexibleDS private __storageLayoutFlexible;
     GangVaultPersistentDS private __storageLayoutPersistent;
+
+    event Burn(address indexed from, uint256 indexed token, uint256 amount);
 
     GangToken immutable token0;
     GangToken immutable token1;
@@ -71,16 +71,16 @@ contract GangVault is UUPSUpgrade, AccessControlUDS {
         __AccessControl_init();
     }
 
-    /// @dev MUST be accompanied by a new `DIAMOND_STORAGE_GANG_VAULT_FX` slot
-    function reset() external reinitializer {
-        for (uint256 i; i < 3; ++i) {
-            s().lastUpdateTime[i] = uint40(block.timestamp);
+    // /// @dev MUST be accompanied by a new `DIAMOND_STORAGE_GANG_VAULT_FX` slot
+    // function reset() external reinitializer {
+    //     for (uint256 i; i < 3; ++i) {
+    //         s().lastUpdateTime[i] = uint40(block.timestamp);
 
-            s().accruedYieldPerShare[i][0] = 0;
-            s().accruedYieldPerShare[i][1] = 0;
-            s().accruedYieldPerShare[i][2] = 0;
-        }
-    }
+    //         s().accruedYieldPerShare[i][0] = 0;
+    //         s().accruedYieldPerShare[i][1] = 0;
+    //         s().accruedYieldPerShare[i][2] = 0;
+    //     }
+    // }
 
     /* ------------- external ------------- */
 
@@ -286,9 +286,9 @@ contract GangVault is UUPSUpgrade, AccessControlUDS {
             uint256 yps_2
         )
     {
-        yps_0 = s().accruedYieldPerShare[gang][0];
-        yps_1 = s().accruedYieldPerShare[gang][1];
-        yps_2 = s().accruedYieldPerShare[gang][2];
+        yps_0 = fx().accruedYieldPerShare[gang][0];
+        yps_1 = fx().accruedYieldPerShare[gang][1];
+        yps_2 = fx().accruedYieldPerShare[gang][2];
 
         // setting to 1 allows gangs to earn if there are no stakers
         // though this is a degenerate case
@@ -307,7 +307,7 @@ contract GangVault is UUPSUpgrade, AccessControlUDS {
         // => divisor > 1 days
         // => max_yps < 1e24 < 2^80
         uint256 divisor = totalShares * 1 days;
-        uint256 lastUpdateTime = s().lastUpdateTime[gang];
+        uint256 lastUpdateTime = fx().lastUpdateTime[gang];
         uint256 timeScaled = (block.timestamp - lastUpdateTime) * 1e8;
 
         yps_0 += (timeScaled * s().yield[gang][0]) / divisor;
@@ -318,11 +318,11 @@ contract GangVault is UUPSUpgrade, AccessControlUDS {
     function _updateYieldPerShare(uint256 gang) private {
         (uint256 yps_0, uint256 yps_1, uint256 yps_2) = _accruedYieldPerShare(gang);
 
-        s().accruedYieldPerShare[gang][0] = uint80(yps_0);
-        s().accruedYieldPerShare[gang][1] = uint80(yps_1);
-        s().accruedYieldPerShare[gang][2] = uint80(yps_2);
+        fx().accruedYieldPerShare[gang][0] = uint80(yps_0);
+        fx().accruedYieldPerShare[gang][1] = uint80(yps_1);
+        fx().accruedYieldPerShare[gang][2] = uint80(yps_2);
 
-        s().lastUpdateTime[gang] = uint40(block.timestamp);
+        fx().lastUpdateTime[gang] = uint40(block.timestamp);
     }
 
     function _updateUserBalance(uint256 gang, address account) private {
