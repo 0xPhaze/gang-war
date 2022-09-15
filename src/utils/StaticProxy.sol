@@ -44,7 +44,7 @@ contract StaticProxy is UUPSUpgrade, OwnableUDS {
     /* ------------- fallback ------------- */
 
     fallback() external {
-        if (msg.sender != address(this)) {
+        if (msg.sender != address(this) && msg.sender != owner()) {
             // open static-call context, loop back in
             // and continue with 'else' control-flow
             assembly {

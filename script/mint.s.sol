@@ -24,40 +24,80 @@ source .env && forge script mint --rpc-url $RPC_MUMBAI --private-key $PRIVATE_KE
 
 import "futils/futils.sol";
 
+struct Player {
+    address wallet;
+    uint256 gang;
+}
+
+bytes constant playerData = abi.encode(
+    Player({wallet: address(0x13370aabbccdd), gang: 1}),
+    Player({wallet: address(0x13371aabbccdd), gang: 1}),
+    Player({wallet: address(0x13372aabbccdd), gang: 2}),
+    Player({wallet: address(0x13373aabbccdd), gang: 2}),
+    Player({wallet: address(0x13374aabbccdd), gang: 0}),
+    Player({wallet: address(0x13375aabbccdd), gang: 0}),
+    Player({wallet: address(0x13376aabbccdd), gang: 0}),
+    Player({wallet: address(0x13377aabbccdd), gang: 2}),
+    Player({wallet: address(0x13378aabbccdd), gang: 2}),
+    Player({wallet: address(0x13379aabbccdd), gang: 1})
+);
+
 contract mint is SetupChild {
     using futils for *;
 
-    // function setUpUpgradeScripts() internal override {
-    //     UPGRADE_SCRIPTS_ATTACH_ONLY = true;
-    // }
+    function setUpUpgradeScripts() internal override {
+        UPGRADE_SCRIPTS_ATTACH_ONLY = true;
+    }
 
     function run() external {
         startBroadcastIfNotDryRun();
 
         setUpContracts();
 
-        if (isTestnet()) initContractsTestnet();
+        if (isTestnet()) {
+            setUpAdmins();
+            sendIdsToPlayers();
+
+            // game.addBaronItem(0, 1, 3);
+            // game.addBaronItem(1, 1, 3);
+            // game.addBaronItem(2, 1, 3);
+
+            // game.addBaronItem(0, 2, 3);
+            // game.addBaronItem(1, 2, 3);
+            // game.addBaronItem(2, 2, 3);
+
+            // game.addBaronItem(0, 3, 3);
+            // game.addBaronItem(1, 3, 3);
+            // game.addBaronItem(2, 3, 3);
+
+            game.reset(occupants, yields);
+
+            if (game.getBaronItemBalances(0)[4] < 10) game.addBaronItem(0, 4, 10);
+            if (game.getBaronItemBalances(1)[4] < 10) game.addBaronItem(1, 4, 10);
+            if (game.getBaronItemBalances(2)[4] < 10) game.addBaronItem(2, 4, 10);
+
+            if (game.getBaronItemBalances(0)[0] < 10) game.addBaronItem(0, 0, 10);
+            if (game.getBaronItemBalances(1)[0] < 10) game.addBaronItem(1, 0, 10);
+            if (game.getBaronItemBalances(2)[0] < 10) game.addBaronItem(2, 0, 10);
+
+            // if (firstTimeDeployed[block.chainid][address(game)]) {
+            // vault.grantRole(GANG_VAULT_CONTROLLER, msg.sender);
+
+            // vault.setYield(0, [uint256(7700000), 7700000, 7700000]);
+            // vault.setYield(1, [uint256(7700000), 7700000, 7700000]);
+            // vault.setYield(2, [uint256(7700000), 7700000, 7700000]);
+            // }
+        }
 
         vm.stopBroadcast();
 
         storeDeployments();
-
-        // uint256[3] memory shares = vault.getUserShares(msg.sender);
-        // console.log("shares0", shares[0]);
-        // console.log("shares1", shares[1]);
-        // console.log("shares2", shares[2]);
-        // // uint256[] memory ownedIds = gmc.getOwnedIds(msg.sender);
-        // // for (uint256 i; i < ownedIds.length; i++) console.log(ownedIds[i]);
-        // // for (uint256 i; i < 3; i++) {
-        // //     vm.prank(address(0));
-        // //     uint256[3] memory balances = game.getGangVaultBalance(i);
-        // //     console.log(balances[0]);
-        // //     console.log(balances[1]);
-        // //     console.log(balances[2]);
-        // // }
     }
 
-    function initContractsTestnet() internal {
+    uint256 baronId = 1;
+    uint256 gangsterId = 1;
+
+    function setUpAdmins() internal {
         address[3] memory admin = [
             msg.sender,
             tryLoadEnvAddress("lumy"),
@@ -94,9 +134,6 @@ contract mint is SetupChild {
             )
             ._toAddressArray();
 
-        uint256 baronId = 1;
-        uint256 gangsterId = 1;
-
         for (uint256 i; i < baronUsers.length; i++) {
             address user = baronUsers[i];
             if (user == address(0)) continue;
@@ -111,51 +148,26 @@ contract mint is SetupChild {
 
             if (gouda.balanceOf(user) < 100_000e18) gouda.mint(user, 100_000e18);
         }
+    }
 
-        // address[] memory players = abi
-        //     .encode(
-        //         [
-        //             address(0x13370),
-        //             address(0x13371),
-        //             address(0x13372),
-        //             address(0x13373),
-        //             address(0x13374),
-        //             address(0x13375),
-        //             address(0x13376),
-        //             address(0x13377),
-        //             address(0x13378),
-        //             address(0x13379)
-        //         ]
-        //     )
-        //     ._toAddressArray();
+    function sendIdsToPlayers() internal {
+        Player[] memory players = abi.decode(playerData.toEncodedArrayType(0x40), (Player[]));
 
-        // for (uint256 i; i < players.length; i++) {
-        //     address user = players[i];
-        //     if (user == address(0)) continue;
+        uint256[] memory allIds;
+        uint256[] memory allGangs;
 
-        //     uint256[] memory gangsterIds = gangsterId.range(gangsterId += 10);
+        for (uint256 i; i < players.length; i++) {
+            uint256[] memory gangsterIds = gangsterId.range(gangsterId + 3);
 
-        //     gmc.resyncIds(user, gangsterIds);
-        // }
+            gmc.resyncIds(players[i].wallet, gangsterIds);
 
-        if (game.getBaronItemBalances(0)[4] < 10) game.addBaronItem(0, 4, 10);
-        if (game.getBaronItemBalances(1)[4] < 10) game.addBaronItem(1, 4, 10);
-        if (game.getBaronItemBalances(2)[4] < 10) game.addBaronItem(2, 4, 10);
+            gangsterId += gangsterIds.length;
 
-        if (game.getBaronItemBalances(0)[0] < 10) game.addBaronItem(0, 0, 10);
-        if (game.getBaronItemBalances(1)[0] < 10) game.addBaronItem(1, 0, 10);
-        if (game.getBaronItemBalances(2)[0] < 10) game.addBaronItem(2, 0, 10);
+            allIds = allIds.union(gangsterIds);
+            allGangs = allGangs.union(players[i].gang.repeat(gangsterIds.length));
+        }
 
-        game.reset(occupants, yields);
-        // vault.reset();
-
-        // if (firstTimeDeployed[block.chainid][address(game)]) {
-        // vault.grantRole(GANG_VAULT_CONTROLLER, msg.sender);
-
-        // vault.setYield(0, [uint256(7700000), 7700000, 7700000]);
-        // vault.setYield(1, [uint256(7700000), 7700000, 7700000]);
-        // vault.setYield(2, [uint256(7700000), 7700000, 7700000]);
-        // }
+        gmc.setGang(allIds, allGangs);
     }
 
     function tryLoadEnvAddress(string memory key) internal returns (address user) {

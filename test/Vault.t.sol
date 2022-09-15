@@ -1,19 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "forge-std/Test.sol";
-import "forge-std/console.sol";
-import "solmate/test/utils/mocks/MockERC20.sol";
-
-import {ERC1967Proxy} from "UDS/proxy/ERC1967Proxy.sol";
-
+import "./Base.t.sol";
+import "/GangWar.sol";
+import {GangVault} from "/GangVault.sol";
 import {MockVRFCoordinator} from "./mocks/MockVRFCoordinator.sol";
 
+import {ERC1967Proxy} from "UDS/proxy/ERC1967Proxy.sol";
+import "solmate/test/utils/mocks/MockERC20.sol";
+import "forge-std/Test.sol";
 import "futils/futils.sol";
-import "/GangWar.sol";
-
-import "./Base.t.sol";
-import {GangVault, DIAMOND_STORAGE_GANG_VAULT, DIAMOND_STORAGE_GANG_VAULT_FX} from "/GangVault.sol";
 
 contract TestGangVault is TestGangWar {
     using futils for *;
@@ -33,11 +29,6 @@ contract TestGangVault is TestGangWar {
 
         // @note add vault scramble
         // vault.scrambleStorage();
-    }
-
-    function test_setUp() public override {
-        assertEq(DIAMOND_STORAGE_GANG_VAULT, keccak256("diamond.storage.gang.vault"));
-        assertEq(DIAMOND_STORAGE_GANG_VAULT_FX, keccak256("diamond.storage.gang.vault.season1"));
     }
 
     function test_transferYield() public {

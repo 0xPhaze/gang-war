@@ -7,13 +7,11 @@ import "/lib/VRFConsumerV2.sol";
 import {Mice} from "/tokens/Mice.sol";
 import {GangWar} from "/GangWar.sol";
 import {GMCChild} from "/tokens/GMCChild.sol";
-import {GangVault} from "/GangVault.sol";
 import {GangToken} from "/tokens/GangToken.sol";
 import {GoudaChild} from "/tokens/GoudaChild.sol";
 import {StaticProxy} from "/utils/StaticProxy.sol";
-
-import "solmate/test/utils/mocks/MockERC721.sol";
-import "solmate/test/utils/mocks/MockERC20.sol";
+import {DIAMOND_STORAGE_GMC_MARKET} from "/GMCMarket.sol";
+import {DIAMOND_STORAGE_GANG_VAULT, GangVault} from "/GangVault.sol";
 
 import "./SetupBase.sol";
 
@@ -31,7 +29,15 @@ contract SetupChild is SetupBase {
         setUpGangWarConstants();
     }
 
+    function assertStorageSeasonSet() internal pure {
+        require(DIAMOND_STORAGE_GANG_WAR == keccak256(bytes(string.concat("diamond.storage.gang.war.", SEASON))), 'Storage season does not match.'); // prettier-ignore
+        require(DIAMOND_STORAGE_GMC_MARKET == keccak256(bytes(string.concat("diamond.storage.gmc.market.", SEASON))), 'Storage season does not match.'); // prettier-ignore
+        require(DIAMOND_STORAGE_GANG_VAULT == keccak256(bytes(string.concat("diamond.storage.gang.vault.", SEASON))), 'Storage season does not match.'); // prettier-ignore
+    }
+
     function setUpContracts() internal {
+        assertStorageSeasonSet();
+
         setUpFxPortal();
         setUpChainlink();
 
@@ -55,10 +61,10 @@ contract SetupChild is SetupBase {
 
         address gangTokenImpl = setUpContract("GangToken");
 
+        badges = GangToken(setUpProxy(gangTokenImpl, badgesInitCall, "Badges"));
         tokens[0] = GangToken(setUpProxy(gangTokenImpl, yakuzaInitCall, "YakuzaToken"));
         tokens[1] = GangToken(setUpProxy(gangTokenImpl, cartelInitCall, "CartelToken"));
         tokens[2] = GangToken(setUpProxy(gangTokenImpl, cyberpInitCall, "CyberpunkToken"));
-        badges = GangToken(setUpProxy(gangTokenImpl, badgesInitCall, "Badges"));
 
         bytes memory miceArgs = abi.encode(tokens[0], tokens[1], tokens[2], badges);
         bytes memory vaultArgs = abi.encode(tokens[0], tokens[1], tokens[2], GANG_VAULT_FEE);
@@ -81,14 +87,7 @@ contract SetupChild is SetupBase {
             1_500_000
         );
 
-        address gangWarImpl;
-
-        if (isTestnet()) {
-            gangWarImpl = setUpContract("GangWar", gangWarArgs, "GangWarImplementation");
-        } else {
-            gangWarImpl = setUpContract("GangWar", gangWarArgs, "GangWarImplementation");
-        }
-
+        address gangWarImpl = setUpContract("GangWar", gangWarArgs, "GangWarImplementation");
         game = GangWar(setUpProxy(gangWarImpl, abi.encodeWithSelector(GangWar.init.selector), "GangWar")); // prettier-ignore
 
         initContracts();
@@ -104,15 +103,15 @@ contract SetupChild is SetupBase {
         if (firstDeployment) {
             gmc.setGangVault(address(vault));
 
+            badges.grantRole(AUTHORITY, address(game));
             tokens[0].grantRole(AUTHORITY, address(vault));
             tokens[1].grantRole(AUTHORITY, address(vault));
             tokens[2].grantRole(AUTHORITY, address(vault));
-            badges.grantRole(AUTHORITY, address(game));
 
+            badges.grantRole(AUTHORITY, address(mice));
             tokens[0].grantRole(AUTHORITY, address(mice));
             tokens[1].grantRole(AUTHORITY, address(mice));
             tokens[2].grantRole(AUTHORITY, address(mice));
-            badges.grantRole(AUTHORITY, address(mice));
 
             vault.grantRole(GANG_VAULT_CONTROLLER, address(gmc));
             vault.grantRole(GANG_VAULT_CONTROLLER, address(game));
@@ -132,15 +131,15 @@ contract SetupChild is SetupBase {
         if (!firstDeployment) {
             if (gmc.vault() != address(vault)) gmc.setGangVault(address(vault));
 
+            if (!badges.hasRole(AUTHORITY, address(game))) badges.grantRole(AUTHORITY, address(game));
             if (!tokens[0].hasRole(AUTHORITY, address(vault))) tokens[0].grantRole(AUTHORITY, address(vault));
             if (!tokens[1].hasRole(AUTHORITY, address(vault))) tokens[1].grantRole(AUTHORITY, address(vault));
             if (!tokens[2].hasRole(AUTHORITY, address(vault))) tokens[2].grantRole(AUTHORITY, address(vault));
-            if (!badges.hasRole(AUTHORITY, address(game))) badges.grantRole(AUTHORITY, address(game));
 
+            if (!badges.hasRole(AUTHORITY, address(mice))) badges.grantRole(AUTHORITY, address(mice));
             if (!tokens[0].hasRole(AUTHORITY, address(mice))) tokens[0].grantRole(AUTHORITY, address(mice));
             if (!tokens[1].hasRole(AUTHORITY, address(mice))) tokens[1].grantRole(AUTHORITY, address(mice));
             if (!tokens[2].hasRole(AUTHORITY, address(mice))) tokens[2].grantRole(AUTHORITY, address(mice));
-            if (!badges.hasRole(AUTHORITY, address(mice))) badges.grantRole(AUTHORITY, address(mice));
 
             if (!vault.hasRole(GANG_VAULT_CONTROLLER, address(gmc)))
                 vault.grantRole(GANG_VAULT_CONTROLLER, address(gmc));
@@ -150,7 +149,6 @@ contract SetupChild is SetupBase {
             if (game.briberyFee(address(gouda)) == 0) game.setBriberyFee(address(gouda), 2e18);
         }
 
-        // TODO link via bridge on test
         if (block.chainid != CHAINID_TEST) {
             linkWithRoot(address(gmc), "GMCRoot");
             linkWithRoot(address(gouda), "GoudaRootRelay");

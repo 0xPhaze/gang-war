@@ -14,6 +14,21 @@ import {FxERC721EnumerableChild} from "fx-contracts/extensions/FxERC721Enumerabl
 
 import "solady/utils/LibString.sol";
 
+bytes32 constant DIAMOND_STORAGE_GMC_CHILD = keccak256("diamond.storage.gmc.child");
+
+struct GMCDS {
+    mapping(uint256 => string) name;
+    mapping(uint256 => uint256) gang;
+}
+
+function s() pure returns (GMCDS storage diamondStorage) {
+    bytes32 slot = DIAMOND_STORAGE_GMC_CHILD;
+    assembly { diamondStorage.slot := slot } // prettier-ignore
+}
+
+error InvalidName();
+error NotAuthorized();
+
 /// @title Gangsta Mice City Child
 /// @author phaze (https://github.com/0xPhaze)
 contract GMCChild is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChild, GMCMarket {
@@ -21,7 +36,7 @@ contract GMCChild is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChild, GMCMarket
 
     event Transfer(address indexed from, address indexed to, uint256 indexed id);
 
-    address public vault;
+    address public vault; // could make immutable
     string private baseURI;
 
     string public constant name = "Gangsta Mice City";
@@ -33,7 +48,7 @@ contract GMCChild is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChild, GMCMarket
         __Ownable_init();
     }
 
-    /* ------------- public ------------- */
+    /* ------------- view ------------- */
 
     function ownerOf(uint256 id) public view override(FxERC721Child, GMCMarket) returns (address) {
         return FxERC721Child.ownerOf(id);
@@ -54,26 +69,27 @@ contract GMCChild is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChild, GMCMarket
         return string.concat(baseURI, id.toString());
     }
 
-    function gangOf(uint256 id) public pure returns (Gang) {
-        return id == 0 ? Gang.NONE : Gang((id < 10_000 ? id - 1 : id - (10_001 - 3)) % 3);
+    function gangOf(uint256 id) public view returns (Gang gang) {
+        uint256 storedGang = s().gang[id];
+
+        if (storedGang == 0) {
+            if (id > 0) gang = Gang((id < 10_000 ? id - 1 : id - (10_001 - 3)) % 3);
+        } else gang = Gang(storedGang - 1);
+
+        return gang;
     }
 
-    /// @dev resets and re-calculates shares
-    function resyncShares() internal {
-        uint256 idsLength = erc721BalanceOf(msg.sender);
+    function getName(uint256 id) external view returns (string memory) {
+        return s().name[id];
+    }
 
-        uint40[3] memory shares;
+    /* ------------- external ------------- */
 
-        for (uint256 i; i < idsLength; ++i) {
-            uint256 id = tokenOfOwnerByIndex(msg.sender, i);
+    function setName(uint256 id, string calldata name_) external {
+        if (!isValidString(name_, 20)) revert InvalidName();
+        if (ownerOf(id) != msg.sender) revert NotAuthorized();
 
-            _cleanUpOffer(msg.sender, id);
-
-            uint256 gang = uint256(gangOf(id));
-            shares[gang] += 100;
-        }
-
-        GangVault(vault).resetShares(msg.sender, shares);
+        s().name[id] = name_;
     }
 
     /* ------------- hooks ------------- */
@@ -98,8 +114,7 @@ contract GMCChild is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChild, GMCMarket
             _cleanUpOffer(from, id);
 
             // @dev: this call seems like a danger point that could possibly
-            // fail in rare cases. Wrapping in try...catch since bridge call should not fail.
-            // Fails when resetting the gang vault and all its shares (here it's fine).
+            // fail during fxPortal call. Fails when gangVault storage is reset.
             try GangVault(vault).removeShares(from, uint256(gangOf(id)), 100) {} catch {}
         }
 
@@ -131,10 +146,27 @@ contract GMCChild is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChild, GMCMarket
     ) internal override {
         Gang gang = gangOf(id);
 
-        // @dev: really don't like the use of try...catch for vault resets
-        try GangVault(vault).transferShares(renter, owner, uint256(gang), uint8(renterShares)) {} catch {}
+        GangVault(vault).transferShares(renter, owner, uint256(gang), uint8(renterShares));
 
         emit Transfer(renter, owner, id);
+    }
+
+    /// @dev resets and re-calculates shares
+    function resyncShares() internal {
+        uint256 idsLength = erc721BalanceOf(msg.sender);
+
+        uint40[3] memory shares;
+
+        for (uint256 i; i < idsLength; ++i) {
+            uint256 id = tokenOfOwnerByIndex(msg.sender, i);
+
+            _cleanUpOffer(msg.sender, id);
+
+            uint256 gang = uint256(gangOf(id));
+            shares[gang] += 100;
+        }
+
+        GangVault(vault).resetShares(msg.sender, shares);
     }
 
     /* ------------- owner ------------- */
@@ -145,6 +177,10 @@ contract GMCChild is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChild, GMCMarket
 
     function resyncIds(address to, uint256[] calldata ids) external onlyOwner {
         _registerIds(to, ids);
+    }
+
+    function setGang(uint256[] calldata ids, uint256[] calldata gang) external onlyOwner {
+        for (uint256 i; i < ids.length; ++i) s().gang[ids[i]] = gang[i] + 1;
     }
 
     function setGangVault(address gangVault) external onlyOwner {
@@ -158,4 +194,29 @@ contract GMCChild is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChild, GMCMarket
     function _authorizeUpgrade() internal override onlyOwner {}
 
     function _authorizeTunnelController() internal override onlyOwner {}
+}
+
+function isValidString(string calldata str, uint256 maxLen) pure returns (bool) {
+    bytes memory b = bytes(str);
+    if (b.length < 1 || b.length > maxLen || b[0] == 0x20 || b[b.length - 1] == 0x20) return false;
+
+    bytes1 lastChar = b[0];
+
+    bytes1 char;
+    for (uint256 i; i < b.length; ++i) {
+        char = b[i];
+
+        if (
+            (char > 0x60 && char < 0x7B) || //a-z
+            (char > 0x40 && char < 0x5B) || //A-Z
+            (char == 0x20) || //space
+            (char > 0x2F && char < 0x3A) //9-0
+        ) {
+            lastChar = char;
+        } else {
+            return false;
+        }
+    }
+
+    return true;
 }

@@ -80,36 +80,4 @@ contract TestGangWar is Test, SetupChild {
     function assertEq(DISTRICT_STATE a, DISTRICT_STATE b) internal {
         assertEq(uint8(a), uint8(b));
     }
-
-    function test_setUp() public virtual {
-        for (uint256 i; i < 21; i++) {
-            for (uint256 j; j < 21; j++) {
-                (uint256 a, uint256 b) = (i < j) ? (i, j) : (j, i);
-                assertEq(connections[a][b], LibPackedMap.isConnecting(connectionsPacked, i, j));
-            }
-        }
-
-        for (uint256 i; i < 21; i++) {
-            District memory district = game.getDistrict(i);
-
-            // assertEq(district.occupants, Gang((i + 2) % 3));
-            assertEq(district.roundId, 1);
-            assertEq(district.attackDeclarationTime, 0);
-            assertEq(district.baronAttackId, 0);
-            assertEq(district.baronDefenseId, 0);
-            assertEq(district.lastUpkeepTime, 0);
-            assertEq(district.lockupTime, 0);
-
-            assertEq(district.state, DISTRICT_STATE.IDLE);
-            assertEq(district.stateCountdown, 0);
-        }
-
-        uint256[3][3] memory yield = vault.getYield();
-
-        assertTrue(yield[0][0] > 0);
-        assertEq(yield[0][0], yield[1][1]);
-        assertEq(yield[0][0], yield[2][2]);
-
-        assertEq(DIAMOND_STORAGE_GANG_WAR, keccak256("diamond.storage.gang.war"));
-    }
 }

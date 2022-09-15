@@ -26,7 +26,7 @@ uint256 constant ATTACK_FAVOR = 65;
 uint256 constant DEFENSE_FAVOR = 200;
 
 uint256 constant LOCKUP_CHANCE = 20;
-uint256 constant LOCKUP_FINE = 50e18;
+uint256 constant LOCKUP_FINE = 500_000e18;
 
 uint256 constant INJURED_WON_FACTOR = 35;
 uint256 constant INJURED_LOST_FACTOR = 65;
@@ -49,8 +49,10 @@ uint256 constant ITEM_911_REQUEST = 1 << 40;
 uint256 constant NUM_BARON_ITEMS = 5;
 
 uint256 constant ITEM_BLITZ_TIME_REDUCTION = 80;
-uint256 constant ITEM_BARRICADES_DEFENSE_INCREASE = 30;
 uint256 constant ITEM_SMOKE_ATTACK_INCREASE = 30;
+uint256 constant ITEM_BARRICADES_DEFENSE_INCREASE = 30;
+uint256 constant ITEM_TIME_DELAY_USE = 6 hours;
+uint256 constant ITEM_TIME_DELAY_PURCHASE = 6 hours;
 
 // ------------- enum
 
@@ -138,11 +140,15 @@ struct GangWarDS {
     /*   districtId =>     roundId     => numForces */
     mapping(uint256 => mapping(uint256 => uint256)) districtAttackForces;
     mapping(uint256 => mapping(uint256 => uint256)) districtDefenseForces;
+    mapping(uint256 => uint256) baronItemLastPurchased;
+    mapping(uint256 => uint256) baronItemLastUsed;
 }
 
 // ------------- storage
 
-bytes32 constant DIAMOND_STORAGE_GANG_WAR = keccak256("diamond.storage.gang.war.sxxx1");
+string constant SEASON = "season.xxx.1";
+
+bytes32 constant DIAMOND_STORAGE_GANG_WAR = keccak256("diamond.storage.gang.war.season.xxx.1");
 
 function s() pure returns (GangWarDS storage diamondStorage) {
     bytes32 slot = DIAMOND_STORAGE_GANG_WAR;
