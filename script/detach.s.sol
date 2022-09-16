@@ -12,8 +12,8 @@ source .env && US_DRY_RUN=true forge script detach --rpc-url $RPC_ANVIL --privat
 source .env && forge script detach --rpc-url $RPC_ANVIL --private-key $PRIVATE_KEY_ANVIL -vvvv --ffi --broadcast 
 
 # Mumbai
-source .env && US_DRY_RUN=true forge script detach --rpc-url $RPC_MUMBAI --private-key $PRIVATE_KEY --with-gas-price 38gwei -vvvv --ffi
-source .env && forge script detach --rpc-url $RPC_MUMBAI --private-key $PRIVATE_KEY --verify --etherscan-api-key $POLYGONSCAN_KEY --with-gas-price 38gwei -vvvv --ffi --broadcast 
+source .env && US_DRY_RUN=true forge script detach --rpc-url $RPC_MUMBAI --private-key $PRIVATE_KEY --with-gas-price 11gwei -vvvv --ffi
+source .env && forge script detach --rpc-url $RPC_MUMBAI --private-key $PRIVATE_KEY --verify --etherscan-api-key $POLYGONSCAN_KEY --with-gas-price 11gwei -vvvv --ffi --broadcast 
 
 */
 
