@@ -43,17 +43,12 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
     event GangWarWon(uint256 indexed districtId, Gang indexed losers, Gang indexed winners);
     event ExitGangWar(uint256 indexed districtId, Gang indexed gang, uint256 tokenId);
     event EnterGangWar(uint256 indexed districtId, Gang indexed gang, uint256 tokenId);
-    event BadgesEarned(uint256 indexed districtId, uint256 indexed tokenId, bool won, uint256 probability);
+    event BadgesEarned(uint256 indexed districtId, uint256 indexed tokenId, Gang indexed gang, bool won, uint256 probability); // prettier-ignore
     event BaronItemUsed(uint256 indexed districtId, uint256 indexed baronId, Gang indexed gang, uint256 itemId);
     event GangsterInjured(uint256 indexed districtId, uint256 indexed tokenId);
     event BaronItemPurchased(uint256 indexed baronId, Gang indexed gang, uint256 itemId, uint256 price);
+    event BaronAttackDeclared(uint256 indexed connectingId, uint256 indexed districtId, Gang indexed gang, uint256 tokenId); // prettier-ignore
     event BaronDefenseDeclared(uint256 indexed districtId, Gang indexed gang, uint256 tokenId);
-    event BaronAttackDeclared(
-        uint256 indexed connectingId,
-        uint256 indexed districtId,
-        Gang indexed gang,
-        uint256 tokenId
-    );
 
     GMC public immutable gmc;
     GangToken public immutable badges;
@@ -684,7 +679,7 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
 
                 uint256 p = _gangWarWonDistrictProb(districtId, roundId);
 
-                emit BadgesEarned(districtId, gangsterId, lastRoundVictory, p);
+                emit BadgesEarned(districtId, gangsterId, gangOf(gangsterId), lastRoundVictory, p);
 
                 gangster.roundId = 0;
             }
