@@ -66,8 +66,11 @@ contract SetupChild is SetupBase {
         tokens[1] = GangToken(setUpProxy(gangTokenImpl, cartelInitCall, "CartelToken"));
         tokens[2] = GangToken(setUpProxy(gangTokenImpl, cyberpInitCall, "CyberpunkToken"));
 
+        uint256 seasonStart = block.chainid == 31337 ? block.timestamp : SEASON_START_DATE;
+        uint256 seasonEnd = block.chainid == 31337 ? type(uint256).max : SEASON_END_DATE;
+
         bytes memory miceArgs = abi.encode(tokens[0], tokens[1], tokens[2], badges);
-        bytes memory vaultArgs = abi.encode(tokens[0], tokens[1], tokens[2], GANG_VAULT_FEE);
+        bytes memory vaultArgs = abi.encode(seasonStart, seasonEnd, tokens[0], tokens[1], tokens[2], GANG_VAULT_FEE); // prettier-ignore
 
         address vaultImpl = setUpContract("GangVault", vaultArgs, "GangVaultImplementation");
         vault = GangVault(setUpProxy(vaultImpl, abi.encode(GangVault.init.selector), "Vault"));
@@ -79,6 +82,8 @@ contract SetupChild is SetupBase {
             gmc,
             vault,
             badges,
+            seasonStart,
+            seasonEnd,
             connectionsPacked,
             coordinator,
             linkKeyHash,
@@ -147,6 +152,7 @@ contract SetupChild is SetupBase {
                 vault.grantRole(GANG_VAULT_CONTROLLER, address(game));
 
             if (game.briberyFee(address(gouda)) == 0) game.setBriberyFee(address(gouda), 2e18);
+            game.reset(occupants, yields);
         }
 
         if (block.chainid != CHAINID_TEST) {

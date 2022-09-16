@@ -14,19 +14,29 @@ import {LibPackedMap} from "./lib/LibPackedMap.sol";
 // uint256 constant TIME_GANG_WAR = 3 hours;
 // uint256 constant TIME_RECOVERY = 12 hours;
 // uint256 constant TIME_REINFORCEMENTS = 5 hours;
-uint256 constant TIME_TRUCE = 10 minutes;
-uint256 constant TIME_LOCKUP = 5 minutes;
-uint256 constant TIME_GANG_WAR = 10 minutes;
-uint256 constant TIME_RECOVERY = 20 minutes;
-uint256 constant TIME_REINFORCEMENTS = 10 minutes;
 
-uint256 constant DEFENSE_FAVOR_LIM = 150;
+// uint256 constant TIME_TRUCE = 10 minutes;
+// uint256 constant TIME_LOCKUP = 5 minutes;
+// uint256 constant TIME_GANG_WAR = 10 minutes;
+// uint256 constant TIME_RECOVERY = 20 minutes;
+// uint256 constant TIME_REINFORCEMENTS = 10 minutes;
+
+uint256 constant SEASON_END_DATE = 1663588800;
+uint256 constant SEASON_START_DATE = 1663416000;
+
+uint256 constant TIME_TRUCE = 10 minutes;
+uint256 constant TIME_LOCKUP = 40 minutes;
+uint256 constant TIME_GANG_WAR = 10 minutes;
+uint256 constant TIME_RECOVERY = 40 minutes;
+uint256 constant TIME_REINFORCEMENTS = 20 minutes;
+
+uint256 constant DEFENSE_FAVOR_LIM = 100; // 150
 uint256 constant BARON_DEFENSE_FORCE = 50;
 uint256 constant ATTACK_FAVOR = 65;
 uint256 constant DEFENSE_FAVOR = 200;
 
 uint256 constant LOCKUP_CHANCE = 20;
-uint256 constant LOCKUP_FINE = 500_000e18;
+uint256 constant LOCKUP_FINE = 200_000e18;
 
 uint256 constant INJURED_WON_FACTOR = 35;
 uint256 constant INJURED_LOST_FACTOR = 65;
@@ -146,16 +156,14 @@ struct GangWarDS {
 
 // ------------- storage
 
-string constant SEASON = "season.xxx.1";
+string constant SEASON = "season.xxx.2";
 
-bytes32 constant DIAMOND_STORAGE_GANG_WAR = keccak256("diamond.storage.gang.war.season.xxx.1");
+bytes32 constant DIAMOND_STORAGE_GANG_WAR = keccak256("diamond.storage.gang.war.season.xxx.2");
 
 function s() pure returns (GangWarDS storage diamondStorage) {
     bytes32 slot = DIAMOND_STORAGE_GANG_WAR;
     assembly { diamondStorage.slot := slot } // prettier-ignore
 }
-
-// ------------- errors
 
 function gangWarWonProbFn(
     uint256 attackForce,

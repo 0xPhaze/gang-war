@@ -209,11 +209,11 @@ contract TestGangVault is TestGangWar {
 
             skip(50 days);
 
-            vault.setYield(gang, [uint256(1), uint256(2), uint256(3)]); //prettier-ignore
+            vault.setYield(gang, [uint256(1), uint256(2), uint256(3)]);
 
             skip(100 days);
 
-            vault.setYield(gang, [uint256(2), uint256(4), uint256(6)]); //prettier-ignore
+            vault.setYield(gang, [uint256(2), uint256(4), uint256(6)]);
 
             skip(100 days);
 
@@ -235,33 +235,52 @@ contract TestGangVault is TestGangWar {
         assertEq(tokens[1].balanceOf(tester), 0);
         assertEq(tokens[2].balanceOf(tester), 0);
 
+        uint256[3] memory accrued;
+        uint256[3] memory balances;
+        uint256[3] memory claimable;
+
         for (uint256 gang; gang < 3; gang++) {
             vault.setYield(gang, [uint256(1), uint256(1), uint256(1)]);
 
             vault.addShares(tester, gang, 1);
 
-            uint256[3] memory balances = vault.getGangVaultBalance(gang);
+            balances = vault.getGangVaultBalance(gang);
+            claimable = vault.getClaimableUserBalance(tester);
 
             assertEq(balances[0], 0);
             assertEq(balances[1], 0);
             assertEq(balances[2], 0);
 
+            assertEq(claimable[0], 0);
+            assertEq(claimable[1], 0);
+            assertEq(claimable[2], 0);
+
             skip(100 days);
 
+            claimable = vault.getClaimableUserBalance(tester);
+
+            assertEq(claimable[0], 80 ether * (gang + 1));
+            assertEq(claimable[1], 80 ether * (gang + 1));
+            assertEq(claimable[2], 80 ether * (gang + 1));
+
             vault.claimUserBalance();
+
+            balances = vault.getGangVaultBalance(gang);
+            claimable = vault.getClaimableUserBalance(tester);
 
             assertApproxEqAbs(tokens[0].balanceOf(tester), 80 ether * (gang + 1), 1e1);
             assertApproxEqAbs(tokens[1].balanceOf(tester), 80 ether * (gang + 1), 1e1);
             assertApproxEqAbs(tokens[2].balanceOf(tester), 80 ether * (gang + 1), 1e1);
 
-            balances = vault.getGangVaultBalance(gang);
-
             assertApproxEqAbs(balances[0], 20 ether, 1e1);
             assertApproxEqAbs(balances[1], 20 ether, 1e1);
             assertApproxEqAbs(balances[2], 20 ether, 1e1);
 
-            vault.spendGangVaultBalance(gang, 4 ether, 3 ether, 20 ether, true);
+            assertEq(claimable[0], 0);
+            assertEq(claimable[1], 0);
+            assertEq(claimable[2], 0);
 
+            vault.spendGangVaultBalance(gang, 4 ether, 3 ether, 20 ether, true);
             balances = vault.getGangVaultBalance(gang);
 
             assertApproxEqAbs(balances[0], 16 ether, 1e1);
@@ -269,7 +288,6 @@ contract TestGangVault is TestGangWar {
             assertApproxEqAbs(balances[2], 0 ether, 1e1);
 
             vault.spendGangVaultBalance(gang, 4 ether, 5 ether, 0 ether, true);
-
             balances = vault.getGangVaultBalance(gang);
 
             assertApproxEqAbs(balances[0], 12 ether, 1e1);
@@ -279,6 +297,77 @@ contract TestGangVault is TestGangWar {
             tokens[0].burnFrom(tester, tokens[0].balanceOf(tester));
             tokens[1].burnFrom(tester, tokens[1].balanceOf(tester));
             tokens[2].burnFrom(tester, tokens[2].balanceOf(tester));
+
+            // gang 0
+            accrued = vault.getAccruedGangVaultBalances(0);
+
+            assertEq(accrued[0], 20 ether * (gang + 1));
+            assertEq(accrued[1], 20 ether * (gang + 1));
+            assertEq(accrued[2], 20 ether * (gang + 1));
+
+            // gang 1
+            accrued = vault.getAccruedGangVaultBalances(1);
+
+            assertEq(accrued[0], 20 ether * (gang + 0));
+            assertEq(accrued[1], 20 ether * (gang + 0));
+            assertEq(accrued[2], 20 ether * (gang + 0));
+
+            // gang 2
+            if (gang > 0) {
+                accrued = vault.getAccruedGangVaultBalances(2);
+
+                assertEq(accrued[0], 20 ether * (gang - 1));
+                assertEq(accrued[1], 20 ether * (gang - 1));
+                assertEq(accrued[2], 20 ether * (gang - 1));
+            }
         }
+    }
+
+    /// future start/end date
+    function test_dates() public {
+        uint256 endDate = block.timestamp + 110 days;
+        uint256 startDate = block.timestamp + 10 days;
+
+        address logic = address(new GangVault(startDate, endDate, [address(tokens[0]), address(tokens[1]), address(tokens[2])], 20)); // prettier-ignore
+        vault = GangVault(address(new ERC1967Proxy(logic, abi.encodeWithSelector(GangVault.init.selector))));
+
+        vault.grantRole(GANG_VAULT_CONTROLLER, tester);
+        vault.setYield(0, [uint256(1), uint256(2), uint256(3)]);
+
+        skip(5 days);
+
+        vault.addShares(tester, 0, 1);
+
+        skip(5 days);
+
+        uint256[3] memory balances = vault.getGangVaultBalance(0);
+        uint256[3] memory accrued = vault.getAccruedGangVaultBalances(0);
+        uint256[3] memory claimable = vault.getClaimableUserBalance(tester);
+
+        assertEq(accrued[0], 0 ether);
+        assertEq(accrued[1], 0 ether);
+        assertEq(accrued[2], 0 ether);
+        assertEq(balances[0], 0 ether);
+        assertEq(balances[1], 0 ether);
+        assertEq(balances[2], 0 ether);
+        assertEq(claimable[0], 0 ether);
+        assertEq(claimable[1], 0 ether);
+        assertEq(claimable[2], 0 ether);
+
+        skip(200 days);
+
+        balances = vault.getGangVaultBalance(0);
+        accrued = vault.getAccruedGangVaultBalances(0);
+        claimable = vault.getClaimableUserBalance(tester);
+
+        assertEq(accrued[0], 20 ether);
+        assertEq(accrued[1], 40 ether);
+        assertEq(accrued[2], 60 ether);
+        assertEq(balances[0], 20 ether);
+        assertEq(balances[1], 40 ether);
+        assertEq(balances[2], 60 ether);
+        assertEq(claimable[0], 80 ether);
+        assertEq(claimable[1], 160 ether);
+        assertEq(claimable[2], 240 ether);
     }
 }

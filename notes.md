@@ -11,11 +11,11 @@
 
 
 # Test
-- test purchaseItems delay
 - test outcome statistics fuzz
 
 # Final
 - restore times (district phases, + RENTAL_ACCEPTANCE_MINIMUM_TIME_DELAY )
+- test purchaseItems delay
 
 # XChain testing
 

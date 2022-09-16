@@ -9,11 +9,11 @@ import {StaticProxy} from "/utils/StaticProxy.sol";
 /* 
 # Anvil
 source .env && US_DRY_RUN=true forge script detach --rpc-url $RPC_ANVIL --private-key $PRIVATE_KEY_ANVIL -vvvv --ffi
-source .env && US_DRY_RUN=false forge script detach --rpc-url $RPC_ANVIL --private-key $PRIVATE_KEY_ANVIL -vvvv --ffi --broadcast 
+source .env && forge script detach --rpc-url $RPC_ANVIL --private-key $PRIVATE_KEY_ANVIL -vvvv --ffi --broadcast 
 
 # Mumbai
 source .env && US_DRY_RUN=true forge script detach --rpc-url $RPC_MUMBAI --private-key $PRIVATE_KEY --with-gas-price 38gwei -vvvv --ffi
-source .env && US_DRY_RUN=false forge script detach --rpc-url $RPC_MUMBAI --private-key $PRIVATE_KEY --verify --etherscan-api-key $POLYGONSCAN_KEY --with-gas-price 38gwei -vvvv --ffi --broadcast 
+source .env && forge script detach --rpc-url $RPC_MUMBAI --private-key $PRIVATE_KEY --verify --etherscan-api-key $POLYGONSCAN_KEY --with-gas-price 38gwei -vvvv --ffi --broadcast 
 
 */
 
@@ -33,17 +33,17 @@ contract detach is SetupChild {
 
         staticProxy = StaticProxy(setUpContract("StaticProxy")); // placeholder to disable UUPS contracts
 
-        setUpProxy(address(staticProxy), abi.encodeCall(staticProxy.init, (address(0))), "GMCChild");
-        setUpProxy(address(staticProxy), abi.encodeCall(staticProxy.init, (address(0))), "GoudaChild");
+        setUpProxy(address(staticProxy), abi.encodeCall(staticProxy.init, (address(gmc))), "GMCChild");
+        setUpProxy(address(staticProxy), abi.encodeCall(staticProxy.init, (address(gouda))), "GoudaChild");
 
-        setUpProxy(address(staticProxy), abi.encodeCall(staticProxy.init, (address(0))), "Badges");
-        setUpProxy(address(staticProxy), abi.encodeCall(staticProxy.init, (address(0))), "YakuzaToken");
-        setUpProxy(address(staticProxy), abi.encodeCall(staticProxy.init, (address(0))), "CartelToken");
-        setUpProxy(address(staticProxy), abi.encodeCall(staticProxy.init, (address(0))), "CyberpunkToken");
+        setUpProxy(address(staticProxy), abi.encodeCall(staticProxy.init, (address(badges))), "Badges");
+        setUpProxy(address(staticProxy), abi.encodeCall(staticProxy.init, (address(tokens[0]))), "YakuzaToken");
+        setUpProxy(address(staticProxy), abi.encodeCall(staticProxy.init, (address(tokens[1]))), "CartelToken");
+        setUpProxy(address(staticProxy), abi.encodeCall(staticProxy.init, (address(tokens[2]))), "CyberpunkToken");
 
-        setUpProxy(address(staticProxy), abi.encodeCall(staticProxy.init, (address(0))), "Vault");
-        setUpProxy(address(staticProxy), abi.encodeCall(staticProxy.init, (address(0))), "Mice");
-        setUpProxy(address(staticProxy), abi.encodeCall(staticProxy.init, (address(0))), "GangWar");
+        setUpProxy(address(staticProxy), abi.encodeCall(staticProxy.init, (address(vault))), "Vault");
+        setUpProxy(address(staticProxy), abi.encodeCall(staticProxy.init, (address(mice))), "Mice");
+        setUpProxy(address(staticProxy), abi.encodeCall(staticProxy.init, (address(game))), "GangWar");
 
         vm.stopBroadcast();
 

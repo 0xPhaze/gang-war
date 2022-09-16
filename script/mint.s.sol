@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 import {ERC1967Proxy} from "UDS/proxy/ERC1967Proxy.sol";
 import {SetupChild} from "../src/SetupChild.sol";
 
+import "/Constants.sol";
 import "forge-std/Script.sol";
 
 /* 
@@ -24,24 +25,6 @@ source .env && forge script mint --rpc-url $RPC_MUMBAI --private-key $PRIVATE_KE
 
 import "futils/futils.sol";
 
-struct Player {
-    address wallet;
-    uint256 gang;
-}
-
-bytes constant playerData = abi.encode(
-    Player({wallet: address(0x13370aabbccdd), gang: 1}),
-    Player({wallet: address(0x13371aabbccdd), gang: 1}),
-    Player({wallet: address(0x13372aabbccdd), gang: 2}),
-    Player({wallet: address(0x13373aabbccdd), gang: 2}),
-    Player({wallet: address(0x13374aabbccdd), gang: 0}),
-    Player({wallet: address(0x13375aabbccdd), gang: 0}),
-    Player({wallet: address(0x13376aabbccdd), gang: 0}),
-    Player({wallet: address(0x13377aabbccdd), gang: 2}),
-    Player({wallet: address(0x13378aabbccdd), gang: 2}),
-    Player({wallet: address(0x13379aabbccdd), gang: 1})
-);
-
 contract mint is SetupChild {
     using futils for *;
 
@@ -55,9 +38,6 @@ contract mint is SetupChild {
         setUpContracts();
 
         if (isTestnet()) {
-            setUpAdmins();
-            sendIdsToPlayers();
-
             // game.addBaronItem(0, 1, 3);
             // game.addBaronItem(1, 1, 3);
             // game.addBaronItem(2, 1, 3);
@@ -70,23 +50,21 @@ contract mint is SetupChild {
             // game.addBaronItem(1, 3, 3);
             // game.addBaronItem(2, 3, 3);
 
-            game.reset(occupants, yields);
+            // game.reset(occupants, yields);
 
-            if (game.getBaronItemBalances(0)[4] < 10) game.addBaronItem(0, 4, 10);
-            if (game.getBaronItemBalances(1)[4] < 10) game.addBaronItem(1, 4, 10);
-            if (game.getBaronItemBalances(2)[4] < 10) game.addBaronItem(2, 4, 10);
+            // vault.setYield(0, [uint256(0), 0, 0]);
+            // vault.setYield(1, [uint256(0), 0, 0]);
+            // vault.setYield(2, [uint256(0), 0, 0]);
 
-            if (game.getBaronItemBalances(0)[0] < 10) game.addBaronItem(0, 0, 10);
-            if (game.getBaronItemBalances(1)[0] < 10) game.addBaronItem(1, 0, 10);
-            if (game.getBaronItemBalances(2)[0] < 10) game.addBaronItem(2, 0, 10);
-
-            // if (firstTimeDeployed[block.chainid][address(game)]) {
-            // vault.grantRole(GANG_VAULT_CONTROLLER, msg.sender);
+            game.setBaronItemBalances(0.range(NUM_BARON_ITEMS), 3.repeat(NUM_BARON_ITEMS));
 
             // vault.setYield(0, [uint256(7700000), 7700000, 7700000]);
             // vault.setYield(1, [uint256(7700000), 7700000, 7700000]);
             // vault.setYield(2, [uint256(7700000), 7700000, 7700000]);
-            // }
+
+            // setUpAdmins();
+
+            // sendIdsToPlayers();
         }
 
         vm.stopBroadcast();
@@ -176,3 +154,21 @@ contract mint is SetupChild {
         } catch {}
     }
 }
+
+struct Player {
+    address wallet;
+    uint256 gang;
+}
+
+bytes constant playerData = abi.encode(
+    Player({wallet: address(0x13370aabbccdd), gang: 1}),
+    Player({wallet: address(0x13371aabbccdd), gang: 1}),
+    Player({wallet: address(0x13372aabbccdd), gang: 2}),
+    Player({wallet: address(0x13373aabbccdd), gang: 2}),
+    Player({wallet: address(0x13374aabbccdd), gang: 0}),
+    Player({wallet: address(0x13375aabbccdd), gang: 0}),
+    Player({wallet: address(0x13376aabbccdd), gang: 0}),
+    Player({wallet: address(0x13377aabbccdd), gang: 2}),
+    Player({wallet: address(0x13378aabbccdd), gang: 2}),
+    Player({wallet: address(0x13379aabbccdd), gang: 1})
+);

@@ -18,6 +18,7 @@ bytes32 constant DIAMOND_STORAGE_GMC_CHILD = keccak256("diamond.storage.gmc.chil
 
 struct GMCDS {
     mapping(uint256 => string) name;
+    mapping(address => string) playerName;
     mapping(uint256 => uint256) gang;
 }
 
@@ -83,6 +84,10 @@ contract GMCChild is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChild, GMCMarket
         return s().name[id];
     }
 
+    function getPlayerName(address user) external view returns (string memory) {
+        return s().playerName[user];
+    }
+
     /* ------------- external ------------- */
 
     function setName(uint256 id, string calldata name_) external {
@@ -90,6 +95,12 @@ contract GMCChild is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChild, GMCMarket
         if (ownerOf(id) != msg.sender) revert NotAuthorized();
 
         s().name[id] = name_;
+    }
+
+    function setPlayerName(string calldata name_) external {
+        if (!isValidString(name_, 20)) revert InvalidName();
+
+        s().playerName[msg.sender] = name_;
     }
 
     /* ------------- hooks ------------- */
@@ -198,6 +209,7 @@ contract GMCChild is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChild, GMCMarket
 
 function isValidString(string calldata str, uint256 maxLen) pure returns (bool) {
     bytes memory b = bytes(str);
+
     if (b.length < 1 || b.length > maxLen || b[0] == 0x20 || b[b.length - 1] == 0x20) return false;
 
     bytes1 lastChar = b[0];
@@ -209,7 +221,7 @@ function isValidString(string calldata str, uint256 maxLen) pure returns (bool) 
         if (
             (char > 0x60 && char < 0x7B) || //a-z
             (char > 0x40 && char < 0x5B) || //A-Z
-            (char == 0x20) || //space
+            (char == 0x20 && lastChar != 0x20) || //space
             (char > 0x2F && char < 0x3A) //9-0
         ) {
             lastChar = char;

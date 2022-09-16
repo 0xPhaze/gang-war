@@ -1,0 +1,447 @@
+{
+  "storage": [
+    {
+      "astId": 538,
+      "contract": "src/GangWar.sol:GangWar",
+      "label": "__storageLayout",
+      "offset": 0,
+      "slot": "0",
+      "type": "t_struct(OwnableDS)528_storage"
+    },
+    {
+      "astId": 41642,
+      "contract": "src/GangWar.sol:GangWar",
+      "label": "__storageLayout",
+      "offset": 0,
+      "slot": "1",
+      "type": "t_struct(GangWarDS)38769_storage"
+    }
+  ],
+  "types": {
+    "t_address": {
+      "encoding": "inplace",
+      "label": "address",
+      "numberOfBytes": "20"
+    },
+    "t_bool": {
+      "encoding": "inplace",
+      "label": "bool",
+      "numberOfBytes": "1"
+    },
+    "t_enum(DISTRICT_STATE)38641": {
+      "encoding": "inplace",
+      "label": "enum DISTRICT_STATE",
+      "numberOfBytes": "1"
+    },
+    "t_enum(Gang)38634": {
+      "encoding": "inplace",
+      "label": "enum Gang",
+      "numberOfBytes": "1"
+    },
+    "t_enum(PLAYER_STATE)38649": {
+      "encoding": "inplace",
+      "label": "enum PLAYER_STATE",
+      "numberOfBytes": "1"
+    },
+    "t_int256": {
+      "encoding": "inplace",
+      "label": "int256",
+      "numberOfBytes": "32"
+    },
+    "t_mapping(t_address,t_uint256)": {
+      "encoding": "mapping",
+      "key": "t_address",
+      "label": "mapping(address => uint256)",
+      "numberOfBytes": "32",
+      "value": "t_uint256"
+    },
+    "t_mapping(t_enum(Gang)38634,t_mapping(t_uint256,t_uint256))": {
+      "encoding": "mapping",
+      "key": "t_enum(Gang)38634",
+      "label": "mapping(enum Gang => mapping(uint256 => uint256))",
+      "numberOfBytes": "32",
+      "value": "t_mapping(t_uint256,t_uint256)"
+    },
+    "t_mapping(t_uint256,t_mapping(t_uint256,t_uint256))": {
+      "encoding": "mapping",
+      "key": "t_uint256",
+      "label": "mapping(uint256 => mapping(uint256 => uint256))",
+      "numberOfBytes": "32",
+      "value": "t_mapping(t_uint256,t_uint256)"
+    },
+    "t_mapping(t_uint256,t_struct(District)38705_storage)": {
+      "encoding": "mapping",
+      "key": "t_uint256",
+      "label": "mapping(uint256 => struct District)",
+      "numberOfBytes": "32",
+      "value": "t_struct(District)38705_storage"
+    },
+    "t_mapping(t_uint256,t_struct(Gangster)38668_storage)": {
+      "encoding": "mapping",
+      "key": "t_uint256",
+      "label": "mapping(uint256 => struct Gangster)",
+      "numberOfBytes": "32",
+      "value": "t_struct(Gangster)38668_storage"
+    },
+    "t_mapping(t_uint256,t_uint256)": {
+      "encoding": "mapping",
+      "key": "t_uint256",
+      "label": "mapping(uint256 => uint256)",
+      "numberOfBytes": "32",
+      "value": "t_uint256"
+    },
+    "t_struct(District)38705_storage": {
+      "encoding": "inplace",
+      "label": "struct District",
+      "members": [
+        {
+          "astId": 38671,
+          "contract": "src/GangWar.sol:GangWar",
+          "label": "occupants",
+          "offset": 0,
+          "slot": "0",
+          "type": "t_enum(Gang)38634"
+        },
+        {
+          "astId": 38674,
+          "contract": "src/GangWar.sol:GangWar",
+          "label": "attackers",
+          "offset": 1,
+          "slot": "0",
+          "type": "t_enum(Gang)38634"
+        },
+        {
+          "astId": 38677,
+          "contract": "src/GangWar.sol:GangWar",
+          "label": "token",
+          "offset": 2,
+          "slot": "0",
+          "type": "t_enum(Gang)38634"
+        },
+        {
+          "astId": 38679,
+          "contract": "src/GangWar.sol:GangWar",
+          "label": "roundId",
+          "offset": 0,
+          "slot": "1",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 38681,
+          "contract": "src/GangWar.sol:GangWar",
+          "label": "attackDeclarationTime",
+          "offset": 0,
+          "slot": "2",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 38683,
+          "contract": "src/GangWar.sol:GangWar",
+          "label": "baronAttackId",
+          "offset": 0,
+          "slot": "3",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 38685,
+          "contract": "src/GangWar.sol:GangWar",
+          "label": "baronDefenseId",
+          "offset": 0,
+          "slot": "4",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 38687,
+          "contract": "src/GangWar.sol:GangWar",
+          "label": "lastUpkeepTime",
+          "offset": 0,
+          "slot": "5",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 38689,
+          "contract": "src/GangWar.sol:GangWar",
+          "label": "lastOutcomeTime",
+          "offset": 0,
+          "slot": "6",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 38691,
+          "contract": "src/GangWar.sol:GangWar",
+          "label": "lockupTime",
+          "offset": 0,
+          "slot": "7",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 38693,
+          "contract": "src/GangWar.sol:GangWar",
+          "label": "yield",
+          "offset": 0,
+          "slot": "8",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 38695,
+          "contract": "src/GangWar.sol:GangWar",
+          "label": "activeItems",
+          "offset": 0,
+          "slot": "9",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 38698,
+          "contract": "src/GangWar.sol:GangWar",
+          "label": "state",
+          "offset": 0,
+          "slot": "10",
+          "type": "t_enum(DISTRICT_STATE)38641"
+        },
+        {
+          "astId": 38700,
+          "contract": "src/GangWar.sol:GangWar",
+          "label": "stateCountdown",
+          "offset": 0,
+          "slot": "11",
+          "type": "t_int256"
+        },
+        {
+          "astId": 38702,
+          "contract": "src/GangWar.sol:GangWar",
+          "label": "attackForces",
+          "offset": 0,
+          "slot": "12",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 38704,
+          "contract": "src/GangWar.sol:GangWar",
+          "label": "defenseForces",
+          "offset": 0,
+          "slot": "13",
+          "type": "t_uint256"
+        }
+      ],
+      "numberOfBytes": "448"
+    },
+    "t_struct(GangWarDS)38769_storage": {
+      "encoding": "inplace",
+      "label": "struct GangWarDS",
+      "members": [
+        {
+          "astId": 38707,
+          "contract": "src/GangWar.sol:GangWar",
+          "label": "gmc",
+          "offset": 0,
+          "slot": "0",
+          "type": "t_address"
+        },
+        {
+          "astId": 38709,
+          "contract": "src/GangWar.sol:GangWar",
+          "label": "vault",
+          "offset": 0,
+          "slot": "1",
+          "type": "t_address"
+        },
+        {
+          "astId": 38711,
+          "contract": "src/GangWar.sol:GangWar",
+          "label": "districtConnections",
+          "offset": 0,
+          "slot": "2",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 38713,
+          "contract": "src/GangWar.sol:GangWar",
+          "label": "lockupTime",
+          "offset": 0,
+          "slot": "3",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 38718,
+          "contract": "src/GangWar.sol:GangWar",
+          "label": "districts",
+          "offset": 0,
+          "slot": "4",
+          "type": "t_mapping(t_uint256,t_struct(District)38705_storage)"
+        },
+        {
+          "astId": 38723,
+          "contract": "src/GangWar.sol:GangWar",
+          "label": "gangsters",
+          "offset": 0,
+          "slot": "5",
+          "type": "t_mapping(t_uint256,t_struct(Gangster)38668_storage)"
+        },
+        {
+          "astId": 38727,
+          "contract": "src/GangWar.sol:GangWar",
+          "label": "baronItemCost",
+          "offset": 0,
+          "slot": "6",
+          "type": "t_mapping(t_uint256,t_uint256)"
+        },
+        {
+          "astId": 38731,
+          "contract": "src/GangWar.sol:GangWar",
+          "label": "briberyFee",
+          "offset": 0,
+          "slot": "7",
+          "type": "t_mapping(t_address,t_uint256)"
+        },
+        {
+          "astId": 38738,
+          "contract": "src/GangWar.sol:GangWar",
+          "label": "baronItems",
+          "offset": 0,
+          "slot": "8",
+          "type": "t_mapping(t_enum(Gang)38634,t_mapping(t_uint256,t_uint256))"
+        },
+        {
+          "astId": 38742,
+          "contract": "src/GangWar.sol:GangWar",
+          "label": "requestIdToDistrictIds",
+          "offset": 0,
+          "slot": "9",
+          "type": "t_mapping(t_uint256,t_uint256)"
+        },
+        {
+          "astId": 38748,
+          "contract": "src/GangWar.sol:GangWar",
+          "label": "gangWarOutcomes",
+          "offset": 0,
+          "slot": "10",
+          "type": "t_mapping(t_uint256,t_mapping(t_uint256,t_uint256))"
+        },
+        {
+          "astId": 38754,
+          "contract": "src/GangWar.sol:GangWar",
+          "label": "districtAttackForces",
+          "offset": 0,
+          "slot": "11",
+          "type": "t_mapping(t_uint256,t_mapping(t_uint256,t_uint256))"
+        },
+        {
+          "astId": 38760,
+          "contract": "src/GangWar.sol:GangWar",
+          "label": "districtDefenseForces",
+          "offset": 0,
+          "slot": "12",
+          "type": "t_mapping(t_uint256,t_mapping(t_uint256,t_uint256))"
+        },
+        {
+          "astId": 38764,
+          "contract": "src/GangWar.sol:GangWar",
+          "label": "baronItemLastPurchased",
+          "offset": 0,
+          "slot": "13",
+          "type": "t_mapping(t_uint256,t_uint256)"
+        },
+        {
+          "astId": 38768,
+          "contract": "src/GangWar.sol:GangWar",
+          "label": "baronItemLastUsed",
+          "offset": 0,
+          "slot": "14",
+          "type": "t_mapping(t_uint256,t_uint256)"
+        }
+      ],
+      "numberOfBytes": "480"
+    },
+    "t_struct(Gangster)38668_storage": {
+      "encoding": "inplace",
+      "label": "struct Gangster",
+      "members": [
+        {
+          "astId": 38651,
+          "contract": "src/GangWar.sol:GangWar",
+          "label": "roundId",
+          "offset": 0,
+          "slot": "0",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 38653,
+          "contract": "src/GangWar.sol:GangWar",
+          "label": "location",
+          "offset": 0,
+          "slot": "1",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 38655,
+          "contract": "src/GangWar.sol:GangWar",
+          "label": "briberyTimeReduction",
+          "offset": 0,
+          "slot": "2",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 38657,
+          "contract": "src/GangWar.sol:GangWar",
+          "label": "recoveryTimeReduction",
+          "offset": 0,
+          "slot": "3",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 38659,
+          "contract": "src/GangWar.sol:GangWar",
+          "label": "attack",
+          "offset": 0,
+          "slot": "4",
+          "type": "t_bool"
+        },
+        {
+          "astId": 38662,
+          "contract": "src/GangWar.sol:GangWar",
+          "label": "gang",
+          "offset": 1,
+          "slot": "4",
+          "type": "t_enum(Gang)38634"
+        },
+        {
+          "astId": 38665,
+          "contract": "src/GangWar.sol:GangWar",
+          "label": "state",
+          "offset": 2,
+          "slot": "4",
+          "type": "t_enum(PLAYER_STATE)38649"
+        },
+        {
+          "astId": 38667,
+          "contract": "src/GangWar.sol:GangWar",
+          "label": "stateCountdown",
+          "offset": 0,
+          "slot": "5",
+          "type": "t_int256"
+        }
+      ],
+      "numberOfBytes": "192"
+    },
+    "t_struct(OwnableDS)528_storage": {
+      "encoding": "inplace",
+      "label": "struct OwnableDS",
+      "members": [
+        {
+          "astId": 527,
+          "contract": "src/GangWar.sol:GangWar",
+          "label": "owner",
+          "offset": 0,
+          "slot": "0",
+          "type": "t_address"
+        }
+      ],
+      "numberOfBytes": "32"
+    },
+    "t_uint256": {
+      "encoding": "inplace",
+      "label": "uint256",
+      "numberOfBytes": "32"
+    }
+  }
+}
