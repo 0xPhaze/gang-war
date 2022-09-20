@@ -17,9 +17,9 @@
 [submodule "lib/upgrade-scripts"]
 	path = lib/upgrade-scripts
 	url = https://github.com/0xPhaze/upgrade-scripts
-[submodule "lib/fx-contracts"]
-	path = lib/fx-contracts
-	url = https://github.com/0xPhaze/fx-contracts
 [submodule "lib/solady"]
 	path = lib/solady
 	url = https://github.com/Vectorized/solady
+[submodule "lib/fx-contracts"]
+	path = lib/fx-contracts
+	url = https://github.com/0xPhaze/fx-contracts
