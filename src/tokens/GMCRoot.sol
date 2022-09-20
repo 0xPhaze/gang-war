@@ -28,23 +28,33 @@ contract GMC is OwnableUDS, FxERC721MRoot {
 
     event SaleStateUpdate();
 
-    string private baseURI;
-    string private unrevealedURI = "ipfs://QmRuQYxmdzqfVfy8ZhZNTvXsmbN9yLnBFPDeczFvWUS2HU/";
-
+    // 8
     bool public publicSaleActive;
 
-    uint16 private publicPriceUnits;
-    uint16 private whitelistPriceUnits;
+    // 16
+    uint8 private publicPriceUnits;
+    uint8 private whitelistPriceUnits;
 
+    // 16
     uint16 public maxSupply = 5555;
     uint16 public constant MAX_PER_WALLET = 20;
 
     uint256 private constant PURCHASE_LIMIT = 5;
     uint256 private constant PRICE_UNIT = 0.001 ether;
 
+    // 160
     address private signer = 0x68442589f40E8Fc3a9679dE62884c85C6E524888;
 
+    // 48
+    uint16 supply1;
+    uint16 supply2;
+    uint16 supply3;
+
+    // 8
     bool public maxSupplyLocked;
+
+    string private baseURI;
+    string private unrevealedURI = "ipfs://QmRuQYxmdzqfVfy8ZhZNTvXsmbN9yLnBFPDeczFvWUS2HU/";
 
     constructor(address checkpointManager, address fxRoot)
         FxERC721MRoot("Gangsta Mice City", "GMC", checkpointManager, fxRoot)
@@ -71,7 +81,7 @@ contract GMC is OwnableUDS, FxERC721MRoot {
         if (!publicSaleActive) revert PublicSaleNotActive();
         if (msg.value != publicPrice() * quantity) revert IncorrectValue();
 
-        if (lock) _mintLockedAndTransmit(msg.sender, quantity);
+        if (lock) _mintLockedAndTransmit(msg.sender, quantity, 0);
         else _mint(msg.sender, quantity);
     }
 
@@ -84,7 +94,7 @@ contract GMC is OwnableUDS, FxERC721MRoot {
         if (!validSignature(signature, limit)) revert InvalidSignature();
         if (msg.value != whitelistPrice() * quantity) revert IncorrectValue();
 
-        if (lock) _mintLockedAndTransmit(msg.sender, quantity);
+        if (lock) _mintLockedAndTransmit(msg.sender, quantity, 0);
         else _mint(msg.sender, quantity);
     }
 
@@ -114,12 +124,12 @@ contract GMC is OwnableUDS, FxERC721MRoot {
         }
     }
 
-    function toPriceUnits(uint256 price) private pure returns (uint16) {
+    function toPriceUnits(uint256 price) private pure returns (uint8) {
         unchecked {
             uint256 units;
             if (price % PRICE_UNIT != 0) revert InvalidPriceUnits();
-            if ((units = price / PRICE_UNIT) > type(uint16).max) revert InvalidPriceUnits();
-            return uint16(units);
+            if ((units = price / PRICE_UNIT) > type(uint8).max) revert InvalidPriceUnits();
+            return uint8(units);
         }
     }
 
@@ -164,7 +174,8 @@ contract GMC is OwnableUDS, FxERC721MRoot {
         uint256[] calldata amounts,
         bool locked
     ) external onlyOwner {
-        if (locked) for (uint256 i; i < users.length; ++i) _mintLockedAndTransmit(users[i], amounts[i]);
+        uint48 auxData = 0;
+        if (locked) for (uint256 i; i < users.length; ++i) _mintLockedAndTransmit(users[i], amounts[i], auxData);
         else for (uint256 i; i < users.length; ++i) _mint(users[i], amounts[i]);
     }
 

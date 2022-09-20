@@ -28,6 +28,7 @@ error IdsMustBeOfSameGang();
 error GangsterInactionable();
 error DistrictInvalidState();
 error GangsterInvalidState();
+error BaronAlreadyDefending();
 error DistrictNotOwnedByGang();
 error MinimumTimeDelayNotPassed();
 error InvalidConnectingDistrict();
@@ -56,15 +57,11 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
     GangVault public immutable vault;
 
     uint256 immutable packedDistrictConnections;
-    uint256 immutable seasonStart;
-    uint256 immutable seasonEnd;
 
     constructor(
         GMC gmc_,
         GangVault vault_,
         GangToken badges_,
-        uint256 startTime,
-        uint256 endTime,
         uint256 connections,
         address coordinator,
         bytes32 keyHash,
@@ -72,12 +69,10 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
         uint16 requestConfirmations,
         uint32 callbackGasLimit
     ) VRFConsumerV2(coordinator, keyHash, subscriptionId, requestConfirmations, callbackGasLimit) {
-        packedDistrictConnections = connections;
-        seasonStart = startTime;
-        seasonEnd = endTime;
         gmc = gmc_;
         vault = vault_;
         badges = badges_;
+        packedDistrictConnections = connections;
     }
 
     /* ------------- init ------------- */
@@ -119,8 +114,8 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
         return tokenId >= 10_000;
     }
 
-    function gangOf(uint256 id) public pure returns (Gang) {
-        return id == 0 ? Gang.NONE : Gang((id < 10000 ? id - 1 : id - (10001 - 3)) % 3);
+    function gangOf(uint256 id) public view returns (Gang) {
+        return Gang(gmc.gangOf(id));
     }
 
     function isConnecting(uint256 districtA, uint256 districtB) public view returns (bool) {
@@ -302,14 +297,14 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
         if (district.occupants == gang) revert CannotAttackDistrictOwnedByGang();
         if (baronState != PLAYER_STATE.IDLE) revert BaronInactionable();
         if (districtState != DISTRICT_STATE.IDLE) revert DistrictInvalidState();
-        if (s().districts[connectingId].occupants != gang) revert ConnectingDistrictNotOwnedByGang();
-
-        if (!isConnecting(connectingId, districtId)) {
-            if (!sewers) revert InvalidConnectingDistrict();
-
+        if (sewers) {
             s().baronItems[gang][ITEM_SEWER] -= 1;
 
             _applyBaronItemToDistrict(ITEM_SEWER, districtId);
+        } else if (!isConnecting(connectingId, districtId)) {
+            revert InvalidConnectingDistrict();
+        } else if (s().districts[connectingId].occupants != gang) {
+            revert ConnectingDistrictNotOwnedByGang();
         }
 
         _collectBadges(tokenId);
@@ -336,6 +331,7 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
 
         if (!isBaron(tokenId)) revert TokenMustBeBaron();
         if (district.occupants != gang) revert DistrictNotOwnedByGang();
+        if (district.baronDefenseId != 0) revert BaronAlreadyDefending();
         if (gangsterState != PLAYER_STATE.IDLE) revert BaronInactionable();
         if (districtState != DISTRICT_STATE.REINFORCEMENT) revert DistrictInvalidState();
 
@@ -847,7 +843,9 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
     /* ------------- modifier ------------- */
 
     modifier isActiveSeason() {
-        if (block.timestamp < seasonStart || seasonEnd < block.timestamp) revert GangWarNotActive();
+        // Removing this for now
+        // if (block.timestamp < seasonStart || seasonEnd < block.timestamp) revert GangWarNotActive();
+        // if (!active) revert GangWarNotActive();
         _;
     }
 
@@ -856,10 +854,20 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
     function setBaronItemBalances(uint256[] calldata itemIds, uint256[] calldata amounts) external payable onlyOwner {
         for (uint256 i; i < itemIds.length; ++i) {
             for (uint256 gang; gang < 3; ++gang) {
-                s().baronItems[Gang(gang)][itemIds[i]] += amounts[i];
+                s().baronItems[Gang(gang)][itemIds[i]] = amounts[i];
             }
         }
     }
+
+    // function addBaronItemBalances(
+    //     uint256 gang,
+    //     uint256[] calldata itemIds,
+    //     uint256[] calldata amounts
+    // ) external payable onlyOwner {
+    //     for (uint256 i; i < itemIds.length; ++i) {
+    //         s().baronItems[Gang(gang)][itemIds[i]] += amounts[i];
+    //     }
+    // }
 
     function setBaronItemCost(uint256 itemId, uint256 cost) external payable onlyOwner {
         s().baronItemCost[itemId] = cost;

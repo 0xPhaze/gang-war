@@ -7,36 +7,22 @@ import {LibPackedMap} from "./lib/LibPackedMap.sol";
 
 // ------------- Constants
 
-// TODO
-// XXX
-// uint256 constant TIME_TRUCE = 4 hours;
-// uint256 constant TIME_LOCKUP = 12 hours;
-// uint256 constant TIME_GANG_WAR = 3 hours;
-// uint256 constant TIME_RECOVERY = 12 hours;
-// uint256 constant TIME_REINFORCEMENTS = 5 hours;
+uint256 constant SEASON_START_DATE = 1663596000;
+uint256 constant SEASON_END_DATE = 1663682400;
 
-// uint256 constant TIME_TRUCE = 10 minutes;
-// uint256 constant TIME_LOCKUP = 5 minutes;
-// uint256 constant TIME_GANG_WAR = 10 minutes;
-// uint256 constant TIME_RECOVERY = 20 minutes;
-// uint256 constant TIME_REINFORCEMENTS = 10 minutes;
+uint256 constant TIME_TRUCE = 20 minutes;
+uint256 constant TIME_LOCKUP = 60 minutes;
+uint256 constant TIME_GANG_WAR = 20 minutes;
+uint256 constant TIME_RECOVERY = 60 minutes;
+uint256 constant TIME_REINFORCEMENTS = 30 minutes;
 
-uint256 constant SEASON_END_DATE = 1663588800;
-uint256 constant SEASON_START_DATE = 1663416000;
-
-uint256 constant TIME_TRUCE = 10 minutes;
-uint256 constant TIME_LOCKUP = 40 minutes;
-uint256 constant TIME_GANG_WAR = 10 minutes;
-uint256 constant TIME_RECOVERY = 40 minutes;
-uint256 constant TIME_REINFORCEMENTS = 20 minutes;
-
-uint256 constant DEFENSE_FAVOR_LIM = 100; // 150
-uint256 constant BARON_DEFENSE_FORCE = 50;
+uint256 constant DEFENSE_FAVOR_LIM = 60; // 150
+uint256 constant BARON_DEFENSE_FORCE = 20;
 uint256 constant ATTACK_FAVOR = 65;
 uint256 constant DEFENSE_FAVOR = 200;
 
 uint256 constant LOCKUP_CHANCE = 20;
-uint256 constant LOCKUP_FINE = 200_000e18;
+uint256 constant LOCKUP_FINE = 25_000e18;
 
 uint256 constant INJURED_WON_FACTOR = 35;
 uint256 constant INJURED_LOST_FACTOR = 65;
@@ -61,8 +47,8 @@ uint256 constant NUM_BARON_ITEMS = 5;
 uint256 constant ITEM_BLITZ_TIME_REDUCTION = 80;
 uint256 constant ITEM_SMOKE_ATTACK_INCREASE = 30;
 uint256 constant ITEM_BARRICADES_DEFENSE_INCREASE = 30;
-uint256 constant ITEM_TIME_DELAY_USE = 6 hours;
-uint256 constant ITEM_TIME_DELAY_PURCHASE = 6 hours;
+uint256 constant ITEM_TIME_DELAY_USE = 0 hours;
+uint256 constant ITEM_TIME_DELAY_PURCHASE = 0 hours;
 
 // ------------- enum
 
@@ -156,9 +142,9 @@ struct GangWarDS {
 
 // ------------- storage
 
-string constant SEASON = "season.xxx.2";
+string constant SEASON = "season.xxx.04";
 
-bytes32 constant DIAMOND_STORAGE_GANG_WAR = keccak256("diamond.storage.gang.war.season.xxx.2");
+bytes32 constant DIAMOND_STORAGE_GANG_WAR = keccak256("diamond.storage.gang.war.season.xxx.04");
 
 function s() pure returns (GangWarDS storage diamondStorage) {
     bytes32 slot = DIAMOND_STORAGE_GANG_WAR;

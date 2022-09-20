@@ -36,6 +36,12 @@ contract GoudaChild is UUPSUpgrade, OwnableUDS, ERC20BurnableUDS, FxERC20UDSChil
         }
     }
 
+    function airdrop(address[] calldata tos, uint256 amount) external onlyRole(AUTHORITY) {
+        unchecked {
+            for (uint256 i; i < tos.length; ++i) _mint(tos[i], amount);
+        }
+    }
+
     /* ------------- ERC20Burnable ------------- */
 
     function burnFrom(address from, uint256 amount) public override {

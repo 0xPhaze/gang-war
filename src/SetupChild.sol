@@ -31,8 +31,8 @@ contract SetupChild is SetupBase {
 
     function assertStorageSeasonSet() internal pure {
         require(DIAMOND_STORAGE_GANG_WAR == keccak256(bytes(string.concat("diamond.storage.gang.war.", SEASON))), 'Storage season does not match.'); // prettier-ignore
-        require(DIAMOND_STORAGE_GMC_MARKET == keccak256(bytes(string.concat("diamond.storage.gmc.market.", SEASON))), 'Storage season does not match.'); // prettier-ignore
-        require(DIAMOND_STORAGE_GANG_VAULT == keccak256(bytes(string.concat("diamond.storage.gang.vault.", SEASON))), 'Storage season does not match.'); // prettier-ignore
+        // require(DIAMOND_STORAGE_GMC_MARKET == keccak256(bytes(string.concat("diamond.storage.gmc.market.", SEASON))), 'Storage season does not match.'); // prettier-ignore
+        // require(DIAMOND_STORAGE_GANG_VAULT == keccak256(bytes(string.concat("diamond.storage.gang.vault.", SEASON))), 'Storage season does not match.'); // prettier-ignore
     }
 
     function setUpContracts() internal {
@@ -82,8 +82,6 @@ contract SetupChild is SetupBase {
             gmc,
             vault,
             badges,
-            seasonStart,
-            seasonEnd,
             connectionsPacked,
             coordinator,
             linkKeyHash,
@@ -152,7 +150,8 @@ contract SetupChild is SetupBase {
                 vault.grantRole(GANG_VAULT_CONTROLLER, address(game));
 
             if (game.briberyFee(address(gouda)) == 0) game.setBriberyFee(address(gouda), 2e18);
-            game.reset(occupants, yields);
+
+            // game.reset(occupants, yields);
         }
 
         if (block.chainid != CHAINID_TEST) {

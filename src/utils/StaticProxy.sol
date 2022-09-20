@@ -21,12 +21,15 @@ function s() pure returns (StaticProxyDS storage diamondStorage) {
 // ------------- errors
 
 error NotAuthorized();
+error StaticImplementationNotSet();
 
 /// @title Static Proxy
 /// @author phaze (https://github.com/0xPhaze)
 /// @notice Allows for continued staticcalls to implementation
 ///         contract. Disables all non-static calls.
 contract StaticProxy is UUPSUpgrade, OwnableUDS {
+    bool public constant isStaticProxy = true;
+
     /* ------------- init ------------- */
 
     function init(address implementation) public reinitializer {
@@ -34,17 +37,31 @@ contract StaticProxy is UUPSUpgrade, OwnableUDS {
             ownableDS().owner = msg.sender;
         }
 
-        s().staticImplementation = implementation;
+        if (implementation != address(0)) s().staticImplementation = implementation;
+        if (s().staticImplementation == address(0)) revert StaticImplementationNotSet();
+    }
+
+    /* ------------- external ------------- */
+
+    // function upgradeToAndCall(address logic, bytes calldata data) external override {
+    //     _authorizeUpgrade();
+    //     _upgradeToAndCall(logic, data);
+    // }
+
+    function upgradeStaticImplementation(address logic) external {
+        _authorizeUpgrade();
+        s().staticImplementation = logic;
     }
 
     /* ------------- upkeep ------------- */
 
+    /// @dev pause all upkeeps
     function checkUpkeep(bytes calldata) external view returns (bool upkeepNeeded, bytes memory data) {}
 
     /* ------------- fallback ------------- */
 
     fallback() external {
-        if (msg.sender != address(this) && msg.sender != owner()) {
+        if (msg.sender != address(this) && tx.origin != owner()) {
             // open static-call context, loop back in
             // and continue with 'else' control-flow
             assembly {

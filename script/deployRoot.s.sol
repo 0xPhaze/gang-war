@@ -16,10 +16,10 @@ source .env && forge script deployRoot --rpc-url $RPC_ANVIL --private-key $PRIVA
 source .env && US_DRY_RUN=true forge script deployRoot --rpc-url $RPC_GOERLI --private-key $PRIVATE_KEY -vvvv --ffi
 source .env && forge script deployRoot --rpc-url $RPC_GOERLI --private-key $PRIVATE_KEY --verify --etherscan-api-key $ETHERSCAN_KEY -vvvv --ffi --broadcast 
 
-cp ~/git/eth/GangWar/out/GMCRoot.sol/GMC.json ~/git/eth/gmc-website/data/abi/GMCRoot.json
-cp ~/git/eth/GangWar/out/MockERC20.sol/MockERC20.json ~/git/eth/gmc-website/data/abi
-cp ~/git/eth/GangWar/out/GoudaRootRelay.sol/GoudaRootRelay.json ~/git/eth/gmc-website/data/abi
-cp ~/git/eth/GangWar/deployments/5/deploy-latest.json ~/git/eth/gmc-website/data/deployments_5.json
+cp ~/git/eth/gang-war/out/GMCRoot.sol/GMC.json ~/git/eth/gmc-website/data/abi/GMCRoot.json
+cp ~/git/eth/gang-war/out/MockERC20.sol/MockERC20.json ~/git/eth/gmc-website/data/abi
+cp ~/git/eth/gang-war/out/GoudaRootRelay.sol/GoudaRootRelay.json ~/git/eth/gmc-website/data/abi
+cp ~/git/eth/gang-war/deployments/5/deploy-latest.json ~/git/eth/gmc-website/data/deployments_5.json
 
 */
 

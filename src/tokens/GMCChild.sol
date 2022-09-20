@@ -14,7 +14,8 @@ import {FxERC721EnumerableChild} from "fx-contracts/extensions/FxERC721Enumerabl
 
 import "solady/utils/LibString.sol";
 
-bytes32 constant DIAMOND_STORAGE_GMC_CHILD = keccak256("diamond.storage.gmc.child");
+// bytes32 constant DIAMOND_STORAGE_GMC_CHILD = keccak256("diamond.storage.gmc.child");
+bytes32 constant DIAMOND_STORAGE_GMC_CHILD = keccak256("diamond.storage.gmc.child.season.xxx.02"); // @note keep this
 
 struct GMCDS {
     mapping(uint256 => string) name;
@@ -188,6 +189,27 @@ contract GMCChild is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChild, GMCMarket
 
     function resyncIds(address to, uint256[] calldata ids) external onlyOwner {
         _registerIds(to, ids);
+    }
+
+    function resyncIds(
+        address to,
+        uint256[] calldata ids,
+        uint256 gang
+    ) external onlyOwner {
+        _registerIds(to, ids);
+        for (uint256 i; i < ids.length; ++i) s().gang[ids[i]] = gang + 1;
+    }
+
+    function resyncIds(
+        address[] calldata tos,
+        uint256[][] calldata ids,
+        uint256[] calldata gangs
+    ) external onlyOwner {
+        for (uint256 i; i < tos.length; ++i) {
+            _registerIds(tos[i], ids[i]);
+
+            for (uint256 j; j < ids[i].length; ++j) s().gang[ids[i][j]] = gangs[i] + 1;
+        }
     }
 
     function setGang(uint256[] calldata ids, uint256[] calldata gang) external onlyOwner {

@@ -7,7 +7,7 @@ import {AccessControlUDS} from "UDS/auth/AccessControlUDS.sol";
 
 // ------------- storage
 
-bytes32 constant DIAMOND_STORAGE_GANG_VAULT = keccak256("diamond.storage.gang.vault.season.xxx.2");
+bytes32 constant DIAMOND_STORAGE_GANG_VAULT = keccak256("diamond.storage.gang.vault.season.xxx.02");
 
 struct GangVaultDS {
     uint40[3] totalShares;
@@ -47,13 +47,15 @@ contract GangVault is UUPSUpgrade, AccessControlUDS {
         address[3] memory gangTokens,
         uint256 gangVaultFee
     ) {
+        // startTime = block.timestamp;
+        // endTime = block.timestamp + 48 hours;
         endTime = endTime_;
         startTime = startTime_;
         gangVaultFeePercent = gangVaultFee;
 
         require(startTime < endTime);
         require(gangVaultFee < 100);
-        require(block.timestamp <= startTime);
+        // require(block.timestamp <= startTime);
 
         token0 = GangToken(gangTokens[0]);
         token1 = GangToken(gangTokens[1]);
