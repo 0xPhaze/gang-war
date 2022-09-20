@@ -7,6 +7,7 @@ optimizer_runs = 100_000
 # eth_rpc_url = "${RPC_MUMBAI}"
 # eth_rpc_url = "https://rpc.ankr.com/polygon_mumbai"
 # private_key = "${PRIVATE_KEY}"
+libraries = []
 
 fs_permissions = [{ access = "read-write", path = "./" }]
 
