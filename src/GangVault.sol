@@ -7,7 +7,7 @@ import {AccessControlUDS} from "UDS/auth/AccessControlUDS.sol";
 
 // ------------- storage
 
-bytes32 constant DIAMOND_STORAGE_GANG_VAULT = keccak256("diamond.storage.gang.vault.season.xxx.02");
+bytes32 constant DIAMOND_STORAGE_GANG_VAULT = keccak256("diamond.storage.gang.vault.season.xxx.06");
 
 struct GangVaultDS {
     uint40[3] totalShares;

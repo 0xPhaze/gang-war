@@ -15,6 +15,7 @@ error MaxSupplyLocked();
 error InvalidSignature();
 error NonexistentToken();
 error InvalidPriceUnits();
+error InvalidMintChoice();
 error WhitelistNotActive();
 error PublicSaleNotActive();
 error SignatureExceedsLimit();
@@ -27,6 +28,8 @@ contract GMC is OwnableUDS, FxERC721MRoot {
     using ECDSA for bytes32;
 
     event SaleStateUpdate();
+    event LegendaryRaffle1Entered(address user);
+    event LegendaryRaffle2Entered(address user);
 
     // 8
     bool public publicSaleActive;
@@ -35,8 +38,9 @@ contract GMC is OwnableUDS, FxERC721MRoot {
     uint8 private publicPriceUnits;
     uint8 private whitelistPriceUnits;
 
-    // 16
+    // 32
     uint16 public maxSupply = 5555;
+    uint16 public maxSupplyGangs = 555;
     uint16 public constant MAX_PER_WALLET = 20;
 
     uint256 private constant PURCHASE_LIMIT = 5;
@@ -45,10 +49,8 @@ contract GMC is OwnableUDS, FxERC721MRoot {
     // 160
     address private signer = 0x68442589f40E8Fc3a9679dE62884c85C6E524888;
 
-    // 48
-    uint16 supply1;
-    uint16 supply2;
-    uint16 supply3;
+    // 64
+    uint16[4] public supplies;
 
     // 8
     bool public maxSupplyLocked;
@@ -67,6 +69,10 @@ contract GMC is OwnableUDS, FxERC721MRoot {
 
     /* ------------- view ------------- */
 
+    function totalSupply() public view override returns (uint256) {
+        return supplies[0];
+    }
+
     function publicPrice() public view returns (uint256) {
         return toPrice(publicPriceUnits);
     }
@@ -75,27 +81,44 @@ contract GMC is OwnableUDS, FxERC721MRoot {
         return toPrice(whitelistPriceUnits);
     }
 
+    function getGang(uint256 id) public view returns (uint256) {
+        return _getAux(id);
+    }
+
     /* ------------- external ------------- */
 
-    function mint(uint256 quantity, bool lock) external payable onlyEOA requireMintable(quantity) {
+    function mint(
+        uint256 quantity,
+        uint256 gang,
+        bool lock
+    ) external payable onlyEOA requireMintableSupply(quantity, gang) requireMintableByUser(quantity) {
         if (!publicSaleActive) revert PublicSaleNotActive();
         if (msg.value != publicPrice() * quantity) revert IncorrectValue();
 
-        if (lock) _mintLockedAndTransmit(msg.sender, quantity, 0);
-        else _mint(msg.sender, quantity);
+        if (quantity > 2) {
+            emit LegendaryRaffle1Entered(msg.sender);
+
+            // @note check this
+            if (totalSupply() < 1500 && (gang == 0 || (gang != 0 && supplies[gang] + quantity <= maxSupplyGangs)))
+                ++quantity;
+        }
+
+        if (lock) _mintLockedAndTransmit(msg.sender, quantity, uint48(gang));
+        else _mint(msg.sender, quantity, uint48(gang));
     }
 
     function whitelistMint(
         uint256 quantity,
+        uint256 gang,
         bool lock,
         uint256 limit,
         bytes calldata signature
-    ) external payable onlyEOA requireMintable(quantity) {
+    ) external payable onlyEOA requireMintableSupply(quantity, gang) requireMintableByUser(quantity) {
         if (!validSignature(signature, limit)) revert InvalidSignature();
         if (msg.value != whitelistPrice() * quantity) revert IncorrectValue();
 
-        if (lock) _mintLockedAndTransmit(msg.sender, quantity, 0);
-        else _mint(msg.sender, quantity);
+        if (lock) _mintLockedAndTransmit(msg.sender, quantity, uint48(gang));
+        else _mint(msg.sender, quantity, uint48(gang));
     }
 
     function lockAndTransmit(address from, uint256[] calldata tokenIds) external {
@@ -104,11 +127,6 @@ contract GMC is OwnableUDS, FxERC721MRoot {
 
     function unlockAndTransmit(address from, uint256[] calldata tokenIds) external {
         _unlockAndTransmit(from, tokenIds);
-    }
-
-    function transferOwnershipAndTransmit(address from, uint256[] calldata tokenIds) external {
-        _unlockAndTransmit(from, tokenIds);
-        _lockAndTransmit(from, tokenIds);
     }
 
     /* ------------- private ------------- */
@@ -127,8 +145,10 @@ contract GMC is OwnableUDS, FxERC721MRoot {
     function toPriceUnits(uint256 price) private pure returns (uint8) {
         unchecked {
             uint256 units;
+
             if (price % PRICE_UNIT != 0) revert InvalidPriceUnits();
             if ((units = price / PRICE_UNIT) > type(uint8).max) revert InvalidPriceUnits();
+
             return uint8(units);
         }
     }
@@ -158,6 +178,7 @@ contract GMC is OwnableUDS, FxERC721MRoot {
 
     function setPublicSaleActive(bool active) external onlyOwner {
         publicSaleActive = active;
+
         emit SaleStateUpdate();
     }
 
@@ -171,12 +192,12 @@ contract GMC is OwnableUDS, FxERC721MRoot {
 
     function airdrop(
         address[] calldata users,
-        uint256[] calldata amounts,
+        uint256 quantity,
+        uint48 gang,
         bool locked
-    ) external onlyOwner {
-        uint48 auxData = 0;
-        if (locked) for (uint256 i; i < users.length; ++i) _mintLockedAndTransmit(users[i], amounts[i], auxData);
-        else for (uint256 i; i < users.length; ++i) _mint(users[i], amounts[i]);
+    ) external onlyOwner requireMintableSupply(quantity * users.length, gang) {
+        if (locked) for (uint256 i; i < users.length; ++i) _mintLockedAndTransmit(users[i], quantity, gang);
+        else for (uint256 i; i < users.length; ++i) _mint(users[i], quantity, gang);
     }
 
     function withdraw() external onlyOwner {
@@ -190,7 +211,13 @@ contract GMC is OwnableUDS, FxERC721MRoot {
         token.transfer(msg.sender, balance);
     }
 
+    /* ------------- override ------------- */
+
     function _authorizeTunnelController() internal override onlyOwner {}
+
+    function _increaseTotalSupply(uint256 amount) internal override {
+        supplies[0] += uint16(amount);
+    }
 
     /* ------------- modifier ------------- */
 
@@ -199,11 +226,19 @@ contract GMC is OwnableUDS, FxERC721MRoot {
         _;
     }
 
-    modifier requireMintable(uint256 quantity) {
+    modifier requireMintableByUser(uint256 quantity) {
         unchecked {
             if (quantity > PURCHASE_LIMIT) revert ExceedsLimit();
-            if (totalSupply() + quantity > maxSupply) revert ExceedsLimit();
-            if (numMinted(msg.sender) + quantity > MAX_PER_WALLET) revert ExceedsLimit();
+            if (quantity + numMinted(msg.sender) > MAX_PER_WALLET) revert ExceedsLimit();
+        }
+        _;
+    }
+
+    modifier requireMintableSupply(uint256 quantity, uint256 gang) {
+        unchecked {
+            if (gang > 3) revert InvalidMintChoice();
+            if (quantity + supplies[0] > maxSupply) revert ExceedsLimit();
+            if (quantity + supplies[gang] > maxSupplyGangs && gang != 0) revert ExceedsLimit();
         }
         _;
     }
@@ -213,6 +248,9 @@ contract GMC is OwnableUDS, FxERC721MRoot {
     function tokenURI(uint256 id) public view override returns (string memory) {
         if (!_exists(id)) revert NonexistentToken();
 
-        return bytes(baseURI).length == 0 ? unrevealedURI : string.concat(baseURI, id.toString(), ".json");
+        return 
+            bytes(baseURI).length == 0 
+            ? unrevealedURI 
+            : string.concat(baseURI, id.toString(), ".json"); // prettier-ignore
     }
 }

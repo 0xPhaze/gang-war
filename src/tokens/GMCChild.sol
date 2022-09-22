@@ -15,7 +15,7 @@ import {FxERC721EnumerableChild} from "fx-contracts/extensions/FxERC721Enumerabl
 import "solady/utils/LibString.sol";
 
 // bytes32 constant DIAMOND_STORAGE_GMC_CHILD = keccak256("diamond.storage.gmc.child");
-bytes32 constant DIAMOND_STORAGE_GMC_CHILD = keccak256("diamond.storage.gmc.child.season.xxx.02"); // @note keep this
+bytes32 constant DIAMOND_STORAGE_GMC_CHILD = keccak256("diamond.storage.gmc.child.season.xxx.06");
 
 struct GMCDS {
     mapping(uint256 => string) name;
@@ -30,13 +30,13 @@ function s() pure returns (GMCDS storage diamondStorage) {
 
 error InvalidName();
 error NotAuthorized();
+error InvalidChoice();
+error GangstersAlreadyMinted();
 
 /// @title Gangsta Mice City Child
 /// @author phaze (https://github.com/0xPhaze)
 contract GMCChild is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChild, GMCMarket {
     using LibString for uint256;
-
-    event Transfer(address indexed from, address indexed to, uint256 indexed id);
 
     address public vault; // could make immutable
     string private baseURI;
@@ -108,7 +108,7 @@ contract GMCChild is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChild, GMCMarket
 
     /// @dev these hooks are called by Polygon's PoS bridge
     /// extra care must be taken such that these calls never fail!
-    /// called when `from` != `to` (3 cases):
+    /// Only called when `from != to` (3 cases):
     /// - `from` = 0
     /// - `to` = 0
     /// - `from`, `to` != 0
@@ -133,8 +133,6 @@ contract GMCChild is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChild, GMCMarket
         if (to != address(0)) {
             GangVault(vault).addShares(to, uint256(gangOf(id)), 100);
         }
-
-        emit Transfer(from, to, id);
     }
 
     function _afterStartRent(
@@ -147,6 +145,7 @@ contract GMCChild is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChild, GMCMarket
 
         GangVault(vault).transferShares(owner, renter, uint256(gang), uint8(renterShares));
 
+        // Mock a transfer
         emit Transfer(owner, renter, id);
     }
 
@@ -164,7 +163,7 @@ contract GMCChild is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChild, GMCMarket
     }
 
     /// @dev resets and re-calculates shares
-    function resyncShares() internal {
+    function _resyncShares() internal {
         uint256 idsLength = erc721BalanceOf(msg.sender);
 
         uint40[3] memory shares;
@@ -183,34 +182,51 @@ contract GMCChild is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChild, GMCMarket
 
     /* ------------- owner ------------- */
 
+    uint16[4] supplies;
+
+    function mint(uint256 gang) external {
+        uint256 startId = supplies[0] += 10;
+        uint256 gangSupply = supplies[gang] += 10;
+
+        if (gang == 0) revert InvalidChoice();
+        if (gangSupply > 3333) revert GangstersAlreadyMinted();
+        if (erc721BalanceOf(msg.sender) != 0) revert GangstersAlreadyMinted();
+
+        for (uint256 i; i < 10; ++i) {
+            _registerId(msg.sender, startId + i);
+
+            s().gang[startId + i] = gang;
+        }
+    }
+
     function resyncId(address to, uint256 id) external onlyOwner {
         _registerId(to, id);
     }
 
-    function resyncIds(address to, uint256[] calldata ids) external onlyOwner {
-        _registerIds(to, ids);
-    }
+    // function resyncIds(address to, uint256[] calldata ids) external onlyOwner {
+    //     _registerIds(to, ids);
+    // }
 
-    function resyncIds(
-        address to,
-        uint256[] calldata ids,
-        uint256 gang
-    ) external onlyOwner {
-        _registerIds(to, ids);
-        for (uint256 i; i < ids.length; ++i) s().gang[ids[i]] = gang + 1;
-    }
+    // function resyncIds(
+    //     address to,
+    //     uint256[] calldata ids,
+    //     uint256 gang
+    // ) external onlyOwner {
+    //     _registerIds(to, ids);
+    //     for (uint256 i; i < ids.length; ++i) s().gang[ids[i]] = gang + 1;
+    // }
 
-    function resyncIds(
-        address[] calldata tos,
-        uint256[][] calldata ids,
-        uint256[] calldata gangs
-    ) external onlyOwner {
-        for (uint256 i; i < tos.length; ++i) {
-            _registerIds(tos[i], ids[i]);
+    // function resyncIds(
+    //     address[] calldata tos,
+    //     uint256[][] calldata ids,
+    //     uint256[] calldata gangs
+    // ) external onlyOwner {
+    //     for (uint256 i; i < tos.length; ++i) {
+    //         _registerIds(tos[i], ids[i]);
 
-            for (uint256 j; j < ids[i].length; ++j) s().gang[ids[i][j]] = gangs[i] + 1;
-        }
-    }
+    //         for (uint256 j; j < ids[i].length; ++j) s().gang[ids[i][j]] = gangs[i] + 1;
+    //     }
+    // }
 
     function setGang(uint256[] calldata ids, uint256[] calldata gang) external onlyOwner {
         for (uint256 i; i < ids.length; ++i) s().gang[ids[i]] = gang[i] + 1;

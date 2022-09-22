@@ -107,6 +107,7 @@ struct District {
     uint256 lockupTime;
     uint256 yield;
     uint256 activeItems;
+    uint256 lockupTimeReduction;
     // variables from here on are not explicitly set
     // but only written to in the view functions for getters
     // don't read these directly in the contract!
@@ -142,9 +143,9 @@ struct GangWarDS {
 
 // ------------- storage
 
-string constant SEASON = "season.xxx.04";
+string constant SEASON = "season.xxx.06";
 
-bytes32 constant DIAMOND_STORAGE_GANG_WAR = keccak256("diamond.storage.gang.war.season.xxx.04");
+bytes32 constant DIAMOND_STORAGE_GANG_WAR = keccak256("diamond.storage.gang.war.season.xxx.06");
 
 function s() pure returns (GangWarDS storage diamondStorage) {
     bytes32 slot = DIAMOND_STORAGE_GANG_WAR;
