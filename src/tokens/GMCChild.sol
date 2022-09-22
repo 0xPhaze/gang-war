@@ -12,12 +12,15 @@ import {UUPSUpgrade} from "UDS/proxy/UUPSUpgrade.sol";
 import {FxERC721Child} from "fx-contracts/FxERC721Child.sol";
 import {FxERC721EnumerableChild} from "fx-contracts/extensions/FxERC721EnumerableChild.sol";
 
+import "solady/utils/ECDSA.sol";
 import "solady/utils/LibString.sol";
 
 // bytes32 constant DIAMOND_STORAGE_GMC_CHILD = keccak256("diamond.storage.gmc.child");
-bytes32 constant DIAMOND_STORAGE_GMC_CHILD = keccak256("diamond.storage.gmc.child.season.xxx.06");
+bytes32 constant DIAMOND_STORAGE_GMC_CHILD = keccak256("diamond.storage.gmc.child.season.xxx.07");
 
 struct GMCDS {
+    uint16[4] supplies;
+    uint256 currentBaronId;
     mapping(uint256 => string) name;
     mapping(address => string) playerName;
     mapping(uint256 => uint256) gang;
@@ -31,11 +34,13 @@ function s() pure returns (GMCDS storage diamondStorage) {
 error InvalidName();
 error NotAuthorized();
 error InvalidChoice();
+error InvalidSignature();
 error GangstersAlreadyMinted();
 
 /// @title Gangsta Mice City Child
 /// @author phaze (https://github.com/0xPhaze)
 contract GMCChild is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChild, GMCMarket {
+    using ECDSA for bytes32;
     using LibString for uint256;
 
     address public vault; // could make immutable
@@ -182,51 +187,88 @@ contract GMCChild is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChild, GMCMarket
 
     /* ------------- owner ------------- */
 
-    uint16[4] supplies;
+    uint16 constant NUM_GANGSTERS = 10;
+    address private constant signer = 0x68442589f40E8Fc3a9679dE62884c85C6E524888;
 
-    function mint(uint256 gang) external {
-        uint256 startId = supplies[0] += 10;
-        uint256 gangSupply = supplies[gang] += 10;
+    function mint(
+        uint256 gang,
+        bool isBaron,
+        bytes calldata signature
+    ) external {
+        // TODO add in
+        // if (erc721BalanceOf(msg.sender) != 0) revert GangstersAlreadyMinted();
+        if (!validSignature(signature, isBaron)) revert InvalidSignature();
+
+        _mint(msg.sender, gang, isBaron);
+    }
+
+    function _mint(
+        address to,
+        uint256 gang,
+        bool isBaron
+    ) private {
+        uint16 numGangsters = NUM_GANGSTERS;
+        if (isBaron) numGangsters *= 2;
+
+        uint256 startId = s().supplies[0] + 1;
+        uint256 gangSupply = s().supplies[gang] += numGangsters;
+
+        s().supplies[0] += numGangsters;
 
         if (gang == 0) revert InvalidChoice();
         if (gangSupply > 3333) revert GangstersAlreadyMinted();
-        if (erc721BalanceOf(msg.sender) != 0) revert GangstersAlreadyMinted();
 
-        for (uint256 i; i < 10; ++i) {
-            _registerId(msg.sender, startId + i);
+        for (uint256 i; i < numGangsters; ++i) {
+            _registerId(to, startId + i);
 
             s().gang[startId + i] = gang;
         }
+
+        if (isBaron) {
+            uint256 baronId = s().currentBaronId;
+            if (baronId == 0) {
+                s().currentBaronId = 10_000;
+
+                baronId = 10_000;
+            }
+
+            ++baronId;
+
+            if (baronId > 10_021) revert GangstersAlreadyMinted();
+
+            _registerId(to, baronId);
+
+            s().gang[baronId] = gang;
+        }
+    }
+
+    function airdrop(
+        address to,
+        uint256 gang,
+        bool isBaron
+    ) external onlyOwner {
+        _mint(to, gang, isBaron);
     }
 
     function resyncId(address to, uint256 id) external onlyOwner {
         _registerId(to, id);
     }
 
-    // function resyncIds(address to, uint256[] calldata ids) external onlyOwner {
-    //     _registerIds(to, ids);
-    // }
+    function resyncIds(
+        address to,
+        uint256[] calldata ids,
+        uint256 gang
+    ) external onlyOwner {
+        _registerIds(to, ids);
 
-    // function resyncIds(
-    //     address to,
-    //     uint256[] calldata ids,
-    //     uint256 gang
-    // ) external onlyOwner {
-    //     _registerIds(to, ids);
-    //     for (uint256 i; i < ids.length; ++i) s().gang[ids[i]] = gang + 1;
-    // }
+        for (uint256 i; i < ids.length; ++i) s().gang[ids[i]] = gang + 1;
+    }
 
-    // function resyncIds(
-    //     address[] calldata tos,
-    //     uint256[][] calldata ids,
-    //     uint256[] calldata gangs
-    // ) external onlyOwner {
-    //     for (uint256 i; i < tos.length; ++i) {
-    //         _registerIds(tos[i], ids[i]);
+    function validSignature(bytes calldata signature, bool isBaron) private view returns (bool) {
+        bytes32 hash = keccak256(abi.encode(address(this), msg.sender, isBaron));
 
-    //         for (uint256 j; j < ids[i].length; ++j) s().gang[ids[i][j]] = gangs[i] + 1;
-    //     }
-    // }
+        return hash.toEthSignedMessageHash().recover(signature) == signer;
+    }
 
     function setGang(uint256[] calldata ids, uint256[] calldata gang) external onlyOwner {
         for (uint256 i; i < ids.length; ++i) s().gang[ids[i]] = gang[i] + 1;

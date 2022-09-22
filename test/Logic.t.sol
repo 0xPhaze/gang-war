@@ -60,7 +60,7 @@ contract TestGangWarGameLogic is TestGangWar {
         game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, BARON_YAKUZA_1, false);
 
         vm.prank(alice);
-        game.joinGangAttack(DISTRICT_CARTEL_1, [GANGSTER_YAKUZA_1].toMemory());
+        game.joinGangAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, [GANGSTER_YAKUZA_1].toMemory());
 
         assertEq(game.getDistrict(DISTRICT_CARTEL_1).state, DISTRICT_STATE.REINFORCEMENT);
         assertEq(game.getDistrict(DISTRICT_CARTEL_1).stateCountdown, int256(TIME_REINFORCEMENTS));
@@ -169,11 +169,9 @@ contract TestGangWarGameLogic is TestGangWar {
         MockVRFCoordinator(coordinator).fulfillLatestRequest();
 
         vm.prank(bob);
-        vm.expectRevert(DistrictInvalidState.selector);
+        vm.expectRevert(CannotAttackDistrictOwnedByGang.selector);
 
         game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, BARON_YAKUZA_2, false);
-
-        skip(TIME_TRUCE);
     }
 
     /// verify baron state after attacking 2nd district
@@ -206,7 +204,7 @@ contract TestGangWarGameLogic is TestGangWar {
         game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, BARON_YAKUZA_1, false);
 
         vm.prank(alice);
-        game.joinGangAttack(DISTRICT_CARTEL_1, [GANGSTER_YAKUZA_1].toMemory());
+        game.joinGangAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, [GANGSTER_YAKUZA_1].toMemory());
 
         Gangster memory gangster = game.getGangster(GANGSTER_YAKUZA_1);
 
@@ -232,7 +230,7 @@ contract TestGangWarGameLogic is TestGangWar {
         game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_2, BARON_YAKUZA_2, false);
 
         vm.prank(alice);
-        game.joinGangAttack(DISTRICT_CARTEL_2, [GANGSTER_YAKUZA_2].toMemory());
+        game.joinGangAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_2, [GANGSTER_YAKUZA_2].toMemory());
 
         Gangster memory gangster = game.getGangster(GANGSTER_YAKUZA_2);
 
@@ -276,7 +274,7 @@ contract TestGangWarGameLogic is TestGangWar {
         game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_2, BARON_YAKUZA_1, false);
 
         vm.prank(alice);
-        game.joinGangAttack(DISTRICT_CARTEL_2, [GANGSTER_YAKUZA_1].toMemory());
+        game.joinGangAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_2, [GANGSTER_YAKUZA_1].toMemory());
 
         Gangster memory gangster = game.getGangster(GANGSTER_YAKUZA_1);
 
@@ -298,7 +296,7 @@ contract TestGangWarGameLogic is TestGangWar {
 
         // -------- perform fakeout
         vm.prank(alice);
-        game.joinGangAttack(DISTRICT_CARTEL_2, [GANGSTER_YAKUZA_1].toMemory());
+        game.joinGangAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_2, [GANGSTER_YAKUZA_1].toMemory());
 
         Gangster memory gangster = game.getGangster(GANGSTER_YAKUZA_1);
 
@@ -343,14 +341,14 @@ contract TestGangWarGameLogic is TestGangWar {
         vm.prank(alice);
         vm.expectRevert(DistrictInvalidState.selector);
 
-        game.joinGangAttack(DISTRICT_CARTEL_1, [GANGSTER_YAKUZA_1].toMemory());
+        game.joinGangAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, [GANGSTER_YAKUZA_1].toMemory());
 
         skip(TIME_GANG_WAR);
 
         vm.prank(alice);
         vm.expectRevert(DistrictInvalidState.selector);
 
-        game.joinGangAttack(DISTRICT_CARTEL_1, [GANGSTER_YAKUZA_1].toMemory());
+        game.joinGangAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, [GANGSTER_YAKUZA_1].toMemory());
 
         game.performUpkeep(abi.encode(1 << DISTRICT_CARTEL_1));
 
@@ -362,7 +360,7 @@ contract TestGangWarGameLogic is TestGangWar {
         vm.prank(alice);
         vm.expectRevert(BaronMustDeclareInitialAttack.selector);
 
-        game.joinGangAttack(DISTRICT_CARTEL_1, [GANGSTER_YAKUZA_1].toMemory());
+        game.joinGangAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, [GANGSTER_YAKUZA_1].toMemory());
     }
 
     /// Baron must lead an attack
@@ -370,7 +368,7 @@ contract TestGangWarGameLogic is TestGangWar {
         vm.expectRevert(BaronMustDeclareInitialAttack.selector);
 
         vm.prank(alice);
-        game.joinGangAttack(DISTRICT_CARTEL_1, [GANGSTER_YAKUZA_1].toMemory());
+        game.joinGangAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, [GANGSTER_YAKUZA_1].toMemory());
     }
 
     /// Call for NFT not owned by caller
@@ -381,7 +379,7 @@ contract TestGangWarGameLogic is TestGangWar {
         vm.expectRevert(NotAuthorized.selector);
 
         vm.prank(bob);
-        game.joinGangAttack(DISTRICT_CARTEL_1, [GANGSTER_YAKUZA_1].toMemory());
+        game.joinGangAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, [GANGSTER_YAKUZA_1].toMemory());
     }
 
     /// Invalid connecting district
@@ -400,7 +398,7 @@ contract TestGangWarGameLogic is TestGangWar {
         vm.expectRevert(IdsMustBeOfSameGang.selector);
 
         vm.prank(alice);
-        game.joinGangAttack(DISTRICT_CARTEL_1, [GANGSTER_YAKUZA_1, GANGSTER_CARTEL_1].toMemory());
+        game.joinGangAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, [GANGSTER_YAKUZA_1, GANGSTER_CARTEL_1].toMemory());
     }
 
     /// Attack as baron
@@ -411,7 +409,7 @@ contract TestGangWarGameLogic is TestGangWar {
         vm.expectRevert(TokenMustBeGangster.selector);
 
         vm.prank(bob);
-        game.joinGangAttack(DISTRICT_CARTEL_1, [BARON_YAKUZA_2].toMemory());
+        game.joinGangAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, [BARON_YAKUZA_2].toMemory());
     }
 
     /// Locked in attack/defense
@@ -433,7 +431,7 @@ contract TestGangWarGameLogic is TestGangWar {
         game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, BARON_YAKUZA_1, false);
 
         vm.prank(alice);
-        game.joinGangAttack(DISTRICT_CARTEL_1, [GANGSTER_YAKUZA_1].toMemory());
+        game.joinGangAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, [GANGSTER_YAKUZA_1].toMemory());
 
         skip(TIME_REINFORCEMENTS);
 
@@ -451,7 +449,7 @@ contract TestGangWarGameLogic is TestGangWar {
         vm.expectRevert(GangsterInactionable.selector);
 
         vm.prank(alice);
-        game.joinGangAttack(DISTRICT_CARTEL_2, [GANGSTER_YAKUZA_1].toMemory());
+        game.joinGangAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_2, [GANGSTER_YAKUZA_1].toMemory());
 
         // // try defending while locked
         // vm.prank(bob);
@@ -683,17 +681,17 @@ contract TestGangWarGameLogic is TestGangWar {
 
     //     vm.startPrank(bob);
 
-    //     game.bribery([GANGSTER_YAKUZA_1].toMemory(), address(gouda), false);
+    //     game.bribery([GANGSTER_YAKUZA_1].toMemory(), address(gouda));
 
     //     assertEq(address(gouda).balanceDiff(bob), -100);
     //     assertApproxEqAbs(game.getGangster(GANGSTER_YAKUZA_1).stateCountdown, int256(TIME_RECOVERY) / 2, 1);
 
-    //     game.bribery([GANGSTER_YAKUZA_1].toMemory(), address(gouda), false);
+    //     game.bribery([GANGSTER_YAKUZA_1].toMemory(), address(gouda));
 
     //     assertEq(address(gouda).balanceDiff(bob), -100);
     //     assertApproxEqAbs(game.getGangster(GANGSTER_YAKUZA_1).stateCountdown, int256(TIME_RECOVERY) / 4, 1);
 
-    //     game.bribery([GANGSTER_YAKUZA_1].toMemory(), address(gouda), false);
+    //     game.bribery([GANGSTER_YAKUZA_1].toMemory(), address(gouda));
 
     //     assertEq(address(gouda).balanceDiff(bob), -100);
     //     assertApproxEqAbs(game.getGangster(GANGSTER_YAKUZA_1).stateCountdown, int256(TIME_RECOVERY) / 8, 1);
@@ -704,7 +702,7 @@ contract TestGangWarGameLogic is TestGangWar {
 
     //     vm.expectRevert(InvalidToken.selector);
 
-    //     game.bribery([GANGSTER_YAKUZA_1].toMemory(), address(0x1337), false);
+    //     game.bribery([GANGSTER_YAKUZA_1].toMemory(), address(0x1337));
 
     //     assertEq(game.getGangster(GANGSTER_YAKUZA_1).stateCountdown, int256(TIME_RECOVERY));
     // }
@@ -717,7 +715,7 @@ contract TestGangWarGameLogic is TestGangWar {
         game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, BARON_YAKUZA_1, false);
 
         vm.prank(alice);
-        game.joinGangAttack(DISTRICT_CARTEL_1, [GANGSTER_YAKUZA_1].toMemory());
+        game.joinGangAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, [GANGSTER_YAKUZA_1].toMemory());
 
         skip(TIME_REINFORCEMENTS + TIME_GANG_WAR);
 
@@ -751,7 +749,7 @@ contract TestGangWarGameLogic is TestGangWar {
         game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, BARON_YAKUZA_1, false);
 
         vm.prank(alice);
-        game.joinGangAttack(DISTRICT_CARTEL_1, [GANGSTER_YAKUZA_1].toMemory());
+        game.joinGangAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, [GANGSTER_YAKUZA_1].toMemory());
 
         skip(100 days);
 
@@ -791,14 +789,14 @@ contract TestGangWarGameLogic is TestGangWar {
 
         vm.startPrank(bob);
 
-        game.bribery([GANGSTER_YAKUZA_1].toMemory(), address(gouda), true);
+        game.bribery([GANGSTER_YAKUZA_1].toMemory(), address(gouda));
 
         int256 timeLeft = (int256(TIME_LOCKUP) - 66) / 2;
 
         assertEq(address(gouda).balanceDiff(bob), -100);
         assertApproxEqAbs(game.getGangster(GANGSTER_YAKUZA_1).stateCountdown, timeLeft, 1);
 
-        game.bribery([GANGSTER_YAKUZA_1].toMemory(), address(gouda), true);
+        game.bribery([GANGSTER_YAKUZA_1].toMemory(), address(gouda));
 
         timeLeft /= 2;
 
@@ -810,7 +808,7 @@ contract TestGangWarGameLogic is TestGangWar {
         timeLeft -= 40;
         timeLeft /= 2;
 
-        game.bribery([GANGSTER_YAKUZA_1].toMemory(), address(gouda), true);
+        game.bribery([GANGSTER_YAKUZA_1].toMemory(), address(gouda));
 
         assertEq(address(gouda).balanceDiff(bob), -100);
         assertApproxEqAbs(game.getGangster(GANGSTER_YAKUZA_1).stateCountdown, timeLeft, 1);
@@ -822,7 +820,7 @@ contract TestGangWarGameLogic is TestGangWar {
         vm.prank(bob);
         vm.expectRevert(TokenMustBeGangster.selector);
 
-        game.bribery([BARON_YAKUZA_1].toMemory(), address(gouda), true);
+        game.bribery([BARON_YAKUZA_1].toMemory(), address(gouda));
     }
 
     /* ------------- badgesReward ------------- */
@@ -833,7 +831,7 @@ contract TestGangWarGameLogic is TestGangWar {
         game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, BARON_YAKUZA_1, false);
 
         vm.prank(alice);
-        game.joinGangAttack(DISTRICT_CARTEL_1, [GANGSTER_YAKUZA_1].toMemory());
+        game.joinGangAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, [GANGSTER_YAKUZA_1].toMemory());
 
         vm.prank(eve);
         game.joinGangDefense(DISTRICT_CARTEL_1, [GANGSTER_CARTEL_3].toMemory());
@@ -881,7 +879,7 @@ contract TestGangWarGameLogic is TestGangWar {
 
         // bob joins with alice's rented gangster
         vm.prank(bob);
-        game.joinGangAttack(DISTRICT_CARTEL_1, [GANGSTER_YAKUZA_1].toMemory());
+        game.joinGangAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, [GANGSTER_YAKUZA_1].toMemory());
 
         vm.prank(eve);
         game.joinGangDefense(DISTRICT_CARTEL_1, [GANGSTER_CARTEL_3].toMemory());

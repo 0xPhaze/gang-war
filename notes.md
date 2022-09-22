@@ -1,7 +1,6 @@
 
 # TODO
 
-- blitz state countdown reduction relative?
 - optimize storage
 
 

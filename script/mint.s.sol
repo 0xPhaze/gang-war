@@ -28,16 +28,16 @@ import "futils/futils.sol";
 contract mint is SetupChild {
     using futils for *;
 
-    function setUpUpgradeScripts() internal override {
-        UPGRADE_SCRIPTS_ATTACH_ONLY = true;
-    }
+    // function setUpUpgradeScripts() internal override {
+    //     UPGRADE_SCRIPTS_ATTACH_ONLY = true;
+    // }
 
     function run() external {
         startBroadcastIfNotDryRun();
 
         setUpContracts();
 
-        game.reset(occupants, yields);
+        // game.reset(occupants, yields);
         // game.setBaronItemBalances(0.range(NUM_BARON_ITEMS), 3.repeat(NUM_BARON_ITEMS));
         // game.addBaronItemBalances(2, 0.range(NUM_BARON_ITEMS), 3.repeat(NUM_BARON_ITEMS));
 
@@ -48,9 +48,19 @@ contract mint is SetupChild {
         //     // sendGangsters();
         // }
 
+        // gmc.mint(
+        //     1,
+        //     false,
+        //     hex"9d5563389e09f91f4c499be2894cad32a7095b670ab8e58aff6124cd97a75a9868e4d746cba95443de82931fbf4b4a4c895fea7633a1a0c56b6b6fc7f70c15691c"
+        // );
+
+        // console.log(gmc.ownerOf(1));
+        // console.log(gmc.ownerOf(2));
+        // console.log(gmc.ownerOf(3));
+
         vm.stopBroadcast();
 
-        storeDeployments();
+        // storeDeployments();
     }
 
     // uint256 constant NUM_BARONS_PER_PLAYER = 1;

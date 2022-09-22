@@ -31,20 +31,20 @@ contract TestBaronItems is TestGangWar {
         vm.prank(alice);
         vm.expectRevert(TokenMustBeBaron.selector);
 
-        game.purchaseBaronItem(GANGSTER_YAKUZA_1, 0);
+        game.purchaseBaronItem(GANGSTER_YAKUZA_1, 0, 0);
     }
 
     function test_purchaseBaronItem_InvalidItem() public {
         vm.prank(bob);
         vm.expectRevert(InvalidItemId.selector);
 
-        game.purchaseBaronItem(BARON_YAKUZA_1, 100_000);
+        game.purchaseBaronItem(BARON_YAKUZA_1, 100_000, 0);
     }
 
     function test_purchaseBaronItem_NotAuthorized() public {
         vm.expectRevert(NotAuthorized.selector);
 
-        game.purchaseBaronItem(BARON_YAKUZA_1, ITEM_BLITZ);
+        game.purchaseBaronItem(BARON_YAKUZA_1, ITEM_BLITZ, 0);
     }
 
     function test_purchaseBaronItem_ArithmeticError() public {
@@ -55,7 +55,7 @@ contract TestBaronItems is TestGangWar {
         vm.prank(bob);
         vm.expectRevert(stdError.arithmeticError);
 
-        game.purchaseBaronItem(BARON_YAKUZA_1, ITEM_BLITZ);
+        game.purchaseBaronItem(BARON_YAKUZA_1, ITEM_BLITZ, 0);
     }
 
     function test_purchaseBaronItem(uint256 id) private {
@@ -70,12 +70,12 @@ contract TestBaronItems is TestGangWar {
         uint256[3] memory balancesBefore = vault.getGangVaultBalance(0);
 
         vm.prank(bob);
-        game.purchaseBaronItem(BARON_YAKUZA_1, id);
+        game.purchaseBaronItem(BARON_YAKUZA_1, id, 0);
 
         // skip(1 days);
 
         vm.prank(bob);
-        game.purchaseBaronItem(BARON_CARTEL_1, id);
+        game.purchaseBaronItem(BARON_CARTEL_1, id, 0);
 
         uint256[3] memory balancesAfter = vault.getGangVaultBalance(0);
 
@@ -83,6 +83,32 @@ contract TestBaronItems is TestGangWar {
         assertEq(balancesBefore[1] - balancesAfter[1], itemCosts[id] / 2);
         assertEq(balancesBefore[2] - balancesAfter[2], itemCosts[id] / 2);
     }
+
+    // function test_purchaseBaronItemExchange(uint256 id) private {
+    //     uint256[] memory itemCosts = [
+    //         uint256(3_000_000e18), // ITEM_SEWER
+    //         3_000_000e18, // ITEM_BLITZ
+    //         2_250_000e18, // ITEM_BARRICADES
+    //         2_250_000e18, // ITEM_SMOKE
+    //         1_500_000e18 // ITEM_911
+    //     ].toMemory();
+
+    //     uint256[3] memory balancesBefore = vault.getGangVaultBalance(0);
+
+    //     vm.prank(bob);
+    //     game.purchaseBaronItem(BARON_YAKUZA_1, id, 0);
+
+    //     // skip(1 days);
+
+    //     vm.prank(bob);
+    //     game.purchaseBaronItem(BARON_CARTEL_1, id, 0);
+
+    //     uint256[3] memory balancesAfter = vault.getGangVaultBalance(0);
+
+    //     assertEq(balancesBefore[0] - balancesAfter[0], itemCosts[id] / 2);
+    //     assertEq(balancesBefore[1] - balancesAfter[1], itemCosts[id] / 2);
+    //     assertEq(balancesBefore[2] - balancesAfter[2], itemCosts[id] / 2);
+    // }
 
     function test_purchaseBaronItems() public {
         // need yield on all gang tokens

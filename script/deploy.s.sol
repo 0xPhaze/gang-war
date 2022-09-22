@@ -30,6 +30,7 @@ cp ~/git/eth/gang-war/out/GangWar.sol/GangWar.json ~/git/eth/gmc-website/data/ab
 cp ~/git/eth/gang-war/out/GangVault.sol/GangVault.json ~/git/eth/gmc-website/data/abi
 cp ~/git/eth/gang-war/out/Mice.sol/Mice.json ~/git/eth/gmc-website/data/abi
 cp ~/git/eth/gang-war/deployments/80001/deploy-latest.json ~/git/eth/gmc-website/data/deployments_80001.json
+cp ~/git/eth/gang-war/js/signaturesDemo.json ~/git/eth/gmc-website/data/
 
 */
 
@@ -40,6 +41,8 @@ contract deploy is SetupChild {
         startBroadcastIfNotDryRun();
 
         setUpContracts();
+
+        // game.reset(occupants, yields);
 
         vm.stopBroadcast();
 

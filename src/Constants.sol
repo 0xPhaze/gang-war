@@ -23,6 +23,7 @@ uint256 constant DEFENSE_FAVOR = 200;
 
 uint256 constant LOCKUP_CHANCE = 20;
 uint256 constant LOCKUP_FINE = 25_000e18;
+uint256 constant RECOVERY_BARON_COST = 25_000e18;
 
 uint256 constant INJURED_WON_FACTOR = 35;
 uint256 constant INJURED_LOST_FACTOR = 65;
@@ -107,7 +108,7 @@ struct District {
     uint256 lockupTime;
     uint256 yield;
     uint256 activeItems;
-    uint256 lockupTimeReduction;
+    uint256 blitzTimeReduction;
     // variables from here on are not explicitly set
     // but only written to in the view functions for getters
     // don't read these directly in the contract!
@@ -118,10 +119,7 @@ struct District {
 }
 
 struct GangWarDS {
-    address gmc;
-    address vault;
-    uint256 districtConnections; // packed bool matrix
-    uint256 lockupTime;
+    /*      id      =>   */
     mapping(uint256 => District) districts;
     mapping(uint256 => Gangster) gangsters;
     /*      id      => price  */
@@ -143,9 +141,9 @@ struct GangWarDS {
 
 // ------------- storage
 
-string constant SEASON = "season.xxx.06";
+string constant SEASON = "season.xxx.07";
 
-bytes32 constant DIAMOND_STORAGE_GANG_WAR = keccak256("diamond.storage.gang.war.season.xxx.06");
+bytes32 constant DIAMOND_STORAGE_GANG_WAR = keccak256("diamond.storage.gang.war.season.xxx.07");
 
 function s() pure returns (GangWarDS storage diamondStorage) {
     bytes32 slot = DIAMOND_STORAGE_GANG_WAR;
