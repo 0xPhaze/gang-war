@@ -165,9 +165,7 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
         uint256 baronId,
         uint256 itemId,
         uint256 exchangeType
-    ) external {
-        // requireActiveSeason();
-
+    ) external isActiveSeason {
         _verifyAuthorizedUser(msg.sender, baronId);
 
         uint256 micePrice = s().baronItemCost[itemId];
@@ -191,9 +189,7 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
         uint256 baronId,
         uint256 itemId,
         uint256 districtId
-    ) external {
-        // requireActiveSeason();
-
+    ) external isActiveSeason {
         _verifyAuthorizedUser(msg.sender, baronId);
 
         uint256 lastUse = s().baronItemLastUsed[baronId];
@@ -252,9 +248,7 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
         emit BaronItemUsed(districtId, baronId, gang, itemId);
     }
 
-    function bribery(uint256[] calldata tokenIds, address token) external {
-        // requireActiveSeason();
-
+    function bribery(uint256[] calldata tokenIds, address token) external isActiveSeason {
         uint256 tokenFee = s().briberyFee[token];
         if (tokenFee == 0) revert InvalidToken();
 
@@ -281,9 +275,7 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
         }
     }
 
-    function recoverBaron(uint256 baronId, uint256 exchangeType) external {
-        // requireActiveSeason();
-
+    function recoverBaron(uint256 baronId, uint256 exchangeType) external isActiveSeason {
         _verifyAuthorizedUser(msg.sender, baronId);
 
         if (!isBaron(baronId)) revert TokenMustBeBaron();
@@ -310,9 +302,7 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
         uint256 districtId,
         uint256 tokenId,
         bool sewers
-    ) external {
-        // requireActiveSeason();
-
+    ) external isActiveSeason {
         _verifyAuthorizedUser(msg.sender, tokenId);
 
         Gang gang = gangOf(tokenId);
@@ -351,9 +341,7 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
         emit BaronAttackDeclared(connectingId, districtId, gang, tokenId);
     }
 
-    function baronDeclareDefense(uint256 districtId, uint256 tokenId) external {
-        // requireActiveSeason();
-
+    function baronDeclareDefense(uint256 districtId, uint256 tokenId) external isActiveSeason {
         Gang gang = gangOf(tokenId);
         District storage district = s().districts[districtId];
 
@@ -384,9 +372,7 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
         uint256 districtIdFrom,
         uint256 districtIdTo,
         uint256[] calldata tokenIds
-    ) external {
-        // requireActiveSeason();
-
+    ) external isActiveSeason {
         Gang gang = gangOf(tokenIds[0]);
 
         District storage district = s().districts[districtIdTo];
@@ -402,9 +388,7 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
         _enterGangWar(districtIdTo, tokenIds, gang, true);
     }
 
-    function joinGangDefense(uint256 districtIdTo, uint256[] calldata tokenIds) external {
-        // requireActiveSeason();
-
+    function joinGangDefense(uint256 districtIdTo, uint256[] calldata tokenIds) external isActiveSeason {
         Gang gang = gangOf(tokenIds[0]);
         District storage districtTo = s().districts[districtIdTo];
 
@@ -414,9 +398,7 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
         _enterGangWar(districtIdTo, tokenIds, gang, false);
     }
 
-    function exitGangWar(uint256[] calldata tokenIds) external {
-        // requireActiveSeason();
-
+    function exitGangWar(uint256[] calldata tokenIds) external isActiveSeason {
         for (uint256 i; i < tokenIds.length; ++i) {
             uint256 tokenId = tokenIds[i];
 
@@ -940,23 +922,12 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
         delete s().requestIdToDistrictIds[requestId];
     }
 
-    // function fulfillRandomWords(uint256 requestId, uint256[] calldata randomWords) internal override {}
-
     /* ------------- modifier ------------- */
 
-    // function requireActiveSeason() internal view {
-    //     // Removing this for now
-    //     if (block.timestamp < seasonStart || seasonEnd < block.timestamp) revert GangWarNotActive();
-    //     // if (!active) revert GangWarNotActive();
-    //     // _;
-    // }
-
-    // modifier isActiveSeason() {
-    //     // Removing this for now
-    //     if (block.timestamp < seasonStart || seasonEnd < block.timestamp) revert GangWarNotActive();
-    //     // if (!active) revert GangWarNotActive();
-    //     _;
-    // }
+    modifier isActiveSeason() {
+        if (block.timestamp < seasonStart || seasonEnd < block.timestamp) revert GangWarNotActive();
+        _;
+    }
 
     /* ------------- owner ------------- */
 
