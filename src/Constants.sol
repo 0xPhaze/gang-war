@@ -7,11 +7,8 @@ import {LibPackedMap} from "./lib/LibPackedMap.sol";
 
 // ------------- Constants
 
-// new Date(' Sep 24 2022 15:00:00 GMT+0200 (Central European Summer Time)').getTime() / 1000
-// uint256 constant SEASON_START_DATE = 1664024400;
-// uint256 constant SEASON_END_DATE = 1664197200;
-uint256 constant SEASON_START_DATE = 1664184600;
-uint256 constant SEASON_END_DATE = 1664017200;
+uint256 constant SEASON_START_DATE = 1664024400;
+uint256 constant SEASON_END_DATE = 1664197200;
 
 uint256 constant TIME_TRUCE = 20 minutes;
 uint256 constant TIME_LOCKUP = 60 minutes;

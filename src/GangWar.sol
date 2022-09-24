@@ -678,16 +678,6 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
         return (DISTRICT_STATE.POST_GANG_WAR, stateCountdown);
     }
 
-    function init2() external onlyOwner {
-        // s().districts[2].occupants = Gang(0);
-        // s().districts[2].yield = 1_300_000;
-        // s().districts[11].occupants = Gang(0);
-        // s().districts[11].yield = 700_000;
-        // s().districts[17].occupants = Gang(1);
-        // s().districts[17].yield = 1_000_000;
-         s().districts[17].token = Gang(1);
-    }
-
     function _advanceDistrictRound(uint256 districtId) private {
         District storage district = s().districts[districtId];
 

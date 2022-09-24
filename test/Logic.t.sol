@@ -163,10 +163,9 @@ contract TestGangWarGameLogic is TestGangWar {
         vm.expectRevert(DistrictInvalidState.selector);
 
         game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, BARON_YAKUZA_2, false);
-
         game.performUpkeep(abi.encode(1 << DISTRICT_CARTEL_1));
 
-        MockVRFCoordinator(coordinator).fulfillLatestRequest();
+        MockVRFCoordinator(coordinator).fulfillLatestRequest(99);
 
         vm.prank(bob);
         vm.expectRevert(CannotAttackDistrictOwnedByGang.selector);

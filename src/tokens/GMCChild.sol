@@ -124,20 +124,20 @@ contract GMCChild is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChild, GMCMarket
     ) internal override {
         super._afterIdRegistered(from, to, id);
 
-        // if (from != address(0)) {
-        //     // make sure any active rental is cleaned up
-        //     // so that shares invariant holds.
-        //     // calls `_afterEndRent` if rental is active.
-        //     _cleanUpOffer(from, id);
+        if (from != address(0)) {
+            // make sure any active rental is cleaned up
+            // so that shares invariant holds.
+            // calls `_afterEndRent` if rental is active.
+            _cleanUpOffer(from, id);
 
-        //     // @dev: this call seems like a danger point that could possibly
-        //     // fail during fxPortal call. Fails when gangVault storage is reset.
-        //     try GangVault(vault).removeShares(from, uint256(gangOf(id)), 100) {} catch {}
-        // }
+            // @dev: this call seems like a danger point that could possibly
+            // fail during fxPortal call. Fails when gangVault storage is reset.
+            try GangVault(vault).removeShares(from, uint256(gangOf(id)), 100) {} catch {}
+        }
 
-        // if (to != address(0)) {
-            // GangVault(vault).addShares(to, uint256(gangOf(id)), 100);
-        // }
+        if (to != address(0)) {
+            GangVault(vault).addShares(to, uint256(gangOf(id)), 100);
+        }
     }
 
     function _afterStartRent(
@@ -199,7 +199,7 @@ contract GMCChild is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChild, GMCMarket
         if (!validSignature(signature, isBaron)) revert InvalidSignature();
 
         uint16 numGangstersToMint = uint16(NUM_GANGSTERS - erc721BalanceOf(msg.sender));
-        
+
         _mintGangsters(msg.sender, gang, numGangstersToMint);
     }
 

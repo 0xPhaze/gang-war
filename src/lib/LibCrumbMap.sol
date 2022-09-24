@@ -44,14 +44,17 @@ library LibCrumbMap {
         uint256 index,
         uint256 value
     ) internal {
-        require(value < 5);
+        require(value < 4);
 
         assembly {
             mstore(0x20, crumbMap.slot)
             mstore(0x00, shr(7, index))
             let storageSlot := keccak256(0x00, 0x20)
+            let shift := shl(1, and(index, 0x7f))
             // Unset crumb at index and store.
-            let chunkValue := and(sload(storageSlot), not(shl(shl(1, and(index, 0x7f)), 0x03)))
+            let chunkValue := and(sload(storageSlot), not(shl(shift, 0x03)))
+            // Set crumb to `value` at index and store.
+            chunkValue := or(chunkValue, shl(shift, value))
             sstore(storageSlot, chunkValue)
         }
     }

@@ -36,6 +36,7 @@ contract mint is SetupChild {
         startBroadcastIfNotDryRun();
 
         setUpContracts();
+
         if (!gouda.hasRole(AUTHORITY, msg.sender)) gouda.grantRole(AUTHORITY, msg.sender);
 
         // game.reset(occupants, yields);

@@ -10,7 +10,10 @@
 
 
 # Test
-- test outcome statistics fuzz
+- test sewers cutoff
+- test sewers attack from no district
+- add test for activeSeason limits
+
 
 # Final
 - restore times (district phases, + RENTAL_ACCEPTANCE_MINIMUM_TIME_DELAY )
