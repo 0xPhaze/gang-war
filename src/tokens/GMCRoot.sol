@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import {OwnableUDS} from "UDS/auth/OwnableUDS.sol";
-import {FxERC721MRoot} from "fx-contracts/extensions/FxERC721MRoot.sol";
+import {FxERC721MRoot} from "ERC721M/extensions/FxERC721MRoot.sol";
 import {ERC20UDS as ERC20} from "UDS/tokens/ERC20UDS.sol";
 
 import "solady/utils/ECDSA.sol";
@@ -24,12 +24,12 @@ error ContractCallNotAllowed();
 /// @title Gangsta Mice City Root
 /// @author phaze (https://github.com/0xPhaze)
 contract GMC is OwnableUDS, FxERC721MRoot {
-    using LibString for uint256;
     using ECDSA for bytes32;
+    using LibString for uint256;
 
     event SaleStateUpdate();
-    event LegendaryRaffle1Entered(address user);
-    event LegendaryRaffle2Entered(address user);
+    event FirstLegendaryRaffleEntered(address user);
+    event SecondLegendaryRaffleEntered(address user);
 
     // 8
     bool public publicSaleActive;
@@ -82,7 +82,7 @@ contract GMC is OwnableUDS, FxERC721MRoot {
     }
 
     function getGang(uint256 id) public view returns (uint256) {
-        return _getAux(id);
+        return getAux(id);
     }
 
     /* ------------- external ------------- */
@@ -95,16 +95,7 @@ contract GMC is OwnableUDS, FxERC721MRoot {
         if (!publicSaleActive) revert PublicSaleNotActive();
         if (msg.value != publicPrice() * quantity) revert IncorrectValue();
 
-        if (quantity > 2) {
-            emit LegendaryRaffle1Entered(msg.sender);
-
-            // @note check this
-            if (totalSupply() < 1500 && (gang == 0 || (gang != 0 && supplies[gang] + quantity <= maxSupplyGangs)))
-                ++quantity;
-        }
-
-        if (lock) _mintLockedAndTransmit(msg.sender, quantity, uint48(gang));
-        else _mint(msg.sender, quantity, uint48(gang));
+        mintUnchecked(msg.sender, quantity, gang, lock);
     }
 
     function whitelistMint(
@@ -117,8 +108,7 @@ contract GMC is OwnableUDS, FxERC721MRoot {
         if (!validSignature(signature, limit)) revert InvalidSignature();
         if (msg.value != whitelistPrice() * quantity) revert IncorrectValue();
 
-        if (lock) _mintLockedAndTransmit(msg.sender, quantity, uint48(gang));
-        else _mint(msg.sender, quantity, uint48(gang));
+        mintUnchecked(msg.sender, quantity, gang, lock);
     }
 
     function lockAndTransmit(address from, uint256[] calldata tokenIds) external {
@@ -133,6 +123,7 @@ contract GMC is OwnableUDS, FxERC721MRoot {
 
     function validSignature(bytes calldata signature, uint256 limit) private view returns (bool) {
         bytes32 hash = keccak256(abi.encode(address(this), msg.sender, limit));
+
         return hash.toEthSignedMessageHash().recover(signature) == signer;
     }
 
@@ -153,6 +144,31 @@ contract GMC is OwnableUDS, FxERC721MRoot {
         }
     }
 
+    function mintUnchecked(
+        address to,
+        uint256 quantity,
+        uint256 gang,
+        bool lock
+    ) private {
+        if (quantity > 2) {
+            emit FirstLegendaryRaffleEntered(to);
+        }
+        if (
+            quantity > 2 &&
+            supplies[0] < 1500 &&
+            (gang == 0 || (gang != 0 && supplies[gang] + quantity <= maxSupplyGangs))
+        ) {
+            ++quantity;
+        }
+
+        if (lock) {
+            emit SecondLegendaryRaffleEntered(to);
+        }
+
+        if (lock) _mintLockedAndTransmit(to, quantity, uint48(gang));
+        else _mint(to, quantity, uint48(gang));
+    }
+
     /* ------------- owner ------------- */
 
     function lockMaxSupply() external onlyOwner {
@@ -165,6 +181,7 @@ contract GMC is OwnableUDS, FxERC721MRoot {
 
     function setMaxSupply(uint16 value) external onlyOwner {
         if (maxSupplyLocked) revert MaxSupplyLocked();
+
         maxSupply = value;
     }
 
@@ -203,11 +220,13 @@ contract GMC is OwnableUDS, FxERC721MRoot {
     function withdraw() external onlyOwner {
         uint256 balance = address(this).balance;
         (bool success, ) = msg.sender.call{value: balance}("");
+
         if (!success) revert TransferFailed();
     }
 
     function recoverToken(ERC20 token) external onlyOwner {
         uint256 balance = token.balanceOf(address(this));
+
         token.transfer(msg.sender, balance);
     }
 

@@ -23,3 +23,6 @@
 [submodule "lib/fx-contracts"]
 	path = lib/fx-contracts
 	url = https://github.com/0xPhaze/fx-contracts
+[submodule "lib/ERC721M"]
+	path = lib/ERC721M
+	url = https://github.com/0xPhaze/ERC721M

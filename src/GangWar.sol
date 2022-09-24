@@ -56,6 +56,8 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
     GMC public immutable gmc;
     GangToken public immutable badges;
     GangVault public immutable vault;
+    // uint256 private seasonStart;
+    // uint256 private seasonEnd;
 
     uint256 immutable packedDistrictConnections;
 
@@ -63,6 +65,8 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
         GMC gmc_,
         GangVault vault_,
         GangToken badges_,
+        // uint256 seasonStart_,
+        // uint256 seasonEnd_,
         uint256 connections,
         address coordinator,
         bytes32 keyHash,
@@ -73,6 +77,10 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
         gmc = gmc_;
         vault = vault_;
         badges = badges_;
+        // seasonStart = seasonStart_;
+        // seasonEnd = seasonEnd_;
+        // seasonStart = 1664184600;
+        // seasonEnd = 1664188200;
         packedDistrictConnections = connections;
     }
 
@@ -157,7 +165,9 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
         uint256 baronId,
         uint256 itemId,
         uint256 exchangeType
-    ) external isActiveSeason {
+    ) external {
+        // requireActiveSeason();
+
         _verifyAuthorizedUser(msg.sender, baronId);
 
         uint256 micePrice = s().baronItemCost[itemId];
@@ -181,7 +191,9 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
         uint256 baronId,
         uint256 itemId,
         uint256 districtId
-    ) external isActiveSeason {
+    ) external {
+        // requireActiveSeason();
+
         _verifyAuthorizedUser(msg.sender, baronId);
 
         uint256 lastUse = s().baronItemLastUsed[baronId];
@@ -240,7 +252,9 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
         emit BaronItemUsed(districtId, baronId, gang, itemId);
     }
 
-    function bribery(uint256[] calldata tokenIds, address token) external isActiveSeason {
+    function bribery(uint256[] calldata tokenIds, address token) external {
+        // requireActiveSeason();
+
         uint256 tokenFee = s().briberyFee[token];
         if (tokenFee == 0) revert InvalidToken();
 
@@ -267,7 +281,9 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
         }
     }
 
-    function recoverBaron(uint256 baronId, uint256 exchangeType) external isActiveSeason {
+    function recoverBaron(uint256 baronId, uint256 exchangeType) external {
+        // requireActiveSeason();
+
         _verifyAuthorizedUser(msg.sender, baronId);
 
         if (!isBaron(baronId)) revert TokenMustBeBaron();
@@ -294,7 +310,9 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
         uint256 districtId,
         uint256 tokenId,
         bool sewers
-    ) external isActiveSeason {
+    ) external {
+        // requireActiveSeason();
+
         _verifyAuthorizedUser(msg.sender, tokenId);
 
         Gang gang = gangOf(tokenId);
@@ -333,7 +351,9 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
         emit BaronAttackDeclared(connectingId, districtId, gang, tokenId);
     }
 
-    function baronDeclareDefense(uint256 districtId, uint256 tokenId) external isActiveSeason {
+    function baronDeclareDefense(uint256 districtId, uint256 tokenId) external {
+        // requireActiveSeason();
+
         Gang gang = gangOf(tokenId);
         District storage district = s().districts[districtId];
 
@@ -364,7 +384,9 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
         uint256 districtIdFrom,
         uint256 districtIdTo,
         uint256[] calldata tokenIds
-    ) external isActiveSeason {
+    ) external {
+        // requireActiveSeason();
+
         Gang gang = gangOf(tokenIds[0]);
 
         District storage district = s().districts[districtIdTo];
@@ -380,7 +402,9 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
         _enterGangWar(districtIdTo, tokenIds, gang, true);
     }
 
-    function joinGangDefense(uint256 districtIdTo, uint256[] calldata tokenIds) external isActiveSeason {
+    function joinGangDefense(uint256 districtIdTo, uint256[] calldata tokenIds) external {
+        // requireActiveSeason();
+
         Gang gang = gangOf(tokenIds[0]);
         District storage districtTo = s().districts[districtIdTo];
 
@@ -390,7 +414,9 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
         _enterGangWar(districtIdTo, tokenIds, gang, false);
     }
 
-    function exitGangWar(uint256[] calldata tokenIds) external isActiveSeason {
+    function exitGangWar(uint256[] calldata tokenIds) external {
+        // requireActiveSeason();
+
         for (uint256 i; i < tokenIds.length; ++i) {
             uint256 tokenId = tokenIds[i];
 
@@ -918,12 +944,19 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
 
     /* ------------- modifier ------------- */
 
-    modifier isActiveSeason() {
-        // Removing this for now
-        // if (block.timestamp < seasonStart || seasonEnd < block.timestamp) revert GangWarNotActive();
-        // if (!active) revert GangWarNotActive();
-        _;
-    }
+    // function requireActiveSeason() internal view {
+    //     // Removing this for now
+    //     if (block.timestamp < seasonStart || seasonEnd < block.timestamp) revert GangWarNotActive();
+    //     // if (!active) revert GangWarNotActive();
+    //     // _;
+    // }
+
+    // modifier isActiveSeason() {
+    //     // Removing this for now
+    //     if (block.timestamp < seasonStart || seasonEnd < block.timestamp) revert GangWarNotActive();
+    //     // if (!active) revert GangWarNotActive();
+    //     _;
+    // }
 
     /* ------------- owner ------------- */
 

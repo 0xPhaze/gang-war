@@ -36,8 +36,9 @@ contract mint is SetupChild {
         startBroadcastIfNotDryRun();
 
         setUpContracts();
+        if (!gouda.hasRole(AUTHORITY, msg.sender)) gouda.grantRole(AUTHORITY, msg.sender);
 
-        // game.reset(occupants, yields);
+        game.reset(occupants, yields);
         // game.setBaronItemBalances(0.range(NUM_BARON_ITEMS), 3.repeat(NUM_BARON_ITEMS));
         // game.addBaronItemBalances(2, 0.range(NUM_BARON_ITEMS), 3.repeat(NUM_BARON_ITEMS));
 
