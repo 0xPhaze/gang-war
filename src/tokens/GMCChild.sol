@@ -187,7 +187,7 @@ contract GMCChild is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChild, GMCMarket
 
     /* ------------- owner ------------- */
 
-    uint16 constant NUM_GANGSTERS = 5;
+    uint16 constant NUM_GANGSTERS = 10;
     address private constant signer = 0x68442589f40E8Fc3a9679dE62884c85C6E524888;
 
     function mint(
@@ -195,62 +195,61 @@ contract GMCChild is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChild, GMCMarket
         bool isBaron,
         bytes calldata signature
     ) external {
-        // TODO add in
-        if (erc721BalanceOf(msg.sender) != 0) revert GangstersAlreadyMinted();
+        if (erc721BalanceOf(msg.sender) >= NUM_GANGSTERS) revert GangstersAlreadyMinted();
         if (!validSignature(signature, isBaron)) revert InvalidSignature();
 
-        _mint(msg.sender, gang, isBaron);
+        uint16 numGangstersToMint = uint16(NUM_GANGSTERS - erc721BalanceOf(msg.sender));
+        
+        _mintGangsters(msg.sender, gang, numGangstersToMint);
     }
 
-    function airdropBarons(address[] calldata tos, uint256[] calldata gangs) external onlyOwner {
-        for (uint256 i; i < tos.length; i++) {
-            if (erc721BalanceOf(tos[i]) == 0) {
-                _mint(tos[i], gangs[i], true);
-            }
-        }
-    }
-
-    function _mint(
+    function _mintGangsters(
         address to,
         uint256 gang,
-        bool isBaron
+        uint16 numGangstersToMint
     ) private {
-        uint16 numGangsters = NUM_GANGSTERS;
-        if (isBaron) numGangsters *= 2;
-
         uint256 startId = s().supplies[0] + 1;
-        uint256 gangSupply = s().supplies[gang] += numGangsters;
+        uint256 gangSupply = s().supplies[gang] += numGangstersToMint;
 
-        s().supplies[0] += numGangsters;
+        s().supplies[0] += numGangstersToMint;
 
         if (gang == 0) revert InvalidChoice();
         if (gangSupply > 3333) revert GangstersAlreadyMinted();
 
-        for (uint256 i; i < numGangsters; ++i) {
+        for (uint256 i; i < numGangstersToMint; ++i) {
             _registerId(to, startId + i);
 
             s().gang[startId + i] = gang;
         }
+    }
 
-        if (isBaron) {
+    function resyncBarons(address[] calldata tos, uint256[] calldata gangs) external onlyOwner {
+        s().currentBaronId = 10_000;
+
+        for (uint256 i; i < tos.length; i++) {
+            // mint baron
             uint256 baronId = s().currentBaronId;
             if (baronId == 0) baronId = 10_000;
+
             s().currentBaronId = ++baronId;
 
             if (baronId > 10_021) revert GangstersAlreadyMinted();
 
-            _registerId(to, baronId);
+            _registerId(tos[i], baronId);
 
-            s().gang[baronId] = gang;
+            s().gang[baronId] = gangs[i];
+
+            // mint gangsters
+            uint256 currentBalance = erc721BalanceOf(tos[i]);
+
+            if (currentBalance < NUM_GANGSTERS * 2 + 1) {
+                uint16 numGangstersToMint = uint16(NUM_GANGSTERS * 2 + 1 - currentBalance);
+
+                if (numGangstersToMint != 0) _mintGangsters(tos[i], gangs[i], numGangstersToMint);
+            }
+
+            // if (numGangstersToMint != 0) _mintGangsters(tos[i], gangs[i], numGangstersToMint);
         }
-    }
-
-    function airdrop(
-        address to,
-        uint256 gang,
-        bool isBaron
-    ) external onlyOwner {
-        _mint(to, gang, isBaron);
     }
 
     function resyncId(address to, uint256 id) external onlyOwner {

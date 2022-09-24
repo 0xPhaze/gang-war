@@ -156,11 +156,11 @@ contract SetupChild is SetupBase {
             if (game.briberyFee(address(gouda)) == 0) game.setBriberyFee(address(gouda), 2e18);
             
 
-            game.setBaronItemCost(ITEM_SEWER, 300_000e18);
-            game.setBaronItemCost(ITEM_BLITZ, 300_000e18);
-            game.setBaronItemCost(ITEM_BARRICADES, 225_000e18);
-            game.setBaronItemCost(ITEM_SMOKE, 225_000e18);
-            game.setBaronItemCost(ITEM_911, 150_000e18);
+            // game.setBaronItemCost(ITEM_SEWER, 300_000e18);
+            // game.setBaronItemCost(ITEM_BLITZ, 300_000e18);
+            // game.setBaronItemCost(ITEM_BARRICADES, 225_000e18);
+            // game.setBaronItemCost(ITEM_SMOKE, 225_000e18);
+            // game.setBaronItemCost(ITEM_911, 150_000e18);
 
             // game.reset(occupants, yields);
         }

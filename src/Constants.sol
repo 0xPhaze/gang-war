@@ -144,9 +144,9 @@ struct GangWarDS {
 
 // ------------- storage
 
-string constant SEASON = "season.xxx.07";
+string constant SEASON = "season.xxx.10";
 
-bytes32 constant DIAMOND_STORAGE_GANG_WAR = keccak256("diamond.storage.gang.war.season.xxx.07");
+bytes32 constant DIAMOND_STORAGE_GANG_WAR = keccak256("diamond.storage.gang.war.season.xxx.10");
 
 function s() pure returns (GangWarDS storage diamondStorage) {
     bytes32 slot = DIAMOND_STORAGE_GANG_WAR;

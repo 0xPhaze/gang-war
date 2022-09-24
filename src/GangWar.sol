@@ -381,7 +381,8 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
         uint256 baronAttackId = district.baronAttackId;
         Gang attackerGang = gangOf(baronAttackId);
 
-        if (districtFrom.occupants != gang) revert ConnectingDistrictNotOwnedByGang();
+        if (districtFrom.occupants != gang && (district.activeItems >> ITEM_SEWER) & 1 == 0)
+            revert ConnectingDistrictNotOwnedByGang();
         if (districtFrom.baronAttackId != 0) revert ConnectingDistrictUnderAttack();
         if (baronAttackId == 0 || attackerGang != gang) revert BaronMustDeclareInitialAttack();
 
@@ -677,16 +678,28 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
         return (DISTRICT_STATE.POST_GANG_WAR, stateCountdown);
     }
 
+    function init2() external onlyOwner {
+        // s().districts[2].occupants = Gang(0);
+        // s().districts[2].yield = 1_300_000;
+        // s().districts[11].occupants = Gang(0);
+        // s().districts[11].yield = 700_000;
+        // s().districts[17].occupants = Gang(1);
+        // s().districts[17].yield = 1_000_000;
+         s().districts[17].token = Gang(1);
+    }
+
     function _advanceDistrictRound(uint256 districtId) private {
         District storage district = s().districts[districtId];
 
-        uint256 nextRoundId = district.roundId + 1;
-
-        delete s().districts[districtId];
-
-        district.roundId = nextRoundId;
         district.attackers = Gang.NONE;
+        district.activeItems = 0;
+        district.baronAttackId = 0;
+        district.baronDefenseId = 0;
         district.lastOutcomeTime = block.timestamp;
+        district.attackDeclarationTime = 0;
+        district.blitzTimeReduction = 0;
+
+        ++district.roundId;
     }
 
     function _call911Now(uint256 districtId) private {

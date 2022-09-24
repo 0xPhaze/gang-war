@@ -28,9 +28,9 @@ import "futils/futils.sol";
 contract mint is SetupChild {
     using futils for *;
 
-    // function setUpUpgradeScripts() internal override {
-    //     UPGRADE_SCRIPTS_ATTACH_ONLY = true;
-    // }
+    function setUpUpgradeScripts() internal override {
+        UPGRADE_SCRIPTS_ATTACH_ONLY = true;
+    }
 
     function run() external {
         startBroadcastIfNotDryRun();
@@ -48,6 +48,8 @@ contract mint is SetupChild {
         //     sendBarons();
         //     // sendGangsters();
         // }
+
+        // game.init2();
 
         // gmc.mint(
         //     1,
