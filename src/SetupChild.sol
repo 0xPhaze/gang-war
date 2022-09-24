@@ -68,8 +68,8 @@ contract SetupChild is SetupBase {
 
         // uint256 seasonStart = block.chainid == 31337 ? block.timestamp : SEASON_START_DATE;
         // uint256 seasonEnd = block.chainid == 31337 ? type(uint256).max : SEASON_END_DATE;
-        uint256 seasonStart = 1664017200; //1664024400
-        uint256 seasonEnd = 1664017936;
+        uint256 seasonStart = 1664024400;
+        uint256 seasonEnd = 1664197200;
 
         bytes memory miceArgs = abi.encode(tokens[0], tokens[1], tokens[2], badges);
         bytes memory vaultArgs = abi.encode(seasonStart, seasonEnd, tokens[0], tokens[1], tokens[2], GANG_VAULT_FEE); // prettier-ignore
