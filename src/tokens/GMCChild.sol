@@ -187,7 +187,7 @@ contract GMCChild is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChild, GMCMarket
 
     /* ------------- owner ------------- */
 
-    uint16 constant NUM_GANGSTERS = 10;
+    uint16 constant NUM_GANGSTERS = 5;
     address private constant signer = 0x68442589f40E8Fc3a9679dE62884c85C6E524888;
 
     function mint(
@@ -196,7 +196,7 @@ contract GMCChild is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChild, GMCMarket
         bytes calldata signature
     ) external {
         // TODO add in
-        // if (erc721BalanceOf(msg.sender) != 0) revert GangstersAlreadyMinted();
+        if (erc721BalanceOf(msg.sender) != 0) revert GangstersAlreadyMinted();
         if (!validSignature(signature, isBaron)) revert InvalidSignature();
 
         _mint(msg.sender, gang, isBaron);

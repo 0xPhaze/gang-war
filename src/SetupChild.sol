@@ -68,8 +68,8 @@ contract SetupChild is SetupBase {
 
         // uint256 seasonStart = block.chainid == 31337 ? block.timestamp : SEASON_START_DATE;
         // uint256 seasonEnd = block.chainid == 31337 ? type(uint256).max : SEASON_END_DATE;
-        uint256 seasonStart = 1664190000;
-        uint256 seasonEnd = 1664191800;
+        uint256 seasonStart = 1664017200; //1664024400
+        uint256 seasonEnd = 1664017936;
 
         bytes memory miceArgs = abi.encode(tokens[0], tokens[1], tokens[2], badges);
         bytes memory vaultArgs = abi.encode(seasonStart, seasonEnd, tokens[0], tokens[1], tokens[2], GANG_VAULT_FEE); // prettier-ignore
@@ -154,6 +154,13 @@ contract SetupChild is SetupBase {
                 vault.grantRole(GANG_VAULT_CONTROLLER, address(game));
 
             if (game.briberyFee(address(gouda)) == 0) game.setBriberyFee(address(gouda), 2e18);
+            
+
+            game.setBaronItemCost(ITEM_SEWER, 300_000e18);
+            game.setBaronItemCost(ITEM_BLITZ, 300_000e18);
+            game.setBaronItemCost(ITEM_BARRICADES, 225_000e18);
+            game.setBaronItemCost(ITEM_SMOKE, 225_000e18);
+            game.setBaronItemCost(ITEM_911, 150_000e18);
 
             // game.reset(occupants, yields);
         }
