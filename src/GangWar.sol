@@ -56,8 +56,8 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
     GMC public immutable gmc;
     GangToken public immutable badges;
     GangVault public immutable vault;
-    // uint256 private seasonStart;
-    // uint256 private seasonEnd;
+    uint256 private seasonStart;
+    uint256 private seasonEnd;
 
     uint256 immutable packedDistrictConnections;
 
@@ -65,8 +65,8 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
         GMC gmc_,
         GangVault vault_,
         GangToken badges_,
-        // uint256 seasonStart_,
-        // uint256 seasonEnd_,
+        uint256 seasonStart_,
+        uint256 seasonEnd_,
         uint256 connections,
         address coordinator,
         bytes32 keyHash,
@@ -77,8 +77,8 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
         gmc = gmc_;
         vault = vault_;
         badges = badges_;
-        // seasonStart = seasonStart_;
-        // seasonEnd = seasonEnd_;
+        seasonStart = seasonStart_;
+        seasonEnd = seasonEnd_;
         // seasonStart = 1664184600;
         // seasonEnd = 1664188200;
         packedDistrictConnections = connections;
