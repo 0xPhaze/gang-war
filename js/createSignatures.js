@@ -7,6 +7,8 @@ const dataBarons = require("./dataBarons.json");
 const dataGangsters = require("./dataGangsters.json");
 const deployments = require("../deployments/80001/deploy-latest.json");
 
+deployments.GMCChild = "0xA6eEC0D4dACF63697f669f21ee58A49cB13EaB77";
+
 let wallet = new ethers.Wallet(process.env.PRIVATE_KEY);
 
 const signatures = {
@@ -51,6 +53,8 @@ const main = async () => {
 
     signatures.gangsters[player.toLowerCase()] = await wallet.signMessage(ethers.utils.arrayify(messageHash));
   }
+
+  signatures.GMCChild = deployments.GMCChild;
 
   fs.writeFile("signaturesDemo.json", JSON.stringify(signatures, null, 2), console.error);
 };

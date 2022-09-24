@@ -154,7 +154,6 @@ contract SetupChild is SetupBase {
                 vault.grantRole(GANG_VAULT_CONTROLLER, address(game));
 
             if (game.briberyFee(address(gouda)) == 0) game.setBriberyFee(address(gouda), 2e18);
-            
 
             // game.setBaronItemCost(ITEM_SEWER, 300_000e18);
             // game.setBaronItemCost(ITEM_BLITZ, 300_000e18);

@@ -92,6 +92,16 @@ contract TestGangWarOutcome is Test {
         }
     }
 
+    // function test_gangWarWonProbProperties() public {
+    //     uint256 attackForce = 5;
+    //     uint256 defenseForce = 5;
+    //     bool baronDefense = false;
+
+    //     uint256 p = gangWarWonProbFn(attackForce, defenseForce, baronDefense);
+
+    //     console.log((p * 10000) >> 128);
+    // }
+
     function test_isInjuredProperties(
         uint256 attackForce,
         uint256 defenseForce,
