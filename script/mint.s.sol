@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import {ERC1967Proxy} from "UDS/proxy/ERC1967Proxy.sol";
 import {SetupChild} from "../src/SetupChild.sol";
 
-import "/Constants.sol";
+import "/GangWar.sol";
 import "forge-std/Script.sol";
 
 /* 

@@ -1,16 +1,18 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import "/Constants.sol";
+import "/GangWar.sol";
 import "/lib/VRFConsumerV2.sol";
 
 import {Mice} from "/tokens/Mice.sol";
-import {GangWar} from "/GangWar.sol";
+// import {GangWar} from "/GangWar.sol";
 import {GMCChild} from "/tokens/GMCChild.sol";
 import {GangToken} from "/tokens/GangToken.sol";
 import {GoudaChild} from "/tokens/GoudaChild.sol";
 import {StaticProxy} from "/utils/StaticProxy.sol";
+import {LibPackedMap} from "./lib/LibPackedMap.sol";
 import {DIAMOND_STORAGE_GMC_MARKET} from "/GMCMarket.sol";
+import {DIAMOND_STORAGE_GANG_WAR, SEASON} from "/GangWar.sol";
 import {DIAMOND_STORAGE_GANG_VAULT, GangVault} from "/GangVault.sol";
 
 import "./SetupBase.sol";

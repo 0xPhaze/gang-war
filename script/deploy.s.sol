@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import {SetupChild} from "../src/SetupChild.sol";
 
-import "/Constants.sol";
+import "/GangWar.sol";
 
 import "forge-std/Script.sol";
 import "futils/futils.sol";

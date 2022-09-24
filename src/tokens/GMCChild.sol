@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import {Gang} from "../Constants.sol";
-import {GangWar} from "../GangWar.sol";
+// import {Gang} from "../Constants.sol";
+import {Gang, GangWar} from "../GangWar.sol";
 import {GangVault} from "../GangVault.sol";
 import {GMCMarket, Offer} from "../GMCMarket.sol";
 
