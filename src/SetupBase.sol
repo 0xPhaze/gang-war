@@ -5,12 +5,11 @@ import "forge-std/Script.sol";
 
 import "/lib/VRFConsumerV2.sol";
 
+import {MockFxTunnel} from "fx-contracts/../test/mocks/MockFxTunnel.sol";
 import {UpgradeScripts} from "upgrade-scripts/UpgradeScripts.sol";
-
-import {MockVRFCoordinator} from "../test/mocks/MockVRFCoordinator.sol";
-
 import {FxBaseRootTunnel} from "fx-contracts/base/FxBaseRootTunnel.sol";
 import {FxBaseChildTunnel} from "fx-contracts/base/FxBaseChildTunnel.sol";
+import {MockVRFCoordinator} from "../test/mocks/MockVRFCoordinator.sol";
 
 contract SetupBase is UpgradeScripts {
     address coordinator;
@@ -78,16 +77,21 @@ contract SetupBase is UpgradeScripts {
             fxRoot = 0x3d1d3E34f7fB6D26245E6640E1c50710eFFf15bA;
             fxRootCheckpointManager = 0x2890bA17EfE978480615e330ecB65333b880928e;
         } else if (block.chainid == CHAINID_MUMBAI) {
-            chainIdRoot = CHAINID_GOERLI;
+            // chainIdRoot = CHAINID_GOERLI;
+            // fxChild = 0xCf73231F28B7331BBe3124B907840A94851f9f11;
 
-            fxChild = 0xCf73231F28B7331BBe3124B907840A94851f9f11;
+            // link these on same chain via MockTunnel for testing
+            fxRoot = setUpContract("MockFxTunnel");
+            fxChild = fxRoot;
+            chainIdRoot = CHAINID_MUMBAI;
+            chainIdChild = CHAINID_MUMBAI;
         } else if (block.chainid == CHAINID_TEST) {
+            // link these on same chain via MockTunnel for testing
+            fxRoot = setUpContract("MockFxTunnel");
+            fxChild = fxRoot;
             chainIdRoot = CHAINID_TEST;
             chainIdChild = CHAINID_TEST;
-        } else if (block.chainid == CHAINID_RINKEBY) {
-            chainIdRoot = CHAINID_RINKEBY;
-            chainIdChild = CHAINID_RINKEBY;
-        }
+        } else if (block.chainid == CHAINID_RINKEBY) {}
 
         if (fxRoot != address(0)) vm.label(fxRoot, "FXROOT");
         if (fxChild != address(0)) vm.label(fxChild, "FXCHILD");
@@ -98,8 +102,11 @@ contract SetupBase is UpgradeScripts {
         if (chainIdChild == 0) revert("Child chain id unset.");
 
         address fxChildTunnel = FxBaseRootTunnel(root).fxChildTunnel();
-        address latestFxChildTunnel = loadLatestDeployedAddress(childKey, chainIdChild);
+        address latestFxChildTunnel = registeredContractAddress[chainIdChild][childKey]; // can be on same chain for testing
 
+        if (UPGRADE_SCRIPTS_BYPASS) return FxBaseRootTunnel(root).setFxChildTunnel(latestFxChildTunnel);
+
+        if (latestFxChildTunnel == address(0)) latestFxChildTunnel = loadLatestDeployedAddress(childKey, chainIdChild);
         if (latestFxChildTunnel == address(0)) {
             console.log("\nWARNING: No latest deployment found for [%s] on child chain %s:", childKey, chainIdChild);
 
@@ -120,8 +127,11 @@ contract SetupBase is UpgradeScripts {
         if (chainIdRoot == 0) revert("Root chain id unset.");
 
         address fxRootTunnel = FxBaseChildTunnel(child).fxRootTunnel();
-        address latestFxRootTunnel = loadLatestDeployedAddress(rootKey, chainIdRoot);
+        address latestFxRootTunnel = registeredContractAddress[chainIdRoot][rootKey]; // can be on same chain for testing
 
+        if (UPGRADE_SCRIPTS_BYPASS) return FxBaseChildTunnel(child).setFxRootTunnel(latestFxRootTunnel);
+
+        if (latestFxRootTunnel == address(0)) latestFxRootTunnel = loadLatestDeployedAddress(rootKey, chainIdRoot);
         if (latestFxRootTunnel == address(0)) {
             console.log("\nWARNING: No latest %s deployment found for root chain %s:", rootKey, chainIdRoot);
             console.log("!! current fxRootTunnel (%s) not linked !!", fxRootTunnel);

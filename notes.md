@@ -1,12 +1,15 @@
 
 # TODO
 
-- optimize storage
+
+- add crumbmap gangs for GMCChild
+- setupChild deploy pipeline, link locally + goerli
+- SafeHouse mint VRF
+- fix GMCChild sync / remove mint
 
 
 # Frontend
 - add name entry for gangster profile
-- add in function getGangAccumulatedBalance() external view returns (uint256[3][3])
 
 
 # Test
@@ -14,12 +17,9 @@
 - test sewers attack from no district
 - add test for activeSeason limits
 
-
 # Final
 - restore times (district phases, + RENTAL_ACCEPTANCE_MINIMUM_TIME_DELAY )
 - test purchaseItems delay
-
-# XChain testing
 
 
 stats:

@@ -144,13 +144,13 @@ contract TestGangWarMarket is TestGangWar {
 
         gmc.acceptOffer(1);
 
-        assertEq(gmc.getActiveOffer(1).renter, tester);
+        assertEq(gmc.getActiveOffer(1).renter, self);
         assertEq(gmc.getActiveOffer(1).renterShare, 40);
-        assertEq(gmc.getRentedIds(tester), [1].toMemory());
+        assertEq(gmc.getRentedIds(self), [1].toMemory());
 
         int256[3] memory sharesDiff;
 
-        sharesDiff = vaultSharesDiff(tester);
+        sharesDiff = vaultSharesDiff(self);
         assertEq(sharesDiff[0], 40);
         assertEq(sharesDiff[1], 0);
         assertEq(sharesDiff[2], 0);
@@ -178,11 +178,11 @@ contract TestGangWarMarket is TestGangWar {
 
         assertEq(gmc.getActiveOffer(1).renter, address(0));
         assertEq(gmc.getActiveOffer(1).renterShare, 40);
-        assertEq(gmc.getRentedIds(tester), new uint256[](0));
+        assertEq(gmc.getRentedIds(self), new uint256[](0));
 
         int256[3] memory sharesDiff;
 
-        sharesDiff = vaultSharesDiff(tester);
+        sharesDiff = vaultSharesDiff(self);
         assertEq(sharesDiff[0], -40);
         assertEq(sharesDiff[1], 0);
         assertEq(sharesDiff[2], 0);
@@ -201,11 +201,11 @@ contract TestGangWarMarket is TestGangWar {
 
         assertEq(gmc.getActiveOffer(1).renter, address(0));
         assertEq(gmc.getActiveOffer(1).renterShare, 40);
-        assertEq(gmc.getRentedIds(tester), new uint256[](0));
+        assertEq(gmc.getRentedIds(self), new uint256[](0));
 
         int256[3] memory sharesDiff;
 
-        sharesDiff = vaultSharesDiff(tester);
+        sharesDiff = vaultSharesDiff(self);
         assertEq(sharesDiff[0], -40);
         assertEq(sharesDiff[1], 0);
         assertEq(sharesDiff[2], 0);
@@ -235,7 +235,7 @@ contract TestGangWarMarket is TestGangWar {
 
         assertEq(gmc.getActiveOffer(1).renter, address(0));
         assertEq(gmc.getActiveOffer(1).renterShare, 0);
-        assertEq(gmc.getRentedIds(tester), new uint256[](0));
+        assertEq(gmc.getRentedIds(self), new uint256[](0));
 
         int256[3] memory sharesDiff = vaultSharesDiff(alice);
         assertEq(sharesDiff[0], 0);
@@ -251,11 +251,11 @@ contract TestGangWarMarket is TestGangWar {
 
         assertEq(gmc.getActiveOffer(1).renter, address(0));
         assertEq(gmc.getActiveOffer(1).renterShare, 0);
-        assertEq(gmc.getRentedIds(tester), new uint256[](0));
+        assertEq(gmc.getRentedIds(self), new uint256[](0));
 
         int256[3] memory sharesDiff;
 
-        sharesDiff = vaultSharesDiff(tester);
+        sharesDiff = vaultSharesDiff(self);
         assertEq(sharesDiff[0], -40);
         assertEq(sharesDiff[1], 0);
         assertEq(sharesDiff[2], 0);
@@ -277,7 +277,7 @@ contract TestGangWarMarket is TestGangWar {
 
         assertEq(gmc.getActiveOffer(1).renter, address(0));
         assertEq(gmc.getActiveOffer(1).renterShare, 0);
-        assertEq(gmc.getRentedIds(tester), new uint256[](0));
+        assertEq(gmc.getRentedIds(self), new uint256[](0));
 
         int256[3] memory sharesDiff = vaultSharesDiff(alice);
         assertEq(sharesDiff[0], -100);
@@ -289,17 +289,17 @@ contract TestGangWarMarket is TestGangWar {
         test_acceptOffer();
 
         vaultSharesDiff(alice);
-        vaultSharesDiff(tester);
+        vaultSharesDiff(self);
 
         gmc.resyncId(address(0), 1);
 
         assertEq(gmc.getActiveOffer(1).renter, address(0));
         assertEq(gmc.getActiveOffer(1).renterShare, 0);
-        assertEq(gmc.getRentedIds(tester), new uint256[](0));
+        assertEq(gmc.getRentedIds(self), new uint256[](0));
 
         int256[3] memory sharesDiff;
 
-        sharesDiff = vaultSharesDiff(tester);
+        sharesDiff = vaultSharesDiff(self);
         assertEq(sharesDiff[0], -40);
         assertEq(sharesDiff[1], 0);
         assertEq(sharesDiff[2], 0);

@@ -37,6 +37,17 @@ contract TestGangWarGameLogic is TestGangWar {
         assertTrue(yield[0][0] > 0);
         assertEq(yield[0][0], yield[1][1]);
         assertEq(yield[0][0], yield[2][2]);
+
+        assertEq(gmc.gangOf(1), Gang.YAKUZA);
+        assertEq(gmc.gangOf(2), Gang.CARTEL);
+        assertEq(gmc.gangOf(3), Gang.CYBERP);
+        assertEq(gmc.gangOf(4), Gang.YAKUZA);
+        assertEq(gmc.gangOf(5), Gang.CARTEL);
+        assertEq(gmc.gangOf(6), Gang.CYBERP);
+
+        assertEq(gmc.gangOf(10_001), Gang.YAKUZA);
+        assertEq(gmc.gangOf(10_002), Gang.CARTEL);
+        assertEq(gmc.gangOf(10_003), Gang.CYBERP);
     }
 
     /* ------------- districtState() & gangsterState() ------------- */

@@ -47,9 +47,6 @@ contract SetupChild is SetupBase {
 
         if (coordinator == address(0) || linkKeyHash == 0 || linkSubId == 0) revert("Invalid Chainlink setup.");
 
-        address gmcImpl = setUpContract("GMCChild", abi.encode(address(0)), "GMCChildImplementation");
-        gmc = GMCChild(setUpProxy(gmcImpl, abi.encodeWithSelector(GMCChild.init.selector), "GMCChild"));
-
         bytes memory goudaArgs = abi.encode(fxChild);
         bytes memory goudaInit = abi.encodeWithSelector(GoudaChild.init.selector);
 
@@ -71,12 +68,18 @@ contract SetupChild is SetupBase {
         uint256 seasonStart = block.chainid == 31337 ? block.timestamp : SEASON_START_DATE;
         uint256 seasonEnd = block.chainid == 31337 ? type(uint256).max : SEASON_END_DATE;
 
-        bytes memory miceArgs = abi.encode(tokens[0], tokens[1], tokens[2], badges);
         bytes memory vaultArgs = abi.encode(seasonStart, seasonEnd, tokens[0], tokens[1], tokens[2], GANG_VAULT_FEE); // prettier-ignore
-
         address vaultImpl = setUpContract("GangVault", vaultArgs, "GangVaultImplementation");
         vault = GangVault(setUpProxy(vaultImpl, abi.encode(GangVault.init.selector), "Vault"));
 
+        bool DEMO = false;
+        string memory GMCContractName = DEMO ? "GMCChildDemo" : "GMCChild";
+
+        bytes memory gmcArgs = abi.encode(fxChild, address(vault));
+        address gmcImpl = setUpContract(GMCContractName, gmcArgs, "GMCChildImplementation");
+        gmc = GMCChild(setUpProxy(gmcImpl, abi.encodeWithSelector(GMCChild.init.selector), "GMCChild"));
+
+        bytes memory miceArgs = abi.encode(tokens[0], tokens[1], tokens[2], badges);
         address miceImpl = setUpContract("Mice", miceArgs, "MiceImplementation");
         mice = Mice(setUpProxy(miceImpl, abi.encode(Mice.init.selector), "Mice"));
 
@@ -108,8 +111,6 @@ contract SetupChild is SetupBase {
 
         // INIT
         if (firstDeployment) {
-            gmc.setGangVault(address(vault));
-
             badges.grantRole(AUTHORITY, address(game));
             tokens[0].grantRole(AUTHORITY, address(vault));
             tokens[1].grantRole(AUTHORITY, address(vault));
@@ -136,8 +137,6 @@ contract SetupChild is SetupBase {
 
         // CI: make sure permissions are good
         if (!firstDeployment) {
-            if (gmc.vault() != address(vault)) gmc.setGangVault(address(vault));
-
             if (!badges.hasRole(AUTHORITY, address(game))) badges.grantRole(AUTHORITY, address(game));
             if (!tokens[0].hasRole(AUTHORITY, address(vault))) tokens[0].grantRole(AUTHORITY, address(vault));
             if (!tokens[1].hasRole(AUTHORITY, address(vault))) tokens[1].grantRole(AUTHORITY, address(vault));

@@ -2,7 +2,7 @@
   "storage": [
     {
       "astId": 4689,
-      "contract": "src/tokens/GangToken.sol:GangToken",
+      "contract": "src/tokens/GoudaChild.sol:GoudaChild",
       "label": "__storageLayout",
       "offset": 0,
       "slot": "0",
@@ -10,7 +10,7 @@
     },
     {
       "astId": 4532,
-      "contract": "src/tokens/GangToken.sol:GangToken",
+      "contract": "src/tokens/GoudaChild.sol:GoudaChild",
       "label": "__storageLayout",
       "offset": 0,
       "slot": "1",
@@ -18,7 +18,7 @@
     },
     {
       "astId": 5402,
-      "contract": "src/tokens/GangToken.sol:GangToken",
+      "contract": "src/tokens/GoudaChild.sol:GoudaChild",
       "label": "__storageLayout",
       "offset": 0,
       "slot": "2",
@@ -26,7 +26,7 @@
     },
     {
       "astId": 4198,
-      "contract": "src/tokens/GangToken.sol:GangToken",
+      "contract": "src/tokens/GoudaChild.sol:GoudaChild",
       "label": "__storageLayout",
       "offset": 0,
       "slot": "8",
@@ -88,7 +88,7 @@
       "members": [
         {
           "astId": 4178,
-          "contract": "src/tokens/GangToken.sol:GangToken",
+          "contract": "src/tokens/GoudaChild.sol:GoudaChild",
           "label": "roles",
           "offset": 0,
           "slot": "0",
@@ -103,7 +103,7 @@
       "members": [
         {
           "astId": 4523,
-          "contract": "src/tokens/GangToken.sol:GangToken",
+          "contract": "src/tokens/GoudaChild.sol:GoudaChild",
           "label": "nonces",
           "offset": 0,
           "slot": "0",
@@ -118,7 +118,7 @@
       "members": [
         {
           "astId": 5375,
-          "contract": "src/tokens/GangToken.sol:GangToken",
+          "contract": "src/tokens/GoudaChild.sol:GoudaChild",
           "label": "name",
           "offset": 0,
           "slot": "0",
@@ -126,7 +126,7 @@
         },
         {
           "astId": 5377,
-          "contract": "src/tokens/GangToken.sol:GangToken",
+          "contract": "src/tokens/GoudaChild.sol:GoudaChild",
           "label": "symbol",
           "offset": 0,
           "slot": "1",
@@ -134,7 +134,7 @@
         },
         {
           "astId": 5379,
-          "contract": "src/tokens/GangToken.sol:GangToken",
+          "contract": "src/tokens/GoudaChild.sol:GoudaChild",
           "label": "decimals",
           "offset": 0,
           "slot": "2",
@@ -142,7 +142,7 @@
         },
         {
           "astId": 5381,
-          "contract": "src/tokens/GangToken.sol:GangToken",
+          "contract": "src/tokens/GoudaChild.sol:GoudaChild",
           "label": "totalSupply",
           "offset": 0,
           "slot": "3",
@@ -150,7 +150,7 @@
         },
         {
           "astId": 5385,
-          "contract": "src/tokens/GangToken.sol:GangToken",
+          "contract": "src/tokens/GoudaChild.sol:GoudaChild",
           "label": "balanceOf",
           "offset": 0,
           "slot": "4",
@@ -158,7 +158,7 @@
         },
         {
           "astId": 5391,
-          "contract": "src/tokens/GangToken.sol:GangToken",
+          "contract": "src/tokens/GoudaChild.sol:GoudaChild",
           "label": "allowance",
           "offset": 0,
           "slot": "5",
@@ -173,7 +173,7 @@
       "members": [
         {
           "astId": 4678,
-          "contract": "src/tokens/GangToken.sol:GangToken",
+          "contract": "src/tokens/GoudaChild.sol:GoudaChild",
           "label": "owner",
           "offset": 0,
           "slot": "0",
@@ -188,7 +188,7 @@
       "members": [
         {
           "astId": 4181,
-          "contract": "src/tokens/GangToken.sol:GangToken",
+          "contract": "src/tokens/GoudaChild.sol:GoudaChild",
           "label": "adminRole",
           "offset": 0,
           "slot": "0",
@@ -196,7 +196,7 @@
         },
         {
           "astId": 4185,
-          "contract": "src/tokens/GangToken.sol:GangToken",
+          "contract": "src/tokens/GoudaChild.sol:GoudaChild",
           "label": "members",
           "offset": 0,
           "slot": "1",

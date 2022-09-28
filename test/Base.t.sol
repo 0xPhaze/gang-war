@@ -23,10 +23,9 @@ contract TestGangWar is Test, SetupChild {
     using futils for *;
 
     address alice = makeAddr("alice");
+    address self = address(this);
     address bob = makeAddr("bob");
     address eve = makeAddr("eve");
-
-    address tester = address(this);
 
     function setUpUpgradeScripts() internal override {
         UPGRADE_SCRIPTS_BYPASS = true;
@@ -35,12 +34,12 @@ contract TestGangWar is Test, SetupChild {
     function setUp() public virtual {
         setUpContracts();
 
-        vm.label(tester, "tester");
+        vm.label(self, "self");
 
-        badges.grantRole(AUTHORITY, tester);
-        tokens[0].grantRole(AUTHORITY, tester);
-        tokens[1].grantRole(AUTHORITY, tester);
-        tokens[2].grantRole(AUTHORITY, tester);
+        badges.grantRole(AUTHORITY, self);
+        tokens[0].grantRole(AUTHORITY, self);
+        tokens[1].grantRole(AUTHORITY, self);
+        tokens[2].grantRole(AUTHORITY, self);
 
         vault.grantRole(GANG_VAULT_CONTROLLER, address(this));
 
@@ -67,6 +66,26 @@ contract TestGangWar is Test, SetupChild {
 
         vm.prank(bob);
         gouda.approve(address(game), type(uint256).max);
+
+        // need to set gangs explicitly
+        // doesn't work for demo contract
+        try gmc.setGangsInChunks(0, 0) {
+            uint256 chunkData;
+            uint256 id;
+            for (uint256 c; c < 70; ++c) {
+                for (uint256 i; i < 128; ++i) {
+                    id = (c << 7) + i + 1;
+                    uint256 gang = 1 + ((id + 1) % 3);
+                    chunkData |= gang << (i << 1);
+                }
+
+                gmc.setGangsInChunks(c, chunkData);
+
+                if (id > 6666) {
+                    break;
+                }
+            }
+        } catch {}
     }
 
     function assertEq(Gang a, Gang b) internal {
@@ -81,3 +100,22 @@ contract TestGangWar is Test, SetupChild {
         assertEq(uint8(a), uint8(b));
     }
 }
+
+// contract TestGangWarRoot is Test, SetupRoot {
+//     using futils for *;
+
+//     address alice = makeAddr("alice");
+//     address self = address(this);
+//     address bob = makeAddr("bob");
+//     address eve = makeAddr("eve");
+
+//     function setUpUpgradeScripts() internal override {
+//         UPGRADE_SCRIPTS_BYPASS = true;
+//     }
+
+//     function setUp() public virtual {
+//         setUpContracts();
+
+//         vm.label(self, "self");
+//     }
+// }

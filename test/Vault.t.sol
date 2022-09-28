@@ -17,9 +17,9 @@ contract TestGangVault is TestGangWar {
     function setUp() public virtual override {
         setUpContracts();
 
-        tokens[0].grantRole(AUTHORITY, tester);
-        tokens[1].grantRole(AUTHORITY, tester);
-        tokens[2].grantRole(AUTHORITY, tester);
+        tokens[0].grantRole(AUTHORITY, self);
+        tokens[1].grantRole(AUTHORITY, self);
+        tokens[2].grantRole(AUTHORITY, self);
 
         vault.grantRole(GANG_VAULT_CONTROLLER, address(this));
 
@@ -62,23 +62,23 @@ contract TestGangVault is TestGangWar {
     function test_rangeLimit() public {
         vault.setYield(0, [uint256(1e12 * 1), uint256(1e12 * 1), uint256(1e12 * 1)]); //prettier-ignore
 
-        vault.addShares(tester, 0, 1);
+        vault.addShares(self, 0, 1);
 
         skip(10_000 days);
 
-        vault.removeShares(tester, 0, 1);
+        vault.removeShares(self, 0, 1);
 
         skip(10_000 days);
 
         for (uint256 token; token < 3; token++) {
             vm.prank(address(0));
-            assertApproxEqAbs(vault.getClaimableUserBalance(tester)[token], (10_000 * 1e12 * 1 ether * 80) / 100, 1e1);
+            assertApproxEqAbs(vault.getClaimableUserBalance(self)[token], (10_000 * 1e12 * 1 ether * 80) / 100, 1e1);
         }
 
         vault.claimUserBalance();
 
         for (uint256 token; token < 3; token++) {
-            assertApproxEqAbs(tokens[0].balanceOf(tester), (10_000 * 1e12 * 1 ether * 80) / 100, 1e1);
+            assertApproxEqAbs(tokens[0].balanceOf(self), (10_000 * 1e12 * 1 ether * 80) / 100, 1e1);
         }
     }
 
@@ -87,7 +87,7 @@ contract TestGangVault is TestGangWar {
         // errors get relatively worse with lower rate (1e6 = approx yield of 1/10 district)
         vault.setYield(0, [uint256(1e6), uint256(1e6), uint256(1e6)]); //prettier-ignore
 
-        vault.addShares(tester, 0, 10_000);
+        vault.addShares(self, 0, 10_000);
 
         vault.addShares(alice, 0, 1);
 
@@ -99,7 +99,7 @@ contract TestGangVault is TestGangWar {
         vault.claimUserBalance();
 
         assertApproxEqAbs(
-            tokens[0].balanceOf(tester),
+            tokens[0].balanceOf(self),
             uint256(10_000 * 1e6 * 1 ether * 10 hours * 80) / (10_001 * 1 days * 100),
             0.0001 ether
         );
@@ -119,15 +119,11 @@ contract TestGangVault is TestGangWar {
             vault.setYield(gang, [uint256(1), uint256(1), uint256(1)]); //prettier-ignore
 
             // stake for 100 days
-            vault.addShares(tester, gang, 10_000);
+            vault.addShares(self, gang, 10_000);
 
             skip(25 days);
 
-            vault.addShares(tester, gang, 10_000); // additional shares don't matter for single staker
-
-            skip(25 days);
-
-            vault.claimUserBalance();
+            vault.addShares(self, gang, 10_000); // additional shares don't matter for single staker
 
             skip(25 days);
 
@@ -135,19 +131,23 @@ contract TestGangVault is TestGangWar {
 
             skip(25 days);
 
-            vault.removeShares(tester, gang, 20_000);
+            vault.claimUserBalance();
+
+            skip(25 days);
+
+            vault.removeShares(self, gang, 20_000);
 
             skip(100 days); // this time won't count, since there are no shares for user
 
             vault.claimUserBalance();
 
-            assertApproxEqAbs(tokens[0].balanceOf(tester), (100 ether * (gang + 1) * 80) / 100, 1e1);
-            assertApproxEqAbs(tokens[1].balanceOf(tester), (100 ether * (gang + 1) * 80) / 100, 1e1);
-            assertApproxEqAbs(tokens[2].balanceOf(tester), (100 ether * (gang + 1) * 80) / 100, 1e1);
+            assertApproxEqAbs(tokens[0].balanceOf(self), (100 ether * (gang + 1) * 80) / 100, 1e1);
+            assertApproxEqAbs(tokens[1].balanceOf(self), (100 ether * (gang + 1) * 80) / 100, 1e1);
+            assertApproxEqAbs(tokens[2].balanceOf(self), (100 ether * (gang + 1) * 80) / 100, 1e1);
 
-            // tokens[0].burnFrom(tester, tokens[0].balanceOf(tester));
-            // tokens[1].burnFrom(tester, tokens[1].balanceOf(tester));
-            // tokens[2].burnFrom(tester, tokens[2].balanceOf(tester));
+            // tokens[0].burnFrom(self, tokens[0].balanceOf(self));
+            // tokens[1].burnFrom(self, tokens[1].balanceOf(self));
+            // tokens[2].burnFrom(self, tokens[2].balanceOf(self));
         }
     }
 
@@ -156,11 +156,11 @@ contract TestGangVault is TestGangWar {
         for (uint256 gang; gang < 3; gang++) {
             vault.setYield(gang, [uint256(1), uint256(1), uint256(1)]); //prettier-ignore
 
-            vault.addShares(tester, gang, 10_000);
+            vault.addShares(self, gang, 10_000);
 
             skip(50 days);
 
-            vault.addShares(tester, gang, 20_000);
+            vault.addShares(self, gang, 20_000);
 
             vault.addShares(alice, gang, 10_000);
 
@@ -176,21 +176,21 @@ contract TestGangVault is TestGangWar {
             vm.prank(alice);
             vault.claimUserBalance();
 
-            vault.removeShares(tester, gang, 30_000);
+            vault.removeShares(self, gang, 30_000);
 
             vault.claimUserBalance();
 
-            assertApproxEqAbs(tokens[0].balanceOf(tester), (((100 ether * 7) / 8) * 80) / 100, 1e1);
-            assertApproxEqAbs(tokens[1].balanceOf(tester), (((100 ether * 7) / 8) * 80) / 100, 1e1);
-            assertApproxEqAbs(tokens[2].balanceOf(tester), (((100 ether * 7) / 8) * 80) / 100, 1e1);
+            assertApproxEqAbs(tokens[0].balanceOf(self), (((100 ether * 7) / 8) * 80) / 100, 1e1);
+            assertApproxEqAbs(tokens[1].balanceOf(self), (((100 ether * 7) / 8) * 80) / 100, 1e1);
+            assertApproxEqAbs(tokens[2].balanceOf(self), (((100 ether * 7) / 8) * 80) / 100, 1e1);
 
             assertApproxEqAbs(tokens[0].balanceOf(alice), (((100 ether * 1) / 8) * 80) / 100, 1e1);
             assertApproxEqAbs(tokens[1].balanceOf(alice), (((100 ether * 1) / 8) * 80) / 100, 1e1);
             assertApproxEqAbs(tokens[2].balanceOf(alice), (((100 ether * 1) / 8) * 80) / 100, 1e1);
 
-            tokens[0].burnFrom(tester, tokens[0].balanceOf(tester));
-            tokens[1].burnFrom(tester, tokens[1].balanceOf(tester));
-            tokens[2].burnFrom(tester, tokens[2].balanceOf(tester));
+            tokens[0].burnFrom(self, tokens[0].balanceOf(self));
+            tokens[1].burnFrom(self, tokens[1].balanceOf(self));
+            tokens[2].burnFrom(self, tokens[2].balanceOf(self));
 
             tokens[0].burnFrom(alice, tokens[0].balanceOf(alice));
             tokens[1].burnFrom(alice, tokens[1].balanceOf(alice));
@@ -205,7 +205,7 @@ contract TestGangVault is TestGangWar {
 
             skip(50 days);
 
-            vault.addShares(tester, gang, 10_000);
+            vault.addShares(self, gang, 10_000);
 
             skip(50 days);
 
@@ -223,17 +223,17 @@ contract TestGangVault is TestGangWar {
 
             vault.claimUserBalance();
 
-            assertApproxEqAbs(tokens[0].balanceOf(tester), (300 ether * (gang + 1) * 80) / 100, 1e1);
-            assertApproxEqAbs(tokens[1].balanceOf(tester), (600 ether * (gang + 1) * 80) / 100, 1e1);
-            assertApproxEqAbs(tokens[2].balanceOf(tester), (900 ether * (gang + 1) * 80) / 100, 1e1);
+            assertApproxEqAbs(tokens[0].balanceOf(self), (300 ether * (gang + 1) * 80) / 100, 1e1);
+            assertApproxEqAbs(tokens[1].balanceOf(self), (600 ether * (gang + 1) * 80) / 100, 1e1);
+            assertApproxEqAbs(tokens[2].balanceOf(self), (900 ether * (gang + 1) * 80) / 100, 1e1);
         }
     }
 
     /// gang vault fees
     function test_stake4() public {
-        assertEq(tokens[0].balanceOf(tester), 0);
-        assertEq(tokens[1].balanceOf(tester), 0);
-        assertEq(tokens[2].balanceOf(tester), 0);
+        assertEq(tokens[0].balanceOf(self), 0);
+        assertEq(tokens[1].balanceOf(self), 0);
+        assertEq(tokens[2].balanceOf(self), 0);
 
         uint256[3] memory accrued;
         uint256[3] memory balances;
@@ -242,10 +242,10 @@ contract TestGangVault is TestGangWar {
         for (uint256 gang; gang < 3; gang++) {
             vault.setYield(gang, [uint256(1), uint256(1), uint256(1)]);
 
-            vault.addShares(tester, gang, 1);
+            vault.addShares(self, gang, 1);
 
             balances = vault.getGangVaultBalance(gang);
-            claimable = vault.getClaimableUserBalance(tester);
+            claimable = vault.getClaimableUserBalance(self);
 
             assertEq(balances[0], 0);
             assertEq(balances[1], 0);
@@ -257,7 +257,7 @@ contract TestGangVault is TestGangWar {
 
             skip(100 days);
 
-            claimable = vault.getClaimableUserBalance(tester);
+            claimable = vault.getClaimableUserBalance(self);
 
             assertEq(claimable[0], 80 ether * (gang + 1));
             assertEq(claimable[1], 80 ether * (gang + 1));
@@ -266,11 +266,11 @@ contract TestGangVault is TestGangWar {
             vault.claimUserBalance();
 
             balances = vault.getGangVaultBalance(gang);
-            claimable = vault.getClaimableUserBalance(tester);
+            claimable = vault.getClaimableUserBalance(self);
 
-            assertApproxEqAbs(tokens[0].balanceOf(tester), 80 ether * (gang + 1), 1e1);
-            assertApproxEqAbs(tokens[1].balanceOf(tester), 80 ether * (gang + 1), 1e1);
-            assertApproxEqAbs(tokens[2].balanceOf(tester), 80 ether * (gang + 1), 1e1);
+            assertApproxEqAbs(tokens[0].balanceOf(self), 80 ether * (gang + 1), 1e1);
+            assertApproxEqAbs(tokens[1].balanceOf(self), 80 ether * (gang + 1), 1e1);
+            assertApproxEqAbs(tokens[2].balanceOf(self), 80 ether * (gang + 1), 1e1);
 
             assertApproxEqAbs(balances[0], 20 ether, 1e1);
             assertApproxEqAbs(balances[1], 20 ether, 1e1);
@@ -294,9 +294,9 @@ contract TestGangVault is TestGangWar {
             assertApproxEqAbs(balances[1], 12 ether, 1e1);
             assertApproxEqAbs(balances[2], 0 ether, 1e1);
 
-            tokens[0].burnFrom(tester, tokens[0].balanceOf(tester));
-            tokens[1].burnFrom(tester, tokens[1].balanceOf(tester));
-            tokens[2].burnFrom(tester, tokens[2].balanceOf(tester));
+            tokens[0].burnFrom(self, tokens[0].balanceOf(self));
+            tokens[1].burnFrom(self, tokens[1].balanceOf(self));
+            tokens[2].burnFrom(self, tokens[2].balanceOf(self));
 
             // gang 0
             accrued = vault.getAccruedGangVaultBalances(0);
@@ -331,18 +331,18 @@ contract TestGangVault is TestGangWar {
     //     address logic = address(new GangVault(startDate, endDate, [address(tokens[0]), address(tokens[1]), address(tokens[2])], 20)); // prettier-ignore
     //     vault = GangVault(address(new ERC1967Proxy(logic, abi.encodeWithSelector(GangVault.init.selector))));
 
-    //     vault.grantRole(GANG_VAULT_CONTROLLER, tester);
+    //     vault.grantRole(GANG_VAULT_CONTROLLER, self);
     //     vault.setYield(0, [uint256(1), uint256(2), uint256(3)]);
 
     //     skip(5 days);
 
-    //     vault.addShares(tester, 0, 1);
+    //     vault.addShares(self, 0, 1);
 
     //     skip(5 days);
 
     //     uint256[3] memory balances = vault.getGangVaultBalance(0);
     //     uint256[3] memory accrued = vault.getAccruedGangVaultBalances(0);
-    //     uint256[3] memory claimable = vault.getClaimableUserBalance(tester);
+    //     uint256[3] memory claimable = vault.getClaimableUserBalance(self);
 
     //     assertEq(accrued[0], 0 ether);
     //     assertEq(accrued[1], 0 ether);
@@ -358,7 +358,7 @@ contract TestGangVault is TestGangWar {
 
     //     balances = vault.getGangVaultBalance(0);
     //     accrued = vault.getAccruedGangVaultBalances(0);
-    //     claimable = vault.getClaimableUserBalance(tester);
+    //     claimable = vault.getClaimableUserBalance(self);
 
     //     assertEq(accrued[0], 20 ether);
     //     assertEq(accrued[1], 40 ether);

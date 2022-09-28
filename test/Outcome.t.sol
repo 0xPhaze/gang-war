@@ -19,7 +19,7 @@ contract TestGangWarOutcome is Test {
     address bob = address(0xb0b);
     address alice = address(0xbabe);
     address chris = address(0xc215);
-    address tester = address(this);
+    address self = address(this);
 
     // GangWar impl = new GangWar();
     // GangWar game;
