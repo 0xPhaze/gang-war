@@ -15,11 +15,17 @@ import {DIAMOND_STORAGE_GMC_MARKET} from "/GMCMarket.sol";
 import {DIAMOND_STORAGE_GANG_WAR, SEASON} from "/GangWar.sol";
 import {DIAMOND_STORAGE_GANG_VAULT, GangVault} from "/GangVault.sol";
 
+// Root (only needed for mock testing tunnel on same chain)
+import {GMC as GMCRoot} from "/tokens/GMCRoot.sol";
+import {GoudaRootRelay} from "/tokens/GoudaRootRelay.sol";
+// import {MockFxTunnel} from "../test/mocks/MockFxTunnel.sol";
+
 import "./SetupBase.sol";
 
 contract SetupChild is SetupBase {
     Mice mice;
     GangWar game;
+    GMCRoot gmcRoot;
     GMCChild gmc;
     GangVault vault;
     GangToken badges;
@@ -100,6 +106,17 @@ contract SetupChild is SetupBase {
         address gangWarImpl = setUpContract("GangWar", gangWarArgs, "GangWarImplementation");
         game = GangWar(setUpProxy(gangWarImpl, abi.encodeWithSelector(GangWar.init.selector), "GangWar")); // prettier-ignore
 
+        if (MOCK_TUNNEL_TESTING) {
+            // should normally be deployed on root-chain
+            // however mocking on same chain for easier testing
+
+            // bytes memory goudaTunnelArgs = abi.encode(address(gouda), fxRootCheckpointManager, fxRoot);
+            // goudaTunnel = GoudaRootRelay(setUpContract("GoudaRootRelay", goudaTunnelArgs));
+
+            bytes memory gmcRootArgs = abi.encode(fxRootCheckpointManager, fxRoot);
+            gmcRoot = GMCRoot(setUpContract("GMCRoot.sol:GMC", gmcRootArgs, "GMCRoot"));
+        }
+
         initContracts();
     }
 
@@ -163,7 +180,10 @@ contract SetupChild is SetupBase {
             // game.reset(occupants, yields);
         }
 
-        if (block.chainid != CHAINID_TEST) {
+        if (MOCK_TUNNEL_TESTING) {
+            FxBaseChildTunnel(gmc).setFxRootTunnel(address(gmcRoot));
+            FxBaseRootTunnel(gmcRoot).setFxChildTunnel(address(gmc));
+        } else if (block.chainid != CHAINID_TEST) {
             linkWithRoot(address(gmc), "GMCRoot");
             linkWithRoot(address(gouda), "GoudaRootRelay");
         }

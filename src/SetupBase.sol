@@ -12,6 +12,8 @@ import {FxBaseChildTunnel} from "fx-contracts/base/FxBaseChildTunnel.sol";
 import {MockVRFCoordinator} from "../test/mocks/MockVRFCoordinator.sol";
 
 contract SetupBase is UpgradeScripts {
+    bool constant MOCK_TUNNEL_TESTING = true;
+
     address coordinator;
     bytes32 linkKeyHash;
     uint64 linkSubId;
@@ -77,20 +79,24 @@ contract SetupBase is UpgradeScripts {
             fxRoot = 0x3d1d3E34f7fB6D26245E6640E1c50710eFFf15bA;
             fxRootCheckpointManager = 0x2890bA17EfE978480615e330ecB65333b880928e;
         } else if (block.chainid == CHAINID_MUMBAI) {
-            // chainIdRoot = CHAINID_GOERLI;
-            // fxChild = 0xCf73231F28B7331BBe3124B907840A94851f9f11;
+            chainIdRoot = CHAINID_GOERLI;
+            fxChild = 0xCf73231F28B7331BBe3124B907840A94851f9f11;
 
-            // link these on same chain via MockTunnel for testing
-            fxRoot = setUpContract("MockFxTunnel");
-            fxChild = fxRoot;
-            chainIdRoot = CHAINID_MUMBAI;
-            chainIdChild = CHAINID_MUMBAI;
+            if (MOCK_TUNNEL_TESTING) {
+                // link these on same chain via MockTunnel for testing
+                fxRoot = setUpContract("MockFxTunnel");
+                fxChild = fxRoot;
+                chainIdRoot = CHAINID_MUMBAI;
+                chainIdChild = CHAINID_MUMBAI;
+            }
         } else if (block.chainid == CHAINID_TEST) {
-            // link these on same chain via MockTunnel for testing
-            fxRoot = setUpContract("MockFxTunnel");
-            fxChild = fxRoot;
-            chainIdRoot = CHAINID_TEST;
-            chainIdChild = CHAINID_TEST;
+            if (MOCK_TUNNEL_TESTING) {
+                // link these on same chain via MockTunnel for testing
+                fxRoot = setUpContract("MockFxTunnel");
+                fxChild = fxRoot;
+                chainIdRoot = CHAINID_TEST;
+                chainIdChild = CHAINID_TEST;
+            }
         } else if (block.chainid == CHAINID_RINKEBY) {}
 
         if (fxRoot != address(0)) vm.label(fxRoot, "FXROOT");
@@ -104,6 +110,7 @@ contract SetupBase is UpgradeScripts {
         address fxChildTunnel = FxBaseRootTunnel(root).fxChildTunnel();
         address latestFxChildTunnel = registeredContractAddress[chainIdChild][childKey]; // can be on same chain for testing
 
+        // bypassing here, as we'll only be working on 1 chain at most when testing
         if (UPGRADE_SCRIPTS_BYPASS) return FxBaseRootTunnel(root).setFxChildTunnel(latestFxChildTunnel);
 
         if (latestFxChildTunnel == address(0)) latestFxChildTunnel = loadLatestDeployedAddress(childKey, chainIdChild);
@@ -129,6 +136,7 @@ contract SetupBase is UpgradeScripts {
         address fxRootTunnel = FxBaseChildTunnel(child).fxRootTunnel();
         address latestFxRootTunnel = registeredContractAddress[chainIdRoot][rootKey]; // can be on same chain for testing
 
+        // bypassing here, as we'll only be working on 1 chain at most when testing
         if (UPGRADE_SCRIPTS_BYPASS) return FxBaseChildTunnel(child).setFxRootTunnel(latestFxRootTunnel);
 
         if (latestFxRootTunnel == address(0)) latestFxRootTunnel = loadLatestDeployedAddress(rootKey, chainIdRoot);
