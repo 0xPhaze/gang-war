@@ -15,14 +15,20 @@ import {UUPSUpgrade} from "UDS/proxy/UUPSUpgrade.sol";
 
 // ------------- constants
 
-uint256 constant SEASON_START_DATE = 1664024400;
-uint256 constant SEASON_END_DATE = 1664197200;
+uint256 constant SEASON_START_DATE = 1664632800;
+uint256 constant SEASON_END_DATE = 1664805600;
 
-uint256 constant TIME_TRUCE = 20 minutes;
+// uint256 constant TIME_TRUCE = 20 minutes;
+// uint256 constant TIME_LOCKUP = 60 minutes;
+// uint256 constant TIME_GANG_WAR = 20 minutes;
+// uint256 constant TIME_RECOVERY = 60 minutes;
+// uint256 constant TIME_REINFORCEMENTS = 30 minutes;
+
+uint256 constant TIME_TRUCE = 40 minutes;
 uint256 constant TIME_LOCKUP = 60 minutes;
-uint256 constant TIME_GANG_WAR = 20 minutes;
+uint256 constant TIME_GANG_WAR = 40 minutes;
 uint256 constant TIME_RECOVERY = 60 minutes;
-uint256 constant TIME_REINFORCEMENTS = 30 minutes;
+uint256 constant TIME_REINFORCEMENTS = 40 minutes;
 
 uint256 constant DEFENSE_FAVOR_LIM = 60; // 150
 uint256 constant BARON_DEFENSE_FORCE = 20;
@@ -149,9 +155,9 @@ struct GangWarDS {
 
 // ------------- storage
 
-string constant SEASON = "season.xxx.10";
+string constant SEASON = "season.rumble";
 
-bytes32 constant DIAMOND_STORAGE_GANG_WAR = keccak256("diamond.storage.gang.war.season.xxx.10");
+bytes32 constant DIAMOND_STORAGE_GANG_WAR = keccak256("diamond.storage.gang.war.season.rumble");
 
 function s() pure returns (GangWarDS storage diamondStorage) {
     bytes32 slot = DIAMOND_STORAGE_GANG_WAR;
@@ -204,8 +210,8 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
     GMC public immutable gmc;
     GangToken public immutable badges;
     GangVault public immutable vault;
-    uint256 public seasonStart;
-    uint256 public seasonEnd;
+    uint256 public immutable seasonStart;
+    uint256 public immutable seasonEnd;
 
     uint256 immutable packedDistrictConnections;
 
@@ -227,8 +233,6 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
         badges = badges_;
         seasonStart = seasonStart_;
         seasonEnd = seasonEnd_;
-        // seasonStart = 1664184600;
-        // seasonEnd = 1664188200;
         packedDistrictConnections = connections;
     }
 
@@ -1076,7 +1080,7 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
     /* ------------- modifier ------------- */
 
     modifier isActiveSeason() {
-        // if (block.timestamp < seasonStart || seasonEnd < block.timestamp) revert GangWarNotActive();
+        if (block.timestamp < seasonStart || seasonEnd < block.timestamp) revert GangWarNotActive();
         _;
     }
 

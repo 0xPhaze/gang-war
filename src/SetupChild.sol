@@ -78,10 +78,11 @@ contract SetupChild is SetupBase {
         address vaultImpl = setUpContract("GangVault", vaultArgs, "GangVaultImplementation");
         vault = GangVault(setUpProxy(vaultImpl, abi.encode(GangVault.init.selector), "Vault"));
 
-        bool DEMO = false;
+        bool DEMO = true;
         string memory GMCContractName = DEMO ? "GMCChildDemo" : "GMCChild";
-
-        bytes memory gmcArgs = abi.encode(fxChild, address(vault));
+        bytes memory gmcArgs = DEMO
+            ? abi.encode(fxChild, address(vault), address(gouda))
+            : abi.encode(fxChild, address(vault));
         address gmcImpl = setUpContract(GMCContractName, gmcArgs, "GMCChildImplementation");
         gmc = GMCChild(setUpProxy(gmcImpl, abi.encodeWithSelector(GMCChild.init.selector), "GMCChild"));
 
@@ -164,6 +165,8 @@ contract SetupChild is SetupBase {
             if (!tokens[1].hasRole(AUTHORITY, address(mice))) tokens[1].grantRole(AUTHORITY, address(mice));
             if (!tokens[2].hasRole(AUTHORITY, address(mice))) tokens[2].grantRole(AUTHORITY, address(mice));
 
+            if (!gouda.hasRole(AUTHORITY, address(gmc))) gouda.grantRole(AUTHORITY, address(gmc));
+
             if (!vault.hasRole(GANG_VAULT_CONTROLLER, address(gmc)))
                 vault.grantRole(GANG_VAULT_CONTROLLER, address(gmc));
             if (!vault.hasRole(GANG_VAULT_CONTROLLER, address(game)))
@@ -171,11 +174,13 @@ contract SetupChild is SetupBase {
 
             if (game.briberyFee(address(gouda)) == 0) game.setBriberyFee(address(gouda), 2e18);
 
-            // game.setBaronItemCost(ITEM_SEWER, 300_000e18);
-            // game.setBaronItemCost(ITEM_BLITZ, 300_000e18);
-            // game.setBaronItemCost(ITEM_BARRICADES, 225_000e18);
-            // game.setBaronItemCost(ITEM_SMOKE, 225_000e18);
-            // game.setBaronItemCost(ITEM_911, 150_000e18);
+            if (game.baronItemCost(0) == 0) {
+                game.setBaronItemCost(ITEM_SEWER, 300_000e18);
+                game.setBaronItemCost(ITEM_BLITZ, 300_000e18);
+                game.setBaronItemCost(ITEM_BARRICADES, 225_000e18);
+                game.setBaronItemCost(ITEM_SMOKE, 225_000e18);
+                game.setBaronItemCost(ITEM_911, 150_000e18);
+            }
 
             // game.reset(occupants, yields);
         }

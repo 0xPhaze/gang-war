@@ -11,7 +11,7 @@ uint256 constant RENTAL_ACCEPTANCE_MINIMUM_TIME_DELAY = 1 minutes;
 
 // ------------- storage
 
-bytes32 constant DIAMOND_STORAGE_GMC_MARKET = keccak256("diamond.storage.gmc.market.season.xxx.10");
+bytes32 constant DIAMOND_STORAGE_GMC_MARKET = keccak256("diamond.storage.gmc.market.season.rumble");
 
 struct Offer {
     address renter;

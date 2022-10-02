@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import {GangVault} from "../GangVault.sol";
+import {GoudaChild} from "./GoudaChild.sol";
 import {Gang, GangWar} from "../GangWar.sol";
 import {GMCMarket, Offer} from "../GMCMarket.sol";
 
@@ -14,8 +15,7 @@ import {FxERC721EnumerableChild} from "fx-contracts/extensions/FxERC721Enumerabl
 import "solady/utils/ECDSA.sol";
 import "solady/utils/LibString.sol";
 
-// bytes32 constant DIAMOND_STORAGE_GMC_CHILD = keccak256("diamond.storage.gmc.child");
-bytes32 constant DIAMOND_STORAGE_GMC_CHILD = keccak256("diamond.storage.gmc.child.season.xxx.11");
+bytes32 constant DIAMOND_STORAGE_GMC_CHILD = keccak256("diamond.storage.gmc.child.season.rumble");
 
 struct GMCDS {
     uint16[4] supplies;
@@ -42,15 +42,20 @@ contract GMCChildDemo is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChild, GMCMa
     using LibString for uint256;
 
     address public immutable vault;
+    address public immutable gouda;
 
     string public constant name = "Gangsta Mice City";
     string public constant symbol = "GMC";
 
-    uint16 constant NUM_GANGSTERS = 10;
     address private constant signer = 0x68442589f40E8Fc3a9679dE62884c85C6E524888;
 
-    constructor(address fxChild, address vault_) FxERC721EnumerableChild(fxChild) {
+    constructor(
+        address fxChild,
+        address vault_,
+        address gouda_
+    ) FxERC721EnumerableChild(fxChild) {
         vault = vault_;
+        gouda = gouda_;
     }
 
     function init() external initializer {
@@ -109,15 +114,13 @@ contract GMCChildDemo is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChild, GMCMa
         s().playerName[msg.sender] = name_;
     }
 
-    function mint(
-        uint256 gang,
-        bool isBaron,
-        bytes calldata signature
-    ) external {
-        if (erc721BalanceOf(msg.sender) >= NUM_GANGSTERS) revert GangstersAlreadyMinted();
-        if (!validSignature(signature, isBaron)) revert InvalidSignature();
+    function mint(uint256 gang, bytes calldata signature) external {
+        uint256 maxGangsters = getMaxGangsters(gang);
 
-        uint16 numGangstersToMint = uint16(NUM_GANGSTERS - erc721BalanceOf(msg.sender));
+        if (!validSignature(signature)) revert InvalidSignature();
+        if (erc721BalanceOf(msg.sender) >= maxGangsters) revert GangstersAlreadyMinted();
+
+        uint16 numGangstersToMint = uint16(maxGangsters - erc721BalanceOf(msg.sender));
 
         _mintGangsters(msg.sender, gang, numGangstersToMint);
     }
@@ -160,9 +163,18 @@ contract GMCChildDemo is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChild, GMCMa
 
             s().gang[startId + i] = gang;
         }
+
+        if (GoudaChild(gouda).balanceOf(to) == 0) GoudaChild(gouda).mint(to, 100e18);
     }
 
     /* ------------- owner ------------- */
+
+    function getMaxGangsters(uint256 gang) public pure returns (uint256) {
+        if (gang == 1) return 20;
+        if (gang == 2) return 40;
+        if (gang == 3) return 40;
+        return 30;
+    }
 
     function resyncBarons(address[] calldata tos, uint256[] calldata gangs) external onlyOwner {
         uint256 baronId = 10_000;
@@ -175,14 +187,16 @@ contract GMCChildDemo is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChild, GMCMa
 
             s().gang[baronId] = gangs[i];
 
-            // mint gangsters
-            uint256 currentBalance = erc721BalanceOf(tos[i]);
+            // // mint gangsters
+            // uint256 currentBalance = erc721BalanceOf(tos[i]);
 
-            if (currentBalance < NUM_GANGSTERS * 2 + 1) {
-                uint16 numGangstersToMint = uint16(NUM_GANGSTERS * 2 + 1 - currentBalance);
+            // uint256 maxGangsters = getMaxGangsters(gangs[i]);
 
-                if (numGangstersToMint != 0) _mintGangsters(tos[i], gangs[i], numGangstersToMint);
-            }
+            // if (currentBalance < maxGangsters + 1) {
+            //     uint16 numGangstersToMint = uint16(maxGangsters + 1 - currentBalance);
+
+            //     if (numGangstersToMint != 0) _mintGangsters(tos[i], gangs[i], numGangstersToMint);
+            // }
         }
     }
 
@@ -200,8 +214,8 @@ contract GMCChildDemo is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChild, GMCMa
         for (uint256 i; i < ids.length; ++i) s().gang[ids[i]] = gang + 1;
     }
 
-    function validSignature(bytes calldata signature, bool isBaron) private view returns (bool) {
-        bytes32 hash = keccak256(abi.encode(address(this), msg.sender, isBaron));
+    function validSignature(bytes calldata signature) private view returns (bool) {
+        bytes32 hash = keccak256(abi.encode(address(this), msg.sender));
         address recovered = hash.toEthSignedMessageHash().recover(signature);
 
         return recovered != address(0) && recovered == signer;

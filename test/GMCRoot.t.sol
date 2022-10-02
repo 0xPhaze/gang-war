@@ -44,7 +44,7 @@ contract TestGMCRoot is Test, SetupRoot {
     /* ------------- setup() ------------- */
 
     function test_setUp() public {
-        assertEq(gmc.maxSupply(), 5555);
+        assertEq(gmc.maxSupply(), 6666);
         assertEq(gmc.mintStart(), block.timestamp);
         assertEq(gmc.publicPrice(), 0.049 ether);
         assertEq(gmc.whitelistPrice(), 0.039 ether);

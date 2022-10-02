@@ -17,7 +17,7 @@ import "solady/utils/LibString.sol";
 
 import "forge-std/console.sol";
 
-bytes32 constant DIAMOND_STORAGE_GMC_CHILD = keccak256("diamond.storage.gmc.child.season.xxx.07");
+bytes32 constant DIAMOND_STORAGE_GMC_CHILD = keccak256("diamond.storage.gmc.child.season.rumble");
 
 struct GMCDS {
     string baseURI;

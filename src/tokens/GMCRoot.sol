@@ -36,8 +36,9 @@ contract GMC is OwnableUDS, FxERC721MRoot {
 
     uint16 public constant MAX_PER_WALLET = 20;
     uint256 public constant PURCHASE_LIMIT = 5;
-    uint256 private constant PRICE_UNIT = 0.001 ether;
     uint256 public constant BRIDGE_RAFFLE_LOCK_DURATION = 24 hours;
+    uint256 private constant PRICE_UNIT = 0.001 ether;
+    uint256 private constant GENESIS_CLAIM = 555;
 
     bool public maxSupplyLocked;
     uint16 public supply;
@@ -58,7 +59,7 @@ contract GMC is OwnableUDS, FxERC721MRoot {
     {
         __Ownable_init();
 
-        maxSupply = 5555;
+        maxSupply = 6666;
         signer = msg.sender;
 
         publicPriceUnits = toPriceUnits(0.049 ether);
@@ -117,8 +118,8 @@ contract GMC is OwnableUDS, FxERC721MRoot {
 
     function lockAndTransmit(address from, uint256[] calldata tokenIds) external {
         unchecked {
-            if (tokenIds.length > 20) revert ExceedsLimit(); // @note verify
-            if (block.timestamp < mintStart + 2 hours) emit SecondLegendaryRaffleEntered(from);
+            if (tokenIds.length > 10) revert ExceedsLimit();
+            if (tokenIds.length != 0 && block.timestamp < mintStart + 2 hours) emit SecondLegendaryRaffleEntered(from);
 
             _lockAndTransmit(from, tokenIds);
         }
@@ -163,16 +164,18 @@ contract GMC is OwnableUDS, FxERC721MRoot {
         uint256 quantity,
         bool lock
     ) private {
-        if (quantity > 2) {
-            emit FirstLegendaryRaffleEntered(to);
+        unchecked {
+            if (quantity > 2) {
+                emit FirstLegendaryRaffleEntered(to);
 
-            if (supply < 1500) ++quantity;
+                if (supply < 500 + GENESIS_CLAIM) ++quantity;
+            }
+
+            if (lock && block.timestamp < mintStart + 2 hours) emit SecondLegendaryRaffleEntered(to);
+
+            if (lock) _mintLockedAndTransmit(to, quantity);
+            else _mint(to, quantity);
         }
-
-        if (lock && block.timestamp < mintStart + 2 hours) emit SecondLegendaryRaffleEntered(to);
-
-        if (lock) _mintLockedAndTransmit(to, quantity);
-        else _mint(to, quantity);
     }
 
     /* ------------- owner ------------- */
