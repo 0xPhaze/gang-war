@@ -22,7 +22,11 @@ import {GoudaRootRelay} from "/tokens/GoudaRootRelay.sol";
 
 import "./SetupBase.sol";
 
+import "futils/futils.sol";
+
 contract SetupChild is SetupBase {
+    using futils for *;
+
     Mice mice;
     GangWar game;
     GMCRoot gmcRoot;
@@ -78,7 +82,7 @@ contract SetupChild is SetupBase {
         address vaultImpl = setUpContract("GangVault", vaultArgs, "GangVaultImplementation");
         vault = GangVault(setUpProxy(vaultImpl, abi.encode(GangVault.init.selector), "Vault"));
 
-        bool DEMO = true;
+        bool DEMO = false;
         string memory GMCContractName = DEMO ? "GMCChildDemo" : "GMCChild";
         bytes memory gmcArgs = DEMO
             ? abi.encode(fxChild, address(vault), address(gouda))
@@ -139,6 +143,8 @@ contract SetupChild is SetupBase {
             tokens[1].grantRole(AUTHORITY, address(mice));
             tokens[2].grantRole(AUTHORITY, address(mice));
 
+            gouda.grantRole(AUTHORITY, address(gmc));
+
             vault.grantRole(GANG_VAULT_CONTROLLER, address(gmc));
             vault.grantRole(GANG_VAULT_CONTROLLER, address(game));
 
@@ -151,6 +157,7 @@ contract SetupChild is SetupBase {
             game.setBriberyFee(address(gouda), 2e18);
 
             game.reset(occupants, yields);
+            game.setBaronItemBalances(0.range(NUM_BARON_ITEMS), 3.repeat(NUM_BARON_ITEMS));
         }
 
         // CI: make sure permissions are good

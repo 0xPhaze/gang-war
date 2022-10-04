@@ -12,7 +12,7 @@ import {FxBaseChildTunnel} from "fx-contracts/base/FxBaseChildTunnel.sol";
 import {MockVRFCoordinator} from "../test/mocks/MockVRFCoordinator.sol";
 
 contract SetupBase is UpgradeScripts {
-    bool constant MOCK_TUNNEL_TESTING = true;
+    bool constant MOCK_TUNNEL_TESTING = false; // set to true to deploy MockFxTunnel (mock tunnel on same chain)
 
     address coordinator;
     bytes32 linkKeyHash;
@@ -90,13 +90,11 @@ contract SetupBase is UpgradeScripts {
                 chainIdChild = CHAINID_MUMBAI;
             }
         } else if (block.chainid == CHAINID_TEST) {
-            if (MOCK_TUNNEL_TESTING) {
-                // link these on same chain via MockTunnel for testing
-                fxRoot = setUpContract("MockFxTunnel");
-                fxChild = fxRoot;
-                chainIdRoot = CHAINID_TEST;
-                chainIdChild = CHAINID_TEST;
-            }
+            // link these on same chain via MockTunnel for testing
+            fxRoot = setUpContract("MockFxTunnel");
+            fxChild = fxRoot;
+            chainIdRoot = CHAINID_TEST;
+            chainIdChild = CHAINID_TEST;
         } else if (block.chainid == CHAINID_RINKEBY) {}
 
         if (fxRoot != address(0)) vm.label(fxRoot, "FXROOT");

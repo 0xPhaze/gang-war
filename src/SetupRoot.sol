@@ -20,7 +20,7 @@ contract SetupRoot is SetupBase {
         setUpFxPortal();
         setUpChainlink();
 
-        staticProxy = StaticProxy(setUpContract("StaticProxy")); // placeholder to disable UUPS contracts
+        // staticProxy = StaticProxy(setUpContract("StaticProxy")); // placeholder to disable UUPS contracts
 
         if (isTestnet()) {
             bytes memory goudaArgs = abi.encode("Gouda", "GOUDA", 18);

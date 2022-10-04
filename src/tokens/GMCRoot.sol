@@ -15,12 +15,9 @@ error TimelockActive();
 error IncorrectValue();
 error MaxSupplyLocked();
 error InvalidSignature();
-error NonexistentToken();
 error InvalidPriceUnits();
-error InvalidMintChoice();
 error WhitelistNotActive();
 error PublicSaleNotActive();
-error SignatureExceedsLimit();
 error ContractCallNotAllowed();
 
 /// @title Gangsta Mice City Root
@@ -39,6 +36,7 @@ contract GMC is OwnableUDS, FxERC721MRoot {
     uint256 public constant BRIDGE_RAFFLE_LOCK_DURATION = 24 hours;
     uint256 private constant PRICE_UNIT = 0.001 ether;
     uint256 private constant GENESIS_CLAIM = 555;
+    uint256 private immutable DEPLOY_TIMESTAMP;
 
     bool public maxSupplyLocked;
     uint16 public supply;
@@ -50,7 +48,7 @@ contract GMC is OwnableUDS, FxERC721MRoot {
 
     string private baseURI;
     string private postFixURI = ".json";
-    string private unrevealedURI = "ipfs://QmRuQYxmdzqfVfy8ZhZNTvXsmbN9yLnBFPDeczFvWUS2HU/";
+    string private unrevealedURI = "ipfs://QmTv9VoXgkZxFcomTW3kN6CRryUPMfgeUkVekFszcd79gK/";
 
     LibCrumbMap.CrumbMap gangs;
 
@@ -61,6 +59,7 @@ contract GMC is OwnableUDS, FxERC721MRoot {
 
         maxSupply = 6666;
         signer = msg.sender;
+        DEPLOY_TIMESTAMP = block.timestamp;
 
         publicPriceUnits = toPriceUnits(0.049 ether);
         whitelistPriceUnits = toPriceUnits(0.039 ether);
@@ -95,7 +94,7 @@ contract GMC is OwnableUDS, FxERC721MRoot {
     {
         unchecked {
             if (msg.value != publicPrice() * quantity) revert IncorrectValue();
-            if (block.timestamp < mintStart || mintStart == 0) revert PublicSaleNotActive();
+            if (block.timestamp < mintStart + 2 hours || mintStart == 0) revert PublicSaleNotActive();
 
             mintWithPerks(msg.sender, quantity, lock);
         }
@@ -118,15 +117,23 @@ contract GMC is OwnableUDS, FxERC721MRoot {
 
     function lockAndTransmit(address from, uint256[] calldata tokenIds) external {
         unchecked {
-            if (tokenIds.length > 10) revert ExceedsLimit();
-            if (tokenIds.length != 0 && block.timestamp < mintStart + 2 hours) emit SecondLegendaryRaffleEntered(from);
+            if (tokenIds.length > 20) revert ExceedsLimit();
+            // don't repeat an unnecessary sload if we can avoid it
+            if (
+                tokenIds.length != 0 &&
+                block.timestamp < DEPLOY_TIMESTAMP + 1 weeks &&
+                block.timestamp < mintStart + 2 hours
+            ) {
+                emit SecondLegendaryRaffleEntered(from);
+            }
 
             _lockAndTransmit(from, tokenIds);
         }
     }
 
     function unlockAndTransmit(address from, uint256[] calldata tokenIds) external {
-        if (block.timestamp < mintStart + BRIDGE_RAFFLE_LOCK_DURATION) {
+        if (tokenIds.length > 20) revert ExceedsLimit();
+        if (block.timestamp < DEPLOY_TIMESTAMP + 1 weeks && block.timestamp < mintStart + BRIDGE_RAFFLE_LOCK_DURATION) {
             revert TimelockActive();
         }
 

@@ -27,7 +27,7 @@ contract TestGMCRoot is Test, SetupRoot {
         vm.label(self, "self");
 
         gmc.setSigner(self);
-        gmc.setMintStart(uint32(block.timestamp));
+        gmc.setMintStart(uint32(block.timestamp - 3600 * 2 - 1));
 
         price = gmc.publicPrice();
 
@@ -45,7 +45,7 @@ contract TestGMCRoot is Test, SetupRoot {
 
     function test_setUp() public {
         assertEq(gmc.maxSupply(), 6666);
-        assertEq(gmc.mintStart(), block.timestamp);
+        // assertEq(gmc.mintStart(), block.timestamp);
         assertEq(gmc.publicPrice(), 0.049 ether);
         assertEq(gmc.whitelistPrice(), 0.039 ether);
     }
@@ -144,6 +144,8 @@ contract TestGMCRoot is Test, SetupRoot {
     }
 
     function test_whitelistMint(uint256 quantity) public {
+        gmc.setMintStart(uint32(block.timestamp));
+
         self.balanceDiff();
 
         uint256 totalSupply = gmc.totalSupply();
@@ -170,6 +172,8 @@ contract TestGMCRoot is Test, SetupRoot {
     }
 
     function test_whitelistMint_revert_ExceedsLimit() public {
+        gmc.setMintStart(uint32(block.timestamp));
+
         uint256 limit = 5;
         uint256 quantity = 3;
 
