@@ -1,0 +1,58 @@
+{
+  "transactions": [
+    {
+      "hash": "0xba2386b5c672d799c8e66b2de45d5e7943c62bb0981865cfb46cf7dcf2ca5569",
+      "transactionType": "CALL",
+      "contractName": "GMC",
+      "contractAddress": "0x904aE1a25757E59456a59a49c4dE52D68DcCf9ff",
+      "function": "airdrop(address[],uint256,bool)",
+      "arguments": [
+        "[0x74De159B3a9372b7e85Fd00569a0929265b630eF]",
+        "554",
+        "false"
+      ],
+      "transaction": {
+        "type": "0x02",
+        "from": "0x74de159b3a9372b7e85fd00569a0929265b630ef",
+        "to": "0x904ae1a25757e59456a59a49c4de52d68dccf9ff",
+        "gas": "0x183149",
+        "value": "0x0",
+        "data": "0xca9228a10000000000000000000000000000000000000000000000000000000000000060000000000000000000000000000000000000000000000000000000000000022a0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000074de159b3a9372b7e85fd00569a0929265b630ef",
+        "nonce": "0x91",
+        "accessList": []
+      },
+      "additionalContracts": []
+    },
+    {
+      "hash": "0x7361e00f957e11da8e4591abf175dda3c12a1dbbc6ef03b694e888a7a2d45b6c",
+      "transactionType": "CALL",
+      "contractName": "GMC",
+      "contractAddress": "0x904aE1a25757E59456a59a49c4dE52D68DcCf9ff",
+      "function": "setSigner(address)",
+      "arguments": [
+        "0x74De159B3a9372b7e85Fd00569a0929265b630eF"
+      ],
+      "transaction": {
+        "type": "0x02",
+        "from": "0x74de159b3a9372b7e85fd00569a0929265b630ef",
+        "to": "0x904ae1a25757e59456a59a49c4de52d68dccf9ff",
+        "gas": "0xa5a2",
+        "value": "0x0",
+        "data": "0x6c19e78300000000000000000000000074de159b3a9372b7e85fd00569a0929265b630ef",
+        "nonce": "0x92",
+        "accessList": []
+      },
+      "additionalContracts": []
+    }
+  ],
+  "receipts": [],
+  "libraries": [],
+  "pending": [
+    "0xba2386b5c672d799c8e66b2de45d5e7943c62bb0981865cfb46cf7dcf2ca5569",
+    "0x7361e00f957e11da8e4591abf175dda3c12a1dbbc6ef03b694e888a7a2d45b6c"
+  ],
+  "path": "/Users/lain/git/eth/gang-war/broadcast/mintRoot.sol/1/run-latest.json",
+  "returns": {},
+  "timestamp": 1664978352,
+  "commit": "3f29683"
+}

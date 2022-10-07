@@ -35,7 +35,7 @@ contract deployRoot is SetupRoot {
 
         setUpContracts();
 
-        gmc.airdrop([msg.sender].toMemory(), 1, false);
+        // gmc.airdrop([msg.sender].toMemory(), 500, false);
 
         // gmc.unlockAndTransmit(msg.sender, 1.range(10));
         // gmc.lockAndTransmit(msg.sender, 30.range(40));

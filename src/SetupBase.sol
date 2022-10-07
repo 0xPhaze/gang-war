@@ -12,7 +12,7 @@ import {FxBaseChildTunnel} from "fx-contracts/base/FxBaseChildTunnel.sol";
 import {MockVRFCoordinator} from "../test/mocks/MockVRFCoordinator.sol";
 
 contract SetupBase is UpgradeScripts {
-    bool constant MOCK_TUNNEL_TESTING = false; // set to true to deploy MockFxTunnel (mock tunnel on same chain)
+    bool constant MOCK_TUNNEL_TESTING = true; // set to true to deploy MockFxTunnel (mock tunnel on same chain)
 
     address coordinator;
     bytes32 linkKeyHash;
@@ -115,7 +115,7 @@ contract SetupBase is UpgradeScripts {
         if (latestFxChildTunnel == address(0)) {
             console.log("\nWARNING: No latest deployment found for [%s] on child chain %s:", childKey, chainIdChild);
 
-            throwError("!! fxChildTunnel unset (MUST be set for root!!) !!");
+            // throwError("!! fxChildTunnel unset (MUST be set for root!!) !!");
         } else {
             if (fxChildTunnel != latestFxChildTunnel) {
                 console.log("\nLinking tunnel on chains %s -> %s", block.chainid, chainIdChild);

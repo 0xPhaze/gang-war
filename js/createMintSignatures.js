@@ -4,7 +4,7 @@ const fs = require("fs");
 const { ethers } = require("ethers");
 
 const dataWhitelist = require("./data/whitelist.json");
-const deployments = require("../deployments/5/deploy-latest.json");
+const deployments = require("../deployments/1/deploy-latest.json");
 
 let wallet = new ethers.Wallet(process.env.PRIVATE_KEY);
 
