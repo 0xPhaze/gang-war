@@ -15,20 +15,11 @@ import {UUPSUpgrade} from "UDS/proxy/UUPSUpgrade.sol";
 
 // ------------- constants
 
-uint256 constant SEASON_START_DATE = 1664632800;
-uint256 constant SEASON_END_DATE = 1664805600;
-
-// uint256 constant TIME_TRUCE = 20 minutes;
-// uint256 constant TIME_LOCKUP = 60 minutes;
-// uint256 constant TIME_GANG_WAR = 20 minutes;
-// uint256 constant TIME_RECOVERY = 60 minutes;
-// uint256 constant TIME_REINFORCEMENTS = 30 minutes;
-
-uint256 constant TIME_TRUCE = 40 minutes;
-uint256 constant TIME_LOCKUP = 60 minutes;
-uint256 constant TIME_GANG_WAR = 40 minutes;
-uint256 constant TIME_RECOVERY = 60 minutes;
-uint256 constant TIME_REINFORCEMENTS = 40 minutes;
+uint256 constant TIME_TRUCE = 4 hours;
+uint256 constant TIME_LOCKUP = 12 hours;
+uint256 constant TIME_GANG_WAR = 3 hours;
+uint256 constant TIME_RECOVERY = 12 hours;
+uint256 constant TIME_REINFORCEMENTS = 5 hours;
 
 uint256 constant DEFENSE_FAVOR_LIM = 60; // 150
 uint256 constant BARON_DEFENSE_FORCE = 20;
@@ -133,6 +124,8 @@ struct District {
 }
 
 struct GangWarDS {
+    uint40 seasonStart;
+    uint40 seasonEnd;
     /*      id      =>   */
     mapping(uint256 => District) districts;
     mapping(uint256 => Gangster) gangsters;
@@ -155,9 +148,9 @@ struct GangWarDS {
 
 // ------------- storage
 
-string constant SEASON = "season.rumble";
+string constant SEASON = "season.1";
 
-bytes32 constant DIAMOND_STORAGE_GANG_WAR = keccak256("diamond.storage.gang.war.season.rumble");
+bytes32 constant DIAMOND_STORAGE_GANG_WAR = keccak256("diamond.storage.gang.war.season.1");
 
 function s() pure returns (GangWarDS storage diamondStorage) {
     bytes32 slot = DIAMOND_STORAGE_GANG_WAR;
@@ -210,8 +203,6 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
     GMC public immutable gmc;
     GangToken public immutable badges;
     GangVault public immutable vault;
-    uint256 public immutable seasonStart;
-    uint256 public immutable seasonEnd;
 
     uint256 immutable packedDistrictConnections;
 
@@ -219,8 +210,6 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
         GMC gmc_,
         GangVault vault_,
         GangToken badges_,
-        uint256 seasonStart_,
-        uint256 seasonEnd_,
         uint256 connections,
         address coordinator,
         bytes32 keyHash,
@@ -231,8 +220,6 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
         gmc = gmc_;
         vault = vault_;
         badges = badges_;
-        seasonStart = seasonStart_;
-        seasonEnd = seasonEnd_;
         packedDistrictConnections = connections;
     }
 
@@ -269,7 +256,22 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
         vault.setYield(2, [uint256(0), uint256(0), initialGangYields[2]]);
     }
 
+    function setSeason(uint40 start, uint40 end) external onlyOwner {
+        s().seasonStart = start;
+        s().seasonEnd = end;
+
+        GangVault(vault).setSeason(start, end);
+    }
+
     /* ------------- view ------------- */
+
+    function seasonStart() external view returns (uint256) {
+        return s().seasonStart;
+    }
+
+    function seasonEnd() external view returns (uint256) {
+        return s().seasonEnd;
+    }
 
     function gangAttackSuccess(uint256 districtId, uint256 roundId) public view returns (bool) {
         uint256 gRand = s().gangWarOutcomes[districtId][roundId];
@@ -531,12 +533,11 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
         District storage districtFrom = s().districts[districtIdFrom];
 
         uint256 baronAttackId = district.baronAttackId;
-        Gang attackerGang = gangOf(baronAttackId);
 
         if (districtFrom.occupants != gang && (district.activeItems >> ITEM_SEWER) & 1 == 0)
             revert ConnectingDistrictNotOwnedByGang();
         if (districtFrom.baronAttackId != 0) revert ConnectingDistrictUnderAttack();
-        if (baronAttackId == 0 || attackerGang != gang) revert BaronMustDeclareInitialAttack();
+        if (baronAttackId == 0 || gangOf(baronAttackId) != gang) revert BaronMustDeclareInitialAttack();
 
         _enterGangWar(districtIdTo, tokenIds, gang, true);
     }
@@ -1080,7 +1081,7 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
     /* ------------- modifier ------------- */
 
     modifier isActiveSeason() {
-        if (block.timestamp < seasonStart || seasonEnd < block.timestamp) revert GangWarNotActive();
+        if (block.timestamp < s().seasonStart || s().seasonEnd < block.timestamp) revert GangWarNotActive();
         _;
     }
 

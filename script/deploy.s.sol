@@ -46,8 +46,8 @@ contract deploy is SetupChild {
 
         setUpContracts();
 
-        game.reset(occupants, yields);
-        game.setBaronItemBalances(0.range(NUM_BARON_ITEMS), 3.repeat(NUM_BARON_ITEMS));
+        // game.reset(occupants, yields);
+        // game.setBaronItemBalances(0.range(NUM_BARON_ITEMS), 3.repeat(NUM_BARON_ITEMS));
 
         vm.stopBroadcast();
 

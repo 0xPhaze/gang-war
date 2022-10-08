@@ -15,7 +15,7 @@ import {FxERC721EnumerableChild} from "fx-contracts/extensions/FxERC721Enumerabl
 import "solady/utils/ECDSA.sol";
 import "solady/utils/LibString.sol";
 
-bytes32 constant DIAMOND_STORAGE_GMC_CHILD = keccak256("diamond.storage.gmc.child.season.rumble");
+bytes32 constant DIAMOND_STORAGE_GMC_CHILD = keccak256("diamond.storage.gmc.child.season.1");
 
 struct GMCDS {
     uint16[4] supplies;

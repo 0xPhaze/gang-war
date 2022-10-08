@@ -6,14 +6,14 @@ import "/lib/VRFConsumerV2.sol";
 
 import {Mice} from "/tokens/Mice.sol";
 // import {GangWar} from "/GangWar.sol";
-import {GMCChild} from "/tokens/GMCChild.sol";
 import {GangToken} from "/tokens/GangToken.sol";
 import {GoudaChild} from "/tokens/GoudaChild.sol";
 import {StaticProxy} from "/utils/StaticProxy.sol";
 import {LibPackedMap} from "./lib/LibPackedMap.sol";
 import {DIAMOND_STORAGE_GMC_MARKET} from "/GMCMarket.sol";
 import {DIAMOND_STORAGE_GANG_WAR, SEASON} from "/GangWar.sol";
-import {DIAMOND_STORAGE_GANG_VAULT, GangVault} from "/GangVault.sol";
+import {DIAMOND_STORAGE_GMC_CHILD, GMCChild} from "/tokens/GMCChild.sol";
+import {DIAMOND_STORAGE_GANG_VAULT, DIAMOND_STORAGE_GANG_VAULT_FX, GangVault} from "/GangVault.sol";
 
 // Root (only needed for mock testing tunnel on same chain)
 import {GMC as GMCRoot} from "/tokens/GMCRoot.sol";
@@ -42,9 +42,14 @@ contract SetupChild is SetupBase {
     }
 
     function assertStorageSeasonSet() internal pure {
+        // these can be completely/partially reset
         require(DIAMOND_STORAGE_GANG_WAR == keccak256(bytes(string.concat("diamond.storage.gang.war.", SEASON))), 'Storage season does not match.'); // prettier-ignore
-        // require(DIAMOND_STORAGE_GMC_MARKET == keccak256(bytes(string.concat("diamond.storage.gmc.market.", SEASON))), 'Storage season does not match.'); // prettier-ignore
-        // require(DIAMOND_STORAGE_GANG_VAULT == keccak256(bytes(string.concat("diamond.storage.gang.vault.", SEASON))), 'Storage season does not match.'); // prettier-ignore
+        require(DIAMOND_STORAGE_GANG_VAULT_FX == keccak256(bytes(string.concat("diamond.storage.gang.vault.", SEASON))), 'Storage season does not match.'); // prettier-ignore
+
+        require(DIAMOND_STORAGE_GANG_VAULT == keccak256(bytes(string.concat("diamond.storage.gang.vault"))), 'Invalid storage location'); // prettier-ignore
+        require(DIAMOND_STORAGE_GMC_MARKET == keccak256(bytes(string.concat("diamond.storage.gmc.market"))), 'Invalid storage location'); // prettier-ignore
+        // @note this one NEEDS TO STAY "rumble", because that's how it was initialized
+        require(DIAMOND_STORAGE_GMC_CHILD == keccak256(bytes(string.concat("diamond.storage.gmc.child.season.rumble"))), 'Invalid storage location'); // prettier-ignore
     }
 
     function setUpContracts() internal {
@@ -75,10 +80,7 @@ contract SetupChild is SetupBase {
         tokens[1] = GangToken(setUpProxy(gangTokenImpl, cartelInitCall, "CartelToken"));
         tokens[2] = GangToken(setUpProxy(gangTokenImpl, cyberpInitCall, "CyberpunkToken"));
 
-        uint256 seasonStart = block.chainid == 31337 ? block.timestamp : SEASON_START_DATE;
-        uint256 seasonEnd = block.chainid == 31337 ? type(uint256).max : SEASON_END_DATE;
-
-        bytes memory vaultArgs = abi.encode(seasonStart, seasonEnd, tokens[0], tokens[1], tokens[2], GANG_VAULT_FEE); // prettier-ignore
+        bytes memory vaultArgs = abi.encode(tokens[0], tokens[1], tokens[2], GANG_VAULT_FEE); // prettier-ignore
         address vaultImpl = setUpContract("GangVault", vaultArgs, "GangVaultImplementation");
         vault = GangVault(setUpProxy(vaultImpl, abi.encode(GangVault.init.selector), "Vault"));
 
@@ -90,6 +92,10 @@ contract SetupChild is SetupBase {
         address gmcImpl = setUpContract(GMCContractName, gmcArgs, "GMCChildImplementation");
         gmc = GMCChild(setUpProxy(gmcImpl, abi.encodeWithSelector(GMCChild.init.selector), "GMCChild"));
 
+        setUpContract("GangProxy", abi.encode(gmc, 0), "YakuzaGangProxy");
+        setUpContract("GangProxy", abi.encode(gmc, 1), "CartelGangProxy");
+        setUpContract("GangProxy", abi.encode(gmc, 2), "CyberpunkGangProxy");
+
         bytes memory miceArgs = abi.encode(tokens[0], tokens[1], tokens[2], badges);
         address miceImpl = setUpContract("Mice", miceArgs, "MiceImplementation");
         mice = Mice(setUpProxy(miceImpl, abi.encode(Mice.init.selector), "Mice"));
@@ -98,8 +104,6 @@ contract SetupChild is SetupBase {
             gmc,
             vault,
             badges,
-            seasonStart,
-            seasonEnd,
             connectionsPacked,
             coordinator,
             linkKeyHash,
@@ -154,7 +158,12 @@ contract SetupChild is SetupBase {
             game.setBaronItemCost(ITEM_SMOKE, 2_250_000e18);
             game.setBaronItemCost(ITEM_911, 1_500_000e18);
 
+            address banana = 0xbC91347e80886453F3f8bBd6d7aC07C122D87735;
+            address spit = 0x5c947eB80D096A5e332bF79bfDc9feb3D0a201d7;
+
             game.setBriberyFee(address(gouda), 2e18);
+            game.setBriberyFee(address(banana), 5e18);
+            game.setBriberyFee(address(spit), 10e18);
 
             game.reset(occupants, yields);
             game.setBaronItemBalances(0.range(NUM_BARON_ITEMS), 3.repeat(NUM_BARON_ITEMS));

@@ -15,8 +15,7 @@ import {FxERC721EnumerableChild} from "fx-contracts/extensions/FxERC721Enumerabl
 import "solady/utils/ECDSA.sol";
 import "solady/utils/LibString.sol";
 
-import "forge-std/console.sol";
-
+// @note fked the naming of this one up; needs to stay "rumble" for now
 bytes32 constant DIAMOND_STORAGE_GMC_CHILD = keccak256("diamond.storage.gmc.child.season.rumble");
 
 struct GMCDS {
@@ -47,7 +46,7 @@ contract GMCChild is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChild, GMCMarket
     using ECDSA for bytes32;
     using LibString for uint256;
     using LibCrumbMap for mapping(uint256 => uint256);
-    // using LibCrumbMap for LibCrumbMap.CrumbMap; // we don't want nested structs
+    // using LibCrumbMap for LibCrumbMap.CrumbMap; // we want to avoid nested structs
 
     address public immutable vault;
 
@@ -82,13 +81,23 @@ contract GMCChild is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChild, GMCMarket
     function gangOf(uint256 id) public view returns (Gang gang) {
         if (id > 10_000) return Gang((id - 2) % 3);
 
-        uint256 gangEnc = s().gangMap.get(id);
+        uint256 gangEnc = s().gangMap.get(id - 1);
 
         // enum Gang has convention of Gang.NONE (= 4) being invalid
         // more natural in a mapping to assume 0 (unset) is invalid
         // that's why we're making converting 0 <=> 4 (Gang.None)
         if (gangEnc == 0) gang = Gang.NONE;
         else gang = Gang(gangEnc - 1);
+    }
+
+    function gangBalancesOf(address user) public view returns (uint256[3] memory balances) {
+        uint256 numOwned = erc721BalanceOf(user);
+
+        for (uint256 i; i < numOwned; ++i) {
+            uint256 id = tokenOfOwnerByIndex(user, i);
+
+            balances[uint8(gangOf(id))] += 1;
+        }
     }
 
     function getName(uint256 id) external view returns (string memory) {

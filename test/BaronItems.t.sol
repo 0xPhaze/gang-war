@@ -11,6 +11,14 @@ contract TestBaronItems is TestGangWar {
 
     mapping(Gang => uint256[]) storedBalances;
 
+    function setUp() public override {
+        super.setUp();
+
+        itemBalancesDiff(Gang.YAKUZA);
+        itemBalancesDiff(Gang.CYBERP);
+        itemBalancesDiff(Gang.CARTEL);
+    }
+
     function itemBalancesDiff(Gang gang) private returns (int256[] memory diff) {
         uint256[] memory stored = storedBalances[gang];
         uint256[] memory balances = game.getBaronItemBalances(uint256(gang));
@@ -115,7 +123,7 @@ contract TestBaronItems is TestGangWar {
         vault.setYield(uint256(Gang.YAKUZA), [uint256(1e8), uint256(1e8), uint256(1e8)]);
         vault.setYield(uint256(Gang.CARTEL), [uint256(1e8), uint256(1e8), uint256(1e8)]);
 
-        skip(100 days);
+        skip(10 days);
 
         for (uint256 i; i < NUM_BARON_ITEMS; i++) {
             test_purchaseBaronItem(i);

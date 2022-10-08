@@ -12,7 +12,7 @@ import {FxBaseChildTunnel} from "fx-contracts/base/FxBaseChildTunnel.sol";
 import {MockVRFCoordinator} from "../test/mocks/MockVRFCoordinator.sol";
 
 contract SetupBase is UpgradeScripts {
-    bool constant MOCK_TUNNEL_TESTING = true; // set to true to deploy MockFxTunnel (mock tunnel on same chain)
+    bool constant MOCK_TUNNEL_TESTING = false; // set to true to deploy MockFxTunnel (mock tunnel on same chain)
 
     address coordinator;
     bytes32 linkKeyHash;

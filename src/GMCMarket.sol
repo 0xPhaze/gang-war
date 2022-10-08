@@ -6,12 +6,11 @@ import {OwnableUDS} from "UDS/auth/OwnableUDS.sol";
 import {UUPSUpgrade} from "UDS/proxy/UUPSUpgrade.sol";
 import {LibEnumerableSet, Uint256Set} from "UDS/lib/LibEnumerableSet.sol";
 
-// TODO change
-uint256 constant RENTAL_ACCEPTANCE_MINIMUM_TIME_DELAY = 1 minutes;
+uint256 constant RENTAL_ACCEPTANCE_MINIMUM_TIME_DELAY = 6 hours;
 
 // ------------- storage
 
-bytes32 constant DIAMOND_STORAGE_GMC_MARKET = keccak256("diamond.storage.gmc.market.season.rumble");
+bytes32 constant DIAMOND_STORAGE_GMC_MARKET = keccak256("diamond.storage.gmc.market");
 
 struct Offer {
     address renter;

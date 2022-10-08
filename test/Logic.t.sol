@@ -98,7 +98,7 @@ contract TestGangWarGameLogic is TestGangWar {
         assertEq(game.getDistrict(DISTRICT_CARTEL_1).state, DISTRICT_STATE.POST_GANG_WAR);
         assertEq(game.getGangster(BARON_YAKUZA_1).state, PLAYER_STATE.ATTACK_LOCKED);
         assertEq(game.getGangster(GANGSTER_YAKUZA_1).state, PLAYER_STATE.ATTACK_LOCKED);
-        assertEq(game.getGangster(0).state, PLAYER_STATE.IDLE);
+        // assertEq(game.getGangster(0).state, PLAYER_STATE.IDLE);
 
         assertEq(game.getDistrict(DISTRICT_CARTEL_1).stateCountdown, 0);
         assertEq(game.getGangster(GANGSTER_YAKUZA_1).stateCountdown, 0);
@@ -498,7 +498,7 @@ contract TestGangWarGameLogic is TestGangWar {
         (upkeepNeeded, ) = game.checkUpkeep("");
         assertFalse(upkeepNeeded);
 
-        skip(100 days);
+        skip(10 days);
 
         (upkeepNeeded, ) = game.checkUpkeep("");
         assertFalse(upkeepNeeded);

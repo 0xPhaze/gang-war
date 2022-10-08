@@ -36,6 +36,8 @@ contract TestGangWar is Test, SetupChild {
 
         vm.label(self, "self");
 
+        game.setSeason(uint40(block.timestamp), uint40(block.timestamp + 4 weeks));
+
         badges.grantRole(AUTHORITY, self);
         tokens[0].grantRole(AUTHORITY, self);
         tokens[1].grantRole(AUTHORITY, self);
@@ -75,7 +77,7 @@ contract TestGangWar is Test, SetupChild {
             for (uint256 c; c < 70; ++c) {
                 for (uint256 i; i < 128; ++i) {
                     id = (c << 7) + i + 1;
-                    uint256 gang = 1 + ((id + 1) % 3);
+                    uint256 gang = 1 + ((id + 2) % 3);
                     chunkData |= gang << (i << 1);
                 }
 
