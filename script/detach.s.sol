@@ -25,7 +25,7 @@ contract detach is SetupChild {
 
     function setUpUpgradeScripts() internal override {
         UPGRADE_SCRIPTS_BYPASS_SAFETY = true;
-        ATTACH_ONLY = true;
+        ATTACH_ONLY = true; // don't replace by static proxy
     }
 
     function upgradeProxy(address proxy, address newImplementation) internal override {

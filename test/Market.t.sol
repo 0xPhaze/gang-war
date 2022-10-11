@@ -266,6 +266,44 @@ contract TestGangWarMarket is TestGangWar {
         assertEq(sharesDiff[2], 0);
     }
 
+    /* ------------- journey ------------- */
+
+    function test_userJourney() public {
+        test_acceptOffer();
+
+        // console.log(bob);
+        // console.log(self);
+        console.log(gmc.renterOf(1));
+        console.log(gmc.getRentedIds(self)[0]);
+
+        vm.prank(alice);
+        gmc.deleteOffer([1].toMemory());
+
+        console.log(gmc.renterOf(1));
+
+        // test_listOffer();
+
+        // Offer[] memory offers = new Offer[](1);
+        // offers[0].renterShare = 40;
+
+        // vm.prank(alice);
+        // gmc.listOffer([1].toMemory(), offers);
+
+        // offers[1].renter = bob;
+        // offers[1].renterShare = 80;
+
+        vm.prank(bob);
+        gmc.acceptOffer(1);
+
+        // console.log(bob);
+        console.log(gmc.renterOf(1));
+        console.log(gmc.getRentedIds(bob)[1]);
+        // console.log(gmc.getRentedIds(self)[0]);
+
+        // console.log(gmc.renterOf(1));
+        // console.log(gmc.getRentedIds(self)[0]);
+    }
+
     /* ------------- burn ------------- */
 
     function test_burn() public {

@@ -22,7 +22,7 @@ uint256 constant TIME_RECOVERY = 12 hours;
 uint256 constant TIME_REINFORCEMENTS = 5 hours;
 
 uint256 constant DEFENSE_FAVOR_LIM = 60; // 150
-uint256 constant BARON_DEFENSE_FORCE = 20;
+uint256 constant BARON_DEFENSE_FORCE = 10;
 uint256 constant ATTACK_FAVOR = 65;
 uint256 constant DEFENSE_FAVOR = 200;
 
@@ -254,13 +254,6 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
         vault.setYield(0, [initialGangYields[0], uint256(0), uint256(0)]);
         vault.setYield(1, [uint256(0), initialGangYields[1], uint256(0)]);
         vault.setYield(2, [uint256(0), uint256(0), initialGangYields[2]]);
-    }
-
-    function setSeason(uint40 start, uint40 end) external onlyOwner {
-        s().seasonStart = start;
-        s().seasonEnd = end;
-
-        GangVault(vault).setSeason(start, end);
     }
 
     /* ------------- view ------------- */
@@ -534,10 +527,12 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
 
         uint256 baronAttackId = district.baronAttackId;
 
-        if (districtFrom.occupants != gang && (district.activeItems >> ITEM_SEWER) & 1 == 0)
-            revert ConnectingDistrictNotOwnedByGang();
-        if (districtFrom.baronAttackId != 0) revert ConnectingDistrictUnderAttack();
         if (baronAttackId == 0 || gangOf(baronAttackId) != gang) revert BaronMustDeclareInitialAttack();
+        // if using sewers skip
+        if ((district.activeItems >> ITEM_SEWER) & 1 == 0) {
+            if (districtFrom.occupants != gang) revert ConnectingDistrictNotOwnedByGang();
+            if (districtFrom.baronAttackId != 0) revert ConnectingDistrictUnderAttack();
+        }
 
         _enterGangWar(districtIdTo, tokenIds, gang, true);
     }
@@ -1086,6 +1081,13 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
     }
 
     /* ------------- owner ------------- */
+
+    function setSeason(uint40 start, uint40 end) external onlyOwner {
+        s().seasonStart = start;
+        s().seasonEnd = end;
+
+        GangVault(vault).setSeason(start, end);
+    }
 
     function setBaronItemBalances(uint256[] calldata itemIds, uint256[] calldata amounts) external payable onlyOwner {
         for (uint256 i; i < itemIds.length; ++i) {

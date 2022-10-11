@@ -33,8 +33,6 @@ cp ~/git/eth/gang-war/out/Mice.sol/Mice.json ~/git/eth/gmc-website/data/abi
 cp ~/git/eth/gang-war/deployments/80001/deploy-latest.json ~/git/eth/gmc-website/data/deployments_80001.json
 cp ~/git/eth/gang-war/deployments/137/deploy-latest.json ~/git/eth/gmc-website/data/deployments_137.json
 cp ~/git/eth/gang-war/deployments/1/deploy-latest.json ~/git/eth/gmc-website/data/deployments_1.json
-cp ~/git/eth/gang-war/js/signaturesDemo.json ~/git/eth/gmc-website/data/
-cp ~/git/eth/gang-war/js/signaturesGMCMint.json ~/git/eth/gmc-website/data/
 
 */
 
@@ -48,6 +46,20 @@ contract deploy is SetupChild {
 
         // game.reset(occupants, yields);
         // game.setBaronItemBalances(0.range(NUM_BARON_ITEMS), 3.repeat(NUM_BARON_ITEMS));
+        // game.setSeason(1665421200, 1668099600);
+
+        // gmc.resyncIds(msg.sender, 1.range(21));
+        // gmc.resyncIds(0x2181838c46bEf020b8Beb756340ad385f5BD82a8, 21.range(41));
+        // gmc.resyncBarons(
+        //     [
+        //         msg.sender,
+        //         msg.sender,
+        //         msg.sender,
+        //         0x2181838c46bEf020b8Beb756340ad385f5BD82a8,
+        //         0x2181838c46bEf020b8Beb756340ad385f5BD82a8,
+        //         0x2181838c46bEf020b8Beb756340ad385f5BD82a8
+        //     ].toMemory()
+        // );
 
         vm.stopBroadcast();
 

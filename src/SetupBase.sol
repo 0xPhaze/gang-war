@@ -47,7 +47,7 @@ contract SetupBase is UpgradeScripts {
         if (block.chainid == CHAINID_POLYGON) {
             coordinator = COORDINATOR_POLYGON;
             linkKeyHash = KEYHASH_POLYGON;
-            linkSubId = 133;
+            linkSubId = 344;
         } else if (block.chainid == CHAINID_MUMBAI) {
             coordinator = COORDINATOR_MUMBAI;
             linkKeyHash = KEYHASH_MUMBAI;

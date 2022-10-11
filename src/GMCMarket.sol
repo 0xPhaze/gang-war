@@ -10,7 +10,7 @@ uint256 constant RENTAL_ACCEPTANCE_MINIMUM_TIME_DELAY = 6 hours;
 
 // ------------- storage
 
-bytes32 constant DIAMOND_STORAGE_GMC_MARKET = keccak256("diamond.storage.gmc.market");
+bytes32 constant DIAMOND_STORAGE_GMC_MARKET = keccak256("diamond.storage.gmc.market.v2");
 
 struct Offer {
     address renter;
@@ -35,6 +35,7 @@ function s() pure returns (GangMarketDS storage diamondStorage) {
 // ------------- error
 
 error InvalidOffer();
+error ActiveRental();
 error AlreadyListed();
 error NotAuthorized();
 error InvalidRenterShare();
@@ -81,6 +82,10 @@ abstract contract GMCMarket {
         return s().rentedIds[user].values();
     }
 
+    function isListed(uint256 id) public view returns (bool) {
+        return s().listedIds[0].includes(id);
+    }
+
     /* ------------- external ------------- */
 
     function listOffer(uint256[] calldata ids, Offer[] calldata offers) external {
@@ -89,40 +94,89 @@ abstract contract GMCMarket {
 
             Offer calldata offer = offers[i];
             uint256 renterShare = offer.renterShare;
+            // address currentRenter = offer.renter;
 
             address owner = ownerOf(id);
 
+            if (id > 10_000) revert NotAuthorized();
             if (owner != msg.sender) revert NotAuthorized();
             if (offer.renter == msg.sender) revert InvalidOffer();
+            // if (currentRenter != address(0)) revert ActiveRental();
             if (renterShare < 30 || 100 < renterShare) revert InvalidRenterShare();
 
+            // note: this prevents ids being "rented" out
+            // multiple times, because they need to be delisted
+            // and _cleanUp needs to run first; could also check
+            // active rentals and clean up
             bool added = s().listedIds[0].add(id);
+
             if (!added) revert AlreadyListed();
-
-            // Offer storage activeRental = s().offers[id];
-            // address currentRenter = activeRental.renter;
-            // if (currentRenter != address(0)) revert ActiveRental();
-
-            s().offers[id] = offers[i];
 
             // direct offer to renter
             if (offer.renter != address(0)) {
+                s().rentedIds[offer.renter].add(id);
+
                 _afterStartRent(owner, offer.renter, id, renterShare);
             }
 
-            s().listedIds[0].add(id);
+            // three steps to "accepting an offer":
+            // - set `address offer.renter`
+            // - add id to `rentedIds[offer.renter]` enumeration
+            // - call `_afterStartRent` to transfer shares
+            s().offers[id] = offers[i];
         }
+    }
+
+    function acceptOffer(uint256 id) external {
+        Offer storage offer = s().offers[id];
+
+        if (!isListed(id)) revert InvalidOffer();
+        if (offer.renterShare == 0) revert InvalidOffer();
+        if (offer.renter != address(0)) revert OfferAlreadyAccepted();
+        if (block.timestamp - s().lastRentalAcceptance[msg.sender] < RENTAL_ACCEPTANCE_MINIMUM_TIME_DELAY) {
+            revert MinimumTimeDelayNotReached();
+        }
+
+        offer.renter = msg.sender;
+
+        s().rentedIds[msg.sender].add(id);
+        s().lastRentalAcceptance[msg.sender] = block.timestamp;
+
+        _afterStartRent(ownerOf(id), msg.sender, id, offer.renterShare);
     }
 
     function deleteOffer(uint256[] calldata ids) external {
         for (uint256 i; i < ids.length; i++) {
             if (ownerOf(ids[i]) != msg.sender) revert NotAuthorized();
 
-            _cleanUpOffer(msg.sender, ids[i]);
+            _removeListingAndCleanUp(msg.sender, ids[i]);
         }
     }
 
-    function _cleanUpOffer(address owner, uint256 id) internal {
+    function endRent(uint256[] calldata ids) external {
+        for (uint256 i; i < ids.length; ++i) {
+            uint256 id = ids[i];
+
+            if (!isAuthorized(msg.sender, id)) revert NotAuthorized();
+
+            Offer storage offer = s().offers[id];
+
+            uint256 renterShare = offer.renterShare;
+            bool expires = offer.expiresOnAcceptance;
+
+            // offer has not been accepted / is invalid
+            if (offer.renter == address(0)) revert InvalidOffer();
+
+            _removeListingAndCleanUp(ownerOf(id), id);
+
+            // note: make this more robust
+            if (!expires) {
+                offer.renterShare = uint8(renterShare);
+            }
+        }
+    }
+
+    function _removeListingAndCleanUp(address owner, uint256 id) internal {
         if (s().listedIds[0].remove(id)) {
             Offer storage offer = s().offers[id];
 
@@ -137,45 +191,6 @@ abstract contract GMCMarket {
         }
 
         delete s().offers[id];
-    }
-
-    function acceptOffer(uint256 id) external {
-        Offer storage offer = s().offers[id];
-
-        if (block.timestamp - s().lastRentalAcceptance[msg.sender] < RENTAL_ACCEPTANCE_MINIMUM_TIME_DELAY) {
-            revert MinimumTimeDelayNotReached();
-        }
-
-        if (offer.renter != address(0)) revert OfferAlreadyAccepted();
-
-        offer.renter = msg.sender;
-
-        s().lastRentalAcceptance[msg.sender] = block.timestamp;
-        s().rentedIds[msg.sender].add(id);
-
-        _afterStartRent(ownerOf(id), msg.sender, id, offer.renterShare);
-    }
-
-    function endRent(uint256[] calldata ids) external {
-        for (uint256 i; i < ids.length; ++i) {
-            uint256 id = ids[i];
-
-            if (!isAuthorized(msg.sender, id)) revert NotAuthorized();
-
-            Offer storage offer = s().offers[id];
-
-            uint256 renterShare = offer.renterShare;
-
-            // offer has not been accepted / is invalid
-            if (offer.renter == address(0)) revert InvalidOffer();
-
-            _cleanUpOffer(ownerOf(id), id);
-
-            // make this better
-            if (!offer.expiresOnAcceptance) {
-                offer.renterShare = uint8(renterShare);
-            }
-        }
     }
 
     /* ------------- hooks ------------- */

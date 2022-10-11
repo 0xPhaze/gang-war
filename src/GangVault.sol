@@ -43,6 +43,8 @@ contract GangVault is UUPSUpgrade, AccessControlUDS {
     GangVaultDS private __storageLayoutPersistent;
 
     event Burn(uint256 indexed gang, uint256 indexed token, uint256 amount);
+    event SharesAdded(address indexed user, uint256 indexed gang, uint256 shares);
+    event SharesRemoved(address indexed user, uint256 indexed gang, uint256 shares);
 
     GangToken immutable token0;
     GangToken immutable token1;
@@ -171,6 +173,8 @@ contract GangVault is UUPSUpgrade, AccessControlUDS {
 
         s().totalShares[gang] += amount;
         s().userShares[account][gang] += amount;
+
+        emit SharesAdded(account, gang, amount);
     }
 
     function removeShares(
@@ -183,6 +187,8 @@ contract GangVault is UUPSUpgrade, AccessControlUDS {
 
         s().totalShares[gang] -= amount;
         s().userShares[account][gang] -= amount;
+
+        emit SharesRemoved(account, gang, amount);
     }
 
     function transferShares(
@@ -197,6 +203,9 @@ contract GangVault is UUPSUpgrade, AccessControlUDS {
 
         s().userShares[from][gang] -= amount;
         s().userShares[to][gang] += amount;
+
+        emit SharesRemoved(from, gang, amount);
+        emit SharesAdded(to, gang, amount);
     }
 
     function resetShares(address account, uint40[3] memory shares) external onlyRole(CONTROLLER) {

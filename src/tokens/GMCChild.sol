@@ -4,13 +4,14 @@ pragma solidity ^0.8.0;
 import {GangVault} from "../GangVault.sol";
 import {LibCrumbMap} from "../lib/LibCrumbMap.sol";
 import {Gang, GangWar} from "../GangWar.sol";
-import {GMCMarket, Offer} from "../GMCMarket.sol";
+import {GMCMarket, Offer, s as marketDS} from "../GMCMarket.sol";
 
 import {ERC721UDS} from "UDS/tokens/ERC721UDS.sol";
 import {OwnableUDS} from "UDS/auth/OwnableUDS.sol";
 import {UUPSUpgrade} from "UDS/proxy/UUPSUpgrade.sol";
 import {FxERC721Child} from "fx-contracts/FxERC721Child.sol";
 import {FxERC721EnumerableChild} from "fx-contracts/extensions/FxERC721EnumerableChild.sol";
+import {LibEnumerableSet, Uint256Set} from "UDS/lib/LibEnumerableSet.sol";
 
 import "solady/utils/ECDSA.sol";
 import "solady/utils/LibString.sol";
@@ -46,7 +47,7 @@ contract GMCChild is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChild, GMCMarket
     using ECDSA for bytes32;
     using LibString for uint256;
     using LibCrumbMap for mapping(uint256 => uint256);
-    // using LibCrumbMap for LibCrumbMap.CrumbMap; // we want to avoid nested structs
+    using LibEnumerableSet for Uint256Set;
 
     address public immutable vault;
 
@@ -78,8 +79,14 @@ contract GMCChild is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChild, GMCMarket
         return (renter != address(0)) ? user == renter : user == ownerOf(id);
     }
 
+    function isBaron(uint256 id) public pure returns (bool) {
+        return id >= 10_000;
+    }
+
     function gangOf(uint256 id) public view returns (Gang gang) {
-        if (id > 10_000) return Gang((id - 2) % 3);
+        if (isBaron(id)) {
+            return Gang((id - 10_001) / 7);
+        }
 
         uint256 gangEnc = s().gangMap.get(id - 1);
 
@@ -104,6 +111,11 @@ contract GMCChild is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChild, GMCMarket
         return s().name[id];
     }
 
+    function getShares(uint256 id) public pure returns (uint40) {
+        if (isBaron(id)) return 1000;
+        return 100;
+    }
+
     function getPlayerName(address user) external view returns (string memory) {
         return s().playerName[user];
     }
@@ -111,8 +123,8 @@ contract GMCChild is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChild, GMCMarket
     function tokenURI(uint256 id) public view returns (string memory) {
         return 
             bytes(s().baseURI).length == 0 
-            ? s().unrevealedURI 
-            : string.concat(s().baseURI, id.toString(), s().postFixURI); // prettier-ignore
+              ? s().unrevealedURI 
+              : string.concat(s().baseURI, id.toString(), s().postFixURI); // prettier-ignore
     }
 
     /* ------------- external ------------- */
@@ -151,20 +163,22 @@ contract GMCChild is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChild, GMCMarket
         // without adding any shares. These will be
         // added as soon as the gangs are known.
         if (gang != Gang.NONE) {
+            uint40 shares = getShares(id);
+
             if (from != address(0)) {
                 // make sure any active rental is cleaned up
                 // so that shares invariant holds.
                 // calls `_afterEndRent` if rental is active.
-                _cleanUpOffer(from, id);
+                _removeListingAndCleanUp(from, id);
 
                 // @dev: this call seems like a danger point that could possibly
                 // fail during fxPortal call. Fails when gangVault storage is reset.
-                // try GangVault(vault).removeShares(from, uint256(gang), 100) {} catch {}
-                GangVault(vault).removeShares(from, uint256(gang), 100);
+                // try GangVault(vault).removeShares(from, uint256(gang), shares) {} catch {}
+                GangVault(vault).removeShares(from, uint256(gang), shares);
             }
 
             if (to != address(0)) {
-                GangVault(vault).addShares(to, uint256(gangOf(id)), 100);
+                GangVault(vault).addShares(to, uint256(gangOf(id)), shares);
             }
         }
     }
@@ -209,10 +223,10 @@ contract GMCChild is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChild, GMCMarket
         for (uint256 i; i < idsLength; ++i) {
             uint256 id = tokenOfOwnerByIndex(msg.sender, i);
 
-            _cleanUpOffer(msg.sender, id);
+            _removeListingAndCleanUp(msg.sender, id);
 
             uint256 gang = uint256(gangOf(id));
-            shares[gang] += 100;
+            shares[gang] += getShares(id);
         }
 
         GangVault(vault).resetShares(msg.sender, shares);
@@ -220,17 +234,38 @@ contract GMCChild is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChild, GMCMarket
 
     /* ------------- owner ------------- */
 
-    function resyncBarons(address[] calldata tos, uint256[] calldata gangs) external onlyOwner {
+    function resyncRentedIds(uint256[] calldata ids) external onlyOwner {
+        for (uint256 i; i < ids.length; i++) {
+            Offer storage offer = marketDS().offers[ids[i]];
+
+            marketDS().rentedIds[offer.renter].add(ids[i]);
+        }
+    }
+
+    function resyncRentedIds(address user) external onlyOwner {
+        uint256[] memory ids = getRentedIds(user);
+
+        uint256 length = ids.length;
+
+        for (uint256 i; i < length; i++) {
+            Offer storage offer = marketDS().offers[ids[i]];
+
+            address renter = offer.renter;
+
+            if (renter != user) {
+                marketDS().rentedIds[user].remove(ids[i]);
+                // marketDS().rentedIds[renter].add(ids[i]);
+            }
+        }
+    }
+
+    function resyncBarons(address[] calldata tos) external onlyOwner {
         uint256 baronId = 10_000;
 
         for (uint256 i; i < tos.length; i++) {
-            // mint baron
             if (++baronId > 10_021) revert GangstersAlreadyMinted();
 
             _registerId(tos[i], baronId);
-
-            // s().gang[baronId] = gangs[i];
-            s().gangMap.set(baronId, gangs[i] + 1);
         }
     }
 
@@ -250,15 +285,9 @@ contract GMCChild is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChild, GMCMarket
         _registerId(to, id);
     }
 
-    // function resyncIds(
-    //     address to,
-    //     uint256[] calldata ids,
-    //     uint256 gang
-    // ) external onlyOwner {
-    //     _registerIds(to, ids);
-
-    //     for (uint256 i; i < ids.length; ++i) s().gang[ids[i]] = gang + 1;
-    // }
+    function resyncIds(address to, uint256[] calldata ids) external onlyOwner {
+        _registerIds(to, ids);
+    }
 
     function setGangsInChunks(uint256 chunkIndex, uint256 chunkData) external onlyOwner {
         if (chunkData == 0) return;
@@ -280,7 +309,7 @@ contract GMCChild is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChild, GMCMarket
                 if (gang != 0 && owner != address(0)) {
                     // storing gangs in crumbMap uses convention 0 = invalid, 1 = Yakuza, ....
                     // gangwar uses convention 0 = Yakuza, .... 4 = invalid
-                    GangVault(vault).addShares(owner, gang - 1, 100);
+                    GangVault(vault).addShares(owner, gang - 1, getShares(id));
                 }
             }
         }
