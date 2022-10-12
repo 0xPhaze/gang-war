@@ -2,18 +2,6 @@
 pragma solidity ^0.8.0;
 
 import {ERC721UDS} from "UDS/tokens/ERC721UDS.sol";
-// import "../ERC721UDS.sol";
-
-// // ------------- storage
-
-// bytes32 constant DIAMOND_STORAGE_ERC721 = keccak256("diamond.storage.erc721");
-
-// function s() pure returns (ERC721DS storage diamondStorage) {
-//     bytes32 slot = DIAMOND_STORAGE_ERC721;
-//     assembly { diamondStorage.slot := slot } // prettier-ignore
-// }
-
-// import {FxERC721Child} from "../FxERC721Child.sol";
 import {LibEnumerableSet, Uint256Set} from "UDS/lib/LibEnumerableSet.sol";
 
 // ------------- storage
@@ -29,7 +17,7 @@ struct ERC721EnumerableDS {
     mapping(address => Uint256Set) ownedIds;
 }
 
-abstract contract ERC721Enumerable is ERC721UDS {
+abstract contract ERC721EnumerableUDS is ERC721UDS {
     using LibEnumerableSet for Uint256Set;
 
     /* ------------- virtual ------------- */

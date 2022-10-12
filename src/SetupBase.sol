@@ -12,7 +12,7 @@ import {FxBaseChildTunnel} from "fx-contracts/base/FxBaseChildTunnel.sol";
 import {MockVRFCoordinator} from "../test/mocks/MockVRFCoordinator.sol";
 
 contract SetupBase is UpgradeScripts {
-    bool constant MOCK_TUNNEL_TESTING = false; // set to true to deploy MockFxTunnel (mock tunnel on same chain)
+    bool constant MOCK_TUNNEL_TESTING = true; // set to true to deploy MockFxTunnel (mock tunnel on same chain)
 
     address coordinator;
     bytes32 linkKeyHash;
@@ -64,7 +64,15 @@ contract SetupBase is UpgradeScripts {
     }
 
     function setUpFxPortal() internal {
-        if (block.chainid == CHAINID_MAINNET) {
+        require(!MOCK_TUNNEL_TESTING || isTestnet(), "can't set mock tunnel tests on mainnet");
+
+        if (MOCK_TUNNEL_TESTING || block.chainid == CHAINID_TEST) {
+            // link these on same chain via MockTunnel for testing
+            fxRoot = setUpContract("MockFxTunnel");
+            fxChild = fxRoot;
+            chainIdRoot = block.chainid;
+            chainIdChild = block.chainid;
+        } else if (block.chainid == CHAINID_MAINNET) {
             chainIdChild = CHAINID_POLYGON;
 
             fxRoot = 0xfe5e5D361b2ad62c541bAb87C45a0B9B018389a2;
@@ -80,21 +88,8 @@ contract SetupBase is UpgradeScripts {
             fxRootCheckpointManager = 0x2890bA17EfE978480615e330ecB65333b880928e;
         } else if (block.chainid == CHAINID_MUMBAI) {
             chainIdRoot = CHAINID_GOERLI;
+            chainIdChild = CHAINID_MUMBAI;
             fxChild = 0xCf73231F28B7331BBe3124B907840A94851f9f11;
-
-            if (MOCK_TUNNEL_TESTING) {
-                // link these on same chain via MockTunnel for testing
-                fxRoot = setUpContract("MockFxTunnel");
-                fxChild = fxRoot;
-                chainIdRoot = CHAINID_MUMBAI;
-                chainIdChild = CHAINID_MUMBAI;
-            }
-        } else if (block.chainid == CHAINID_TEST) {
-            // link these on same chain via MockTunnel for testing
-            fxRoot = setUpContract("MockFxTunnel");
-            fxChild = fxRoot;
-            chainIdRoot = CHAINID_TEST;
-            chainIdChild = CHAINID_TEST;
         } else if (block.chainid == CHAINID_RINKEBY) {}
 
         if (fxRoot != address(0)) vm.label(fxRoot, "FXROOT");

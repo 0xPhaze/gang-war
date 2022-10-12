@@ -11,6 +11,8 @@ broadcast/*/80001
 # !broadcast/*/137/*.json
 
 deployments/31337
+deployments/80001
+deployments/5
 
 json
 

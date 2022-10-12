@@ -7,6 +7,7 @@ import "/lib/VRFConsumerV2.sol";
 import {Mice} from "/tokens/Mice.sol";
 // import {GangWar} from "/GangWar.sol";
 import {GangToken} from "/tokens/GangToken.sol";
+import {SafeHouses} from "/tokens/SafeHouses.sol";
 import {GoudaChild} from "/tokens/GoudaChild.sol";
 import {StaticProxy} from "/utils/StaticProxy.sol";
 import {LibPackedMap} from "./lib/LibPackedMap.sol";
@@ -36,6 +37,7 @@ contract SetupChild is SetupBase {
     GoudaChild gouda;
     GangToken[3] tokens;
     StaticProxy staticProxy;
+    SafeHouses safeHouses;
 
     constructor() {
         setUpGangWarConstants();
@@ -52,7 +54,7 @@ contract SetupChild is SetupBase {
         require(DIAMOND_STORAGE_GMC_CHILD == keccak256(bytes(string.concat("diamond.storage.gmc.child.season.rumble"))), 'Invalid storage location'); // prettier-ignore
     }
 
-    function setUpContracts() internal {
+    function setUpContracts() internal virtual {
         assertStorageSeasonSet();
 
         setUpFxPortal();
@@ -115,6 +117,23 @@ contract SetupChild is SetupBase {
         address gangWarImpl = setUpContract("GangWar", gangWarArgs, "GangWarImplementation");
         game = GangWar(setUpProxy(gangWarImpl, abi.encodeWithSelector(GangWar.init.selector), "GangWar")); // prettier-ignore
 
+        bytes memory safeHousesArgs = abi.encode(
+            mice,
+            badges,
+            gouda,
+            tokens[0],
+            tokens[1],
+            tokens[2],
+            fxChild,
+            coordinator,
+            linkKeyHash,
+            linkSubId,
+            3,
+            1_500_000
+        );
+        address safeHousesImplementation = setUpContract("SafeHouses", safeHousesArgs, "SafeHousesImplementation");
+        safeHouses = SafeHouses(setUpProxy(safeHousesImplementation, abi.encodeWithSelector(SafeHouses.init.selector), "SafeHouses")); // prettier-ignore
+
         if (MOCK_TUNNEL_TESTING) {
             // should normally be deployed on root-chain
             // however mocking on same chain for easier testing
@@ -127,12 +146,23 @@ contract SetupChild is SetupBase {
         }
 
         initContracts();
+        linkContracts();
+    }
+
+    function linkContracts() internal virtual {
+        if (MOCK_TUNNEL_TESTING) {
+            FxBaseChildTunnel(gmc).setFxRootTunnel(address(gmcRoot));
+            FxBaseRootTunnel(gmcRoot).setFxChildTunnel(address(gmc));
+        } else if (block.chainid != CHAINID_TEST) {
+            linkWithRoot(address(gmc), "GMCRoot");
+            linkWithRoot(address(gouda), "GoudaRootRelay");
+        }
     }
 
     bytes32 constant AUTHORITY = keccak256("AUTHORITY");
     bytes32 constant GANG_VAULT_CONTROLLER = keccak256("GANG.VAULT.CONTROLLER");
 
-    function initContracts() internal {
+    function initContracts() internal virtual {
         bool firstDeployment = firstTimeDeployed[block.chainid][address(game)];
 
         // INIT
@@ -199,14 +229,6 @@ contract SetupChild is SetupBase {
             }
 
             // game.reset(occupants, yields);
-        }
-
-        if (MOCK_TUNNEL_TESTING) {
-            FxBaseChildTunnel(gmc).setFxRootTunnel(address(gmcRoot));
-            FxBaseRootTunnel(gmcRoot).setFxChildTunnel(address(gmc));
-        } else if (block.chainid != CHAINID_TEST) {
-            linkWithRoot(address(gmc), "GMCRoot");
-            linkWithRoot(address(gouda), "GoudaRootRelay");
         }
     }
 

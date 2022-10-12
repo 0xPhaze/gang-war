@@ -9,8 +9,8 @@ import "futils/futils.sol";
 
 /* 
 # Mainnet
-source .env && US_DRY_RUN=true forge script deployRoot --rpc-url $RPC_MAINNET --private-key $PRIVATE_KEY -vvvv --ffi
-source .env && forge script deployRoot --rpc-url $RPC_MAINNET --private-key $PRIVATE_KEY --verify --etherscan-api-key $ETHERSCAN_KEY -vvvv --ffi --broadcast 
+source .env && US_DRY_RUN=true forge script deployRoot --rpc-url $RPC_MAINNET --private-key $PRIVATE_KEY_GMC -vvvv --ffi
+source .env && forge script deployRoot --rpc-url $RPC_MAINNET --private-key $PRIVATE_KEY_GMC --verify --etherscan-api-key $ETHERSCAN_KEY -vvvv --ffi --broadcast 
 
 # Anvil
 source .env && US_DRY_RUN=true forge script deployRoot --rpc-url $RPC_ANVIL --private-key $PRIVATE_KEY_ANVIL -vvvv --ffi
@@ -20,10 +20,19 @@ source .env && forge script deployRoot --rpc-url $RPC_ANVIL --private-key $PRIVA
 source .env && US_DRY_RUN=true forge script deployRoot --rpc-url $RPC_GOERLI --private-key $PRIVATE_KEY -vvvv --ffi
 source .env && forge script deployRoot --rpc-url $RPC_GOERLI --private-key $PRIVATE_KEY --verify --etherscan-api-key $ETHERSCAN_KEY -vvvv --ffi --broadcast 
 
+# Mumbai
+source .env && US_DRY_RUN=true forge script deployRoot --rpc-url $RPC_MUMBAI --private-key $PRIVATE_KEY -vvvv --ffi
+source .env && forge script deployRoot --rpc-url $RPC_MUMBAI --private-key $PRIVATE_KEY --verify --etherscan-api-key $POLYGONSCAN_KEY -vvvv --ffi --broadcast 
+
 cp ~/git/eth/gang-war/out/GMCRoot.sol/GMC.json ~/git/eth/gmc-website/data/abi/GMCRoot.json
 cp ~/git/eth/gang-war/out/MockERC20.sol/MockERC20.json ~/git/eth/gmc-website/data/abi
 cp ~/git/eth/gang-war/out/GoudaRootRelay.sol/GoudaRootRelay.json ~/git/eth/gmc-website/data/abi
+cp ~/git/eth/gang-war/out/SafeHouseClaim.sol/SafeHouseClaim.json ~/git/eth/gmc-website/data/abi
+
+cp ~/git/eth/gang-war/deployments/80001/deploy-latest.json ~/git/eth/gmc-website/data/deployments_80001.json
+cp ~/git/eth/gang-war/deployments/137/deploy-latest.json ~/git/eth/gmc-website/data/deployments_137.json
 cp ~/git/eth/gang-war/deployments/5/deploy-latest.json ~/git/eth/gmc-website/data/deployments_5.json
+cp ~/git/eth/gang-war/deployments/1/deploy-latest.json ~/git/eth/gmc-website/data/deployments_1.json
 
 */
 

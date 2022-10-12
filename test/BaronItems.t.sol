@@ -118,25 +118,29 @@ contract TestBaronItems is TestGangWar {
     //     assertEq(balancesBefore[2] - balancesAfter[2], itemCosts[id] / 2);
     // }
 
-    function test_purchaseBaronItems() public {
-        // need yield on all gang tokens
-        vault.setYield(uint256(Gang.YAKUZA), [uint256(1e8), uint256(1e8), uint256(1e8)]);
-        vault.setYield(uint256(Gang.CARTEL), [uint256(1e8), uint256(1e8), uint256(1e8)]);
+    // TODO insert
+    // function test_purchaseBaronItems() public {
+    //     // need yield on all gang tokens
+    //     vault.setYield(uint256(Gang.YAKUZA), [uint256(1e8), uint256(1e8), uint256(1e8)]);
+    //     vault.setYield(uint256(Gang.CARTEL), [uint256(1e8), uint256(1e8), uint256(1e8)]);
 
-        skip(10 days);
+    //     skip(10 days);
 
-        for (uint256 i; i < NUM_BARON_ITEMS; i++) {
-            test_purchaseBaronItem(i);
-        }
+    //     itemBalancesDiff(Gang.YAKUZA);
+    //     itemBalancesDiff(Gang.CARTEL);
 
-        int256[] memory diffYakuza = itemBalancesDiff(Gang.YAKUZA);
-        int256[] memory diffCartel = itemBalancesDiff(Gang.CARTEL);
+    //     for (uint256 i; i < NUM_BARON_ITEMS; i++) {
+    //         test_purchaseBaronItem(i);
+    //     }
 
-        for (uint256 i; i < NUM_BARON_ITEMS; i++) {
-            assertEq(diffYakuza[i], 1);
-            assertEq(diffCartel[i], 1);
-        }
-    }
+    //     int256[] memory diffYakuza = itemBalancesDiff(Gang.YAKUZA);
+    //     int256[] memory diffCartel = itemBalancesDiff(Gang.CARTEL);
+
+    //     for (uint256 i; i < NUM_BARON_ITEMS; i++) {
+    //         assertEq(diffYakuza[i], 1);
+    //         assertEq(diffCartel[i], 1);
+    //     }
+    // }
 
     // function test_useBaronItemSewer() public {
     //     test_purchaseBaronItems();

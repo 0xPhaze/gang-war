@@ -2,12 +2,13 @@
 pragma solidity ^0.8.0;
 
 import {ERC20UDS} from "UDS/tokens/ERC20UDS.sol";
-import {ERC721UDS} from "UDS/tokens/ERC721UDS.sol";
+import {GangToken} from "./GangToken.sol";
 import {OwnableUDS} from "UDS/auth/OwnableUDS.sol";
 import {UUPSUpgrade} from "UDS/proxy/UUPSUpgrade.sol";
 import {VRFConsumerV2} from "../lib/VRFConsumerV2.sol";
 import {FxBaseChildTunnel} from "fx-contracts/base/FxBaseChildTunnel.sol";
-import {MINT_ERC721_SELECTOR} from "./SafeHouseClaim.sol";
+import {ERC721EnumerableUDS} from "./ERC721EnumerableUDS.sol";
+import {CONSECUTIVE_MINT_ERC721_SELECTOR} from "./SafeHouseClaim.sol";
 
 import "solady/utils/LibString.sol";
 
@@ -16,7 +17,9 @@ import "solady/utils/LibString.sol";
 struct SafeHouseData {
     uint8 level;
     uint8 districtId;
+    uint40 lastClaim;
 }
+
 struct SafeHouseDS {
     bool pendingVRFRequest;
     uint16 totalSupply;
@@ -42,7 +45,7 @@ error ExceedsLimit();
 error InvalidQuantity();
 error InvalidSelector();
 
-contract SafeHouses is UUPSUpgrade, OwnableUDS, ERC721UDS, VRFConsumerV2, FxBaseChildTunnel {
+contract SafeHouses is UUPSUpgrade, OwnableUDS, ERC721EnumerableUDS, VRFConsumerV2, FxBaseChildTunnel {
     using LibString for uint256;
 
     string public constant override name = "Safe Houses";
@@ -62,20 +65,22 @@ contract SafeHouses is UUPSUpgrade, OwnableUDS, ERC721UDS, VRFConsumerV2, FxBase
 
     address public immutable mice;
     address public immutable badges;
+    address public immutable gouda;
 
-    // Level 1 - Safe House
-    // 100,000 MICE and 200 Badges
-    // 2 GOUDA & 300 Gang Tokens
-    // Level 2 - Barracks
-    // 150,000 MICE and 250 Badges
-    // 4 GOUDA & 450 Gang Tokens
-    // Level 3 - Headquarters
-    // 225,000 MICE and 300 Badges
-    // 7 Gouda & 600 Gang Tokens
+    address public immutable token0;
+    address public immutable token1;
+    address public immutable token2;
+
+    uint256 immutable rewardStart = block.timestamp;
+    uint256 constant gangEncoding = 0x16a015aa05;
 
     constructor(
         address mice_,
         address badges_,
+        address gouda_,
+        address token0_,
+        address token1_,
+        address token2_,
         address fxChild,
         address coordinator,
         bytes32 keyHash,
@@ -88,6 +93,10 @@ contract SafeHouses is UUPSUpgrade, OwnableUDS, ERC721UDS, VRFConsumerV2, FxBase
     {
         mice = mice_;
         badges = badges_;
+        gouda = gouda_;
+        token0 = token0_;
+        token1 = token1_;
+        token2 = token2_;
     }
 
     function init() external initializer {
@@ -120,7 +129,80 @@ contract SafeHouses is UUPSUpgrade, OwnableUDS, ERC721UDS, VRFConsumerV2, FxBase
         return s().safeHouseData[id].districtId;
     }
 
+    function goudaDailyRate(uint256 level) public pure returns (uint256) {
+        if (level == 1) return 2;
+        if (level == 2) return 4;
+        if (level == 3) return 7;
+        return 0;
+    }
+
+    function tokenDailyRate(uint256 level) public pure returns (uint256) {
+        if (level == 1) return 300e18;
+        if (level == 2) return 450e18;
+        if (level == 3) return 600e18;
+        return 0;
+    }
+
+    function districtToGang(uint256 id) public pure returns (uint256) {
+        return 3 & (gangEncoding >> ((id - 1) << 1));
+    }
+
+    function tokenAddress(uint256 gang) public view returns (address) {
+        if (gang == 0) return token0;
+        if (gang == 1) return token1;
+        if (gang == 2) return token2;
+        return address(0);
+    }
+
+    function pendingReward(uint256[] calldata ids) external view returns (uint256[4] memory reward) {
+        SafeHouseData storage data;
+
+        for (uint256 i; i < ids.length; ++i) {
+            data = s().safeHouseData[ids[i]];
+
+            uint256 level = data.level;
+            uint256 lastClaim = data.lastClaim;
+            uint256 districtId = data.districtId;
+
+            uint256 gang = districtToGang(districtId);
+
+            if (lastClaim == 0) lastClaim = rewardStart;
+
+            reward[3] += ((block.timestamp - lastClaim) * goudaDailyRate(level)) / 1 days;
+            reward[gang] += ((block.timestamp - lastClaim) * tokenDailyRate(level)) / 1 days;
+        }
+    }
+
     /* ------------- external ------------- */
+
+    function claim(uint256[] calldata ids) external {
+        SafeHouseData storage data;
+
+        uint256 totalGoudaReward;
+        uint256[3] memory totalTokenReward;
+
+        for (uint256 i; i < ids.length; ++i) {
+            data = s().safeHouseData[ids[i]];
+
+            uint256 level = data.level;
+            uint256 lastClaim = data.lastClaim;
+            uint256 districtId = data.districtId;
+
+            uint256 gang = districtToGang(districtId);
+
+            if (lastClaim == 0) lastClaim = rewardStart;
+
+            totalGoudaReward += ((block.timestamp - lastClaim) * goudaDailyRate(level)) / 1 days;
+            totalTokenReward[gang] += ((block.timestamp - lastClaim) * tokenDailyRate(level)) / 1 days;
+
+            data.lastClaim = uint40(block.timestamp);
+        }
+
+        if (totalGoudaReward != 0) GangToken(gouda).mint(msg.sender, totalGoudaReward);
+        if (totalTokenReward[0] != 0) GangToken(tokenAddress(0)).mint(msg.sender, totalTokenReward[0]);
+        if (totalTokenReward[1] != 0) GangToken(tokenAddress(1)).mint(msg.sender, totalTokenReward[1]);
+        if (totalTokenReward[2] != 0) GangToken(tokenAddress(2)).mint(msg.sender, totalTokenReward[2]);
+    }
 
     function mint(uint256 quantity) external {
         uint256 totalMiceCost = quantity * MINT_MICE_COST;
@@ -200,6 +282,7 @@ contract SafeHouses is UUPSUpgrade, OwnableUDS, ERC721UDS, VRFConsumerV2, FxBase
 
         for (uint256 i; i < quantity; ++i) {
             uint256 id = ++s().totalSupply;
+
             if (id > MAX_SUPPLY) revert ExceedsLimit();
 
             _mint(to, id);
@@ -221,7 +304,7 @@ contract SafeHouses is UUPSUpgrade, OwnableUDS, ERC721UDS, VRFConsumerV2, FxBase
     ) internal virtual override {
         bytes4 selector = bytes4(message);
 
-        if (selector != MINT_ERC721_SELECTOR) revert InvalidSelector();
+        if (selector != CONSECUTIVE_MINT_ERC721_SELECTOR) revert InvalidSelector();
 
         address to = address(uint160(uint256(bytes32(message[4:36]))));
 

@@ -46,8 +46,28 @@ contract TestGangWarGameLogic is TestGangWar {
         assertEq(gmc.gangOf(6), Gang.CYBERP);
 
         assertEq(gmc.gangOf(10_001), Gang.YAKUZA);
-        assertEq(gmc.gangOf(10_002), Gang.CARTEL);
-        assertEq(gmc.gangOf(10_003), Gang.CYBERP);
+        assertEq(gmc.gangOf(10_002), Gang.YAKUZA);
+        assertEq(gmc.gangOf(10_003), Gang.YAKUZA);
+        assertEq(gmc.gangOf(10_004), Gang.YAKUZA);
+        assertEq(gmc.gangOf(10_005), Gang.YAKUZA);
+        assertEq(gmc.gangOf(10_006), Gang.YAKUZA);
+        assertEq(gmc.gangOf(10_007), Gang.YAKUZA);
+
+        assertEq(gmc.gangOf(10_008), Gang.CARTEL);
+        assertEq(gmc.gangOf(10_009), Gang.CARTEL);
+        assertEq(gmc.gangOf(10_010), Gang.CARTEL);
+        assertEq(gmc.gangOf(10_011), Gang.CARTEL);
+        assertEq(gmc.gangOf(10_012), Gang.CARTEL);
+        assertEq(gmc.gangOf(10_013), Gang.CARTEL);
+        assertEq(gmc.gangOf(10_014), Gang.CARTEL);
+
+        assertEq(gmc.gangOf(10_015), Gang.CYBERP);
+        assertEq(gmc.gangOf(10_016), Gang.CYBERP);
+        assertEq(gmc.gangOf(10_017), Gang.CYBERP);
+        assertEq(gmc.gangOf(10_018), Gang.CYBERP);
+        assertEq(gmc.gangOf(10_019), Gang.CYBERP);
+        assertEq(gmc.gangOf(10_020), Gang.CYBERP);
+        assertEq(gmc.gangOf(10_021), Gang.CYBERP);
     }
 
     /* ------------- districtState() & gangsterState() ------------- */

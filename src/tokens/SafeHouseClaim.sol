@@ -6,7 +6,7 @@ import {OwnableUDS} from "UDS/auth/OwnableUDS.sol";
 import {UUPSUpgrade} from "UDS/proxy/UUPSUpgrade.sol";
 import {FxBaseRootTunnel} from "fx-contracts/base/FxBaseRootTunnel.sol";
 
-bytes4 constant MINT_ERC721_SELECTOR = bytes4(keccak256("mint(address)"));
+bytes4 constant CONSECUTIVE_MINT_ERC721_SELECTOR = bytes4(keccak256("conescutiveMint(address)"));
 
 import "solady/utils/LibString.sol";
 
@@ -34,10 +34,9 @@ function s() pure returns (SafeHouseDS storage diamondStorage) {
 error InvalidBurnAmount();
 
 contract SafeHouseClaim is UUPSUpgrade, OwnableUDS, FxBaseRootTunnel {
-    string public constant name = "Safe House Claim";
+    string public constant name = "Safe Houses Claim";
     string public constant symbol = "SAFE";
 
-    // address immutable troupe = 0x74d9d90a7fc261FBe92eD47B606b6E0E00d75E70;
     address public immutable troupe;
     address public constant burnAddress = 0x000000000000000000000000000000000000dEaD;
 
@@ -67,7 +66,7 @@ contract SafeHouseClaim is UUPSUpgrade, OwnableUDS, FxBaseRootTunnel {
                 ERC721UDS(troupe).transferFrom(msg.sender, burnAddress, ids[c][i]);
             }
 
-            _sendMessageToChild(abi.encodeWithSelector(MINT_ERC721_SELECTOR, msg.sender));
+            _sendMessageToChild(abi.encodeWithSelector(CONSECUTIVE_MINT_ERC721_SELECTOR, msg.sender));
         }
     }
 
