@@ -22,22 +22,12 @@ import {GoudaRootRelay} from "/tokens/GoudaRootRelay.sol";
 // import {MockFxTunnel} from "../test/mocks/MockFxTunnel.sol";
 
 import "./SetupBase.sol";
+import "./SetupRoot.sol";
 
 import "futils/futils.sol";
 
-contract SetupChild is SetupBase {
+contract SetupChild is SetupRoot {
     using futils for *;
-
-    Mice mice;
-    GangWar game;
-    GMCRoot gmcRoot;
-    GMCChild gmc;
-    GangVault vault;
-    GangToken badges;
-    GoudaChild gouda;
-    GangToken[3] tokens;
-    StaticProxy staticProxy;
-    SafeHouses safeHouses;
 
     constructor() {
         setUpGangWarConstants();
@@ -54,7 +44,7 @@ contract SetupChild is SetupBase {
         require(DIAMOND_STORAGE_GMC_CHILD == keccak256(bytes(string.concat("diamond.storage.gmc.child.season.rumble"))), 'Invalid storage location'); // prettier-ignore
     }
 
-    function setUpContracts() internal virtual {
+    function setUpContracts() internal virtual override {
         assertStorageSeasonSet();
 
         setUpFxPortal();
@@ -114,8 +104,9 @@ contract SetupChild is SetupBase {
             1_500_000
         );
 
-        address gangWarImpl = setUpContract("GangWar", gangWarArgs, "GangWarImplementation");
-        game = GangWar(setUpProxy(gangWarImpl, abi.encodeWithSelector(GangWar.init.selector), "GangWar")); // prettier-ignore
+        bool keepExistingGangWar = true;
+        address gangWarImpl = setUpContract("GangWar", gangWarArgs, "GangWarImplementation", keepExistingGangWar);
+        game = GangWar(setUpProxy(gangWarImpl, abi.encodeWithSelector(GangWar.init.selector), "GangWar", keepExistingGangWar)); // prettier-ignore
 
         bytes memory safeHousesArgs = abi.encode(
             mice,
@@ -137,32 +128,29 @@ contract SetupChild is SetupBase {
         if (MOCK_TUNNEL_TESTING) {
             // should normally be deployed on root-chain
             // however mocking on same chain for easier testing
-
-            // bytes memory goudaTunnelArgs = abi.encode(address(gouda), fxRootCheckpointManager, fxRoot);
-            // goudaTunnel = GoudaRootRelay(setUpContract("GoudaRootRelay", goudaTunnelArgs));
-
-            bytes memory gmcRootArgs = abi.encode(fxRootCheckpointManager, fxRoot);
-            gmcRoot = GMCRoot(setUpContract("GMCRoot.sol:GMC", gmcRootArgs, "GMCRoot"));
+            SetupRoot.setUpContractsRoot();
         }
 
-        initContracts();
-        linkContracts();
+        initContractsChild();
+        linkContractsWithRoot();
     }
 
-    function linkContracts() internal virtual {
+    function linkContractsWithRoot() internal virtual {
         if (MOCK_TUNNEL_TESTING) {
             FxBaseChildTunnel(gmc).setFxRootTunnel(address(gmcRoot));
-            FxBaseRootTunnel(gmcRoot).setFxChildTunnel(address(gmc));
+            FxBaseChildTunnel(gouda).setFxRootTunnel(address(goudaTunnel));
+            FxBaseChildTunnel(safeHouses).setFxRootTunnel(address(safeHouseClaim));
         } else if (block.chainid != CHAINID_TEST) {
             linkWithRoot(address(gmc), "GMCRoot");
             linkWithRoot(address(gouda), "GoudaRootRelay");
+            linkWithRoot(address(safeHouses), "SafeHouseClaim");
         }
     }
 
     bytes32 constant AUTHORITY = keccak256("AUTHORITY");
     bytes32 constant GANG_VAULT_CONTROLLER = keccak256("GANG.VAULT.CONTROLLER");
 
-    function initContracts() internal virtual {
+    function initContractsChild() internal virtual {
         bool firstDeployment = firstTimeDeployed[block.chainid][address(game)];
 
         // INIT

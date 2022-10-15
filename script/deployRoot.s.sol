@@ -35,6 +35,18 @@ cp ~/git/eth/gang-war/deployments/5/deploy-latest.json ~/git/eth/gmc-website/dat
 cp ~/git/eth/gang-war/deployments/1/deploy-latest.json ~/git/eth/gmc-website/data/deployments_1.json
 
 */
+// import "solmate/test/utils/mocks/MockERC721.sol";
+
+// contract TestMint {
+//     constructor(address troupe) {
+//         for (uint256 i; i < 20; i++) {
+//             MockERC721(troupe).mint(0x2181838c46bEf020b8Beb756340ad385f5BD82a8, i);
+//         }
+//         for (uint256 i; i < 20; i++) {
+//             MockERC721(troupe).mint(tx.origin, 20 + i);
+//         }
+//     }
+// }
 
 contract deployRoot is SetupRoot {
     using futils for *;
@@ -44,15 +56,17 @@ contract deployRoot is SetupRoot {
 
         setUpContracts();
 
-        // gmc.airdrop([msg.sender].toMemory(), 500, false);
+        // new TestMint(address(troupe));
 
-        // gmc.unlockAndTransmit(msg.sender, 1.range(10));
-        // gmc.lockAndTransmit(msg.sender, 30.range(40));
-        // gmc.lockAndTransmit(msg.sender, 50.range(80));
+        // goudaRoot.mint(msg.sender, 100e18);
+        // goudaRoot.approve(address(goudaTunnel), type(uint256).max);
+        // goudaTunnel.lock(msg.sender, 50e18);
 
-        // gmc.airdrop([msg.sender].toMemory(), 50, true);
-        // gmc.airdrop([msg.sender].toMemory(), 100, true);
-        // gmc.airdrop([msg.sender].toMemory(), 10, true);
+        // MockERC721(troupe).mint(tx.origin, 20 + i);
+        // MockERC721(troupe).setApprovalForAll(address(safeHouseClaim), true);
+        // uint256[][] memory ids = new uint256[][](1);
+        // ids[0] = 26.range(31);
+        // safeHouseClaim.claim(ids);
 
         vm.stopBroadcast();
 

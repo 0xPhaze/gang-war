@@ -45,6 +45,8 @@ error ExceedsLimit();
 error InvalidQuantity();
 error InvalidSelector();
 
+/// @title Safe Houses
+/// @author phaze (https://github.com/0xPhaze)
 contract SafeHouses is UUPSUpgrade, OwnableUDS, ERC721EnumerableUDS, VRFConsumerV2, FxBaseChildTunnel {
     using LibString for uint256;
 

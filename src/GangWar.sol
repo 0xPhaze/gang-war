@@ -16,7 +16,7 @@ import {UUPSUpgrade} from "UDS/proxy/UUPSUpgrade.sol";
 // ------------- constants
 
 uint256 constant TIME_TRUCE = 4 hours;
-uint256 constant TIME_LOCKUP = 12 hours;
+uint256 constant TIME_LOCKUP = 8 hours;
 uint256 constant TIME_GANG_WAR = 3 hours;
 uint256 constant TIME_RECOVERY = 12 hours;
 uint256 constant TIME_REINFORCEMENTS = 5 hours;
@@ -26,7 +26,7 @@ uint256 constant BARON_DEFENSE_FORCE = 10;
 uint256 constant ATTACK_FAVOR = 65;
 uint256 constant DEFENSE_FAVOR = 200;
 
-uint256 constant LOCKUP_CHANCE = 20;
+uint256 constant LOCKUP_CHANCE = 15;
 uint256 constant LOCKUP_FINE = 25_000e18;
 uint256 constant RECOVERY_BARON_COST = 25_000e18;
 
@@ -55,6 +55,7 @@ uint256 constant ITEM_SMOKE_ATTACK_INCREASE = 30;
 uint256 constant ITEM_BARRICADES_DEFENSE_INCREASE = 30;
 uint256 constant ITEM_TIME_DELAY_USE = 0 hours;
 uint256 constant ITEM_TIME_DELAY_PURCHASE = 0 hours;
+uint256 constant COPS_LOCKUP_MINIMUM_INTERVAL = 20 minutes;
 
 // ------------- enum
 
@@ -144,6 +145,7 @@ struct GangWarDS {
     mapping(uint256 => mapping(uint256 => uint256)) districtDefenseForces;
     mapping(uint256 => uint256) baronItemLastPurchased;
     mapping(uint256 => uint256) baronItemLastUsed;
+    uint40 lastGlobalLockupTime;
 }
 
 // ------------- storage
@@ -350,47 +352,51 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
         District storage district = s().districts[districtId];
         (DISTRICT_STATE districtState, int256 stateCountdown) = _districtStateAndCountdown(district);
 
-        if (districtState != DISTRICT_STATE.IDLE && districtState != DISTRICT_STATE.REINFORCEMENT) {
-            revert DistrictInvalidState();
-        }
-        if (itemId == ITEM_BLITZ) {
-            if (
-                // require attacking/defending
-                (district.attackers != gang && district.occupants != gang) ||
-                districtState != DISTRICT_STATE.REINFORCEMENT
-            ) {
-                revert InvalidItemUsage();
-            }
-
-            s().districts[districtId].blitzTimeReduction = (uint256(stateCountdown) * ITEM_BLITZ_TIME_REDUCTION) / 100;
-        } else if (itemId == ITEM_BARRICADES) {
-            if (
-                // require defending
-                district.occupants != gang ||
-                (districtState != DISTRICT_STATE.REINFORCEMENT && districtState != DISTRICT_STATE.GANG_WAR)
-            ) {
-                revert InvalidItemUsage();
-            }
-        } else if (itemId == ITEM_SMOKE) {
-            if (
-                // require attacking
-                district.attackers != gang ||
-                (districtState != DISTRICT_STATE.REINFORCEMENT && districtState != DISTRICT_STATE.GANG_WAR)
-            ) {
-                revert InvalidItemUsage();
-            }
-        } else if (itemId == ITEM_911) {
+        if (itemId == ITEM_911) {
             uint256 requestId = requestVRF();
 
             s().requestIdToDistrictIds[requestId] = ITEM_911_REQUEST;
+        } else {
+            if (districtState != DISTRICT_STATE.IDLE && districtState != DISTRICT_STATE.REINFORCEMENT) {
+                revert DistrictInvalidState();
+            }
+
+            if (itemId == ITEM_BLITZ) {
+                if (
+                    // require attacking/defending
+                    (district.attackers != gang && district.occupants != gang) ||
+                    districtState != DISTRICT_STATE.REINFORCEMENT
+                ) {
+                    revert InvalidItemUsage();
+                }
+
+                s().districts[districtId].blitzTimeReduction =
+                    (uint256(stateCountdown) * ITEM_BLITZ_TIME_REDUCTION) /
+                    100;
+            } else if (itemId == ITEM_BARRICADES) {
+                if (
+                    // require defending
+                    district.occupants != gang ||
+                    (districtState != DISTRICT_STATE.REINFORCEMENT && districtState != DISTRICT_STATE.GANG_WAR)
+                ) {
+                    revert InvalidItemUsage();
+                }
+            } else if (itemId == ITEM_SMOKE) {
+                if (
+                    // require attacking
+                    district.attackers != gang ||
+                    (districtState != DISTRICT_STATE.REINFORCEMENT && districtState != DISTRICT_STATE.GANG_WAR)
+                ) {
+                    revert InvalidItemUsage();
+                }
+            }
+
+            // apply for all items except 911
+            _applyBaronItemToDistrict(itemId, districtId);
         }
 
         s().baronItems[gang][itemId] -= 1;
         s().baronItemLastUsed[baronId] = block.timestamp;
-
-        if (itemId != ITEM_911) {
-            _applyBaronItemToDistrict(itemId, districtId);
-        }
 
         emit BaronItemUsed(districtId, baronId, gang, itemId);
     }
@@ -973,6 +979,7 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
 
         if (upkeepIds != 0) {
             uint256 requestId = requestVRF();
+
             s().requestIdToDistrictIds[requestId] = upkeepIds;
         }
     }
@@ -987,7 +994,8 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
         uint256 rand = randomWords[0];
         District storage district;
 
-        bool lockup = copsLockupRequest || uint256(keccak256(abi.encode(rand, 0))) % 100 < LOCKUP_CHANCE;
+        bool lockup = copsLockupRequest ||
+            (rand % 100 < LOCKUP_CHANCE && block.timestamp - s().lastGlobalLockupTime > COPS_LOCKUP_MINIMUM_INTERVAL);
         uint256 lockupDistrictId = rand % 21;
 
         if (lockup) {
@@ -1004,6 +1012,8 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
                 // signal that it was triggered by an item
                 if (copsLockupRequest) {
                     _applyBaronItemToDistrict(ITEM_911, lockupDistrictId);
+
+                    s().lastGlobalLockupTime = uint40(block.timestamp);
                 }
             }
         }

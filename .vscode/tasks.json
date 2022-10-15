@@ -3,7 +3,7 @@
 	"tasks": [
 		{
             "type": "shell",
-			"command": "forge test -vvv",
+			"command": "forge test -vvvv --mc SafeHouses",
 			"group": {
 				"kind": "test",
 				"isDefault": true

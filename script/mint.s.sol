@@ -57,7 +57,7 @@ contract mint is SetupChild {
         // '0x6d711be0693b5ff41678ba3f4507c0bf1ae1ff17',
         // '0x673a278E13a5B6D34e43B3f7F936Ea89a7e6eEc7',
         // '0x5143b2f5e573be79aa5d96ae1367bfc6f095c4d9',
-        // '0xb32b26d02cf757e61c824b1416013714a460483f',
+        // '0xDe23301fEd4034651bCF6612A5f89D9ADC5b8a2b',
         // '0x205C4d9d198a2e9D74eee70151d1Ba02f3C70Daa',
         // '0x02C1422931439B3e945e2F2F721c80F6c0feaF56',
         // '0x205FfDa46164C3e6ae60AF559c82F26f9470072E',

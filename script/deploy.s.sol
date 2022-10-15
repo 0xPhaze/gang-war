@@ -7,6 +7,7 @@ import "/GangWar.sol";
 
 import "forge-std/Script.sol";
 import "futils/futils.sol";
+import "solmate/test/utils/mocks/MockERC721.sol";
 
 /* 
 
@@ -32,6 +33,11 @@ cp ~/git/eth/gang-war/out/GangVault.sol/GangVault.json ~/git/eth/gmc-website/dat
 cp ~/git/eth/gang-war/out/Mice.sol/Mice.json ~/git/eth/gmc-website/data/abi
 cp ~/git/eth/gang-war/out/SafeHouses.sol/SafeHouses.json ~/git/eth/gmc-website/data/abi
 
+cp ~/git/eth/gang-war/out/GMCRoot.sol/GMC.json ~/git/eth/gmc-website/data/abi/GMCRoot.json
+cp ~/git/eth/gang-war/out/MockERC20.sol/MockERC20.json ~/git/eth/gmc-website/data/abi
+cp ~/git/eth/gang-war/out/GoudaRootRelay.sol/GoudaRootRelay.json ~/git/eth/gmc-website/data/abi
+cp ~/git/eth/gang-war/out/SafeHouseClaim.sol/SafeHouseClaim.json ~/git/eth/gmc-website/data/abi
+
 cp ~/git/eth/gang-war/deployments/80001/deploy-latest.json ~/git/eth/gmc-website/data/deployments_80001.json
 cp ~/git/eth/gang-war/deployments/137/deploy-latest.json ~/git/eth/gmc-website/data/deployments_137.json
 cp ~/git/eth/gang-war/deployments/5/deploy-latest.json ~/git/eth/gmc-website/data/deployments_5.json
@@ -45,7 +51,12 @@ contract deploy is SetupChild {
     function run() external {
         startBroadcastIfNotDryRun();
 
+        // console.log("chainid", block.chainid, block.chainid == 80_001);
         setUpContracts();
+
+        // goudaRoot.mint(msg.sender, 100e18);
+        // goudaRoot.approve(address(goudaTunnel), type(uint256).max);
+        // goudaTunnel.lock(msg.sender, 50e18);
 
         // game.reset(occupants, yields);
         // game.setBaronItemBalances(0.range(NUM_BARON_ITEMS), 3.repeat(NUM_BARON_ITEMS));

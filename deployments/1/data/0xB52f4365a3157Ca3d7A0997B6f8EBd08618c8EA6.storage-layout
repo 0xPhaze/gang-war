@@ -1,0 +1,34 @@
+{
+  "storage": [
+    {
+      "astId": 4689,
+      "contract": "src/tokens/SafeHouseClaim.sol:SafeHouseClaim",
+      "label": "__storageLayout",
+      "offset": 0,
+      "slot": "0",
+      "type": "t_struct(OwnableDS)4679_storage"
+    }
+  ],
+  "types": {
+    "t_address": {
+      "encoding": "inplace",
+      "label": "address",
+      "numberOfBytes": "20"
+    },
+    "t_struct(OwnableDS)4679_storage": {
+      "encoding": "inplace",
+      "label": "struct OwnableDS",
+      "members": [
+        {
+          "astId": 4678,
+          "contract": "src/tokens/SafeHouseClaim.sol:SafeHouseClaim",
+          "label": "owner",
+          "offset": 0,
+          "slot": "0",
+          "type": "t_address"
+        }
+      ],
+      "numberOfBytes": "32"
+    }
+  }
+}

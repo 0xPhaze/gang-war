@@ -27,13 +27,13 @@ contract detachRoot is SetupRoot {
     function upgradeProxy(address proxy, address newImplementation) internal override {
         address oldImplementation = loadProxyStoredImplementation(proxy);
 
-        StaticProxy(proxy).upgradeToAndCall(newImplementation, abi.encodeCall(staticProxy.init, (oldImplementation)));
+        StaticProxy(proxy).upgradeToAndCall(newImplementation, abi.encodeCall(StaticProxy.init, (oldImplementation)));
     }
 
     function run() external {
         startBroadcastIfNotDryRun();
 
-        staticProxy = StaticProxy(setUpContract("StaticProxy")); // placeholder to disable UUPS contracts
+        StaticProxy staticProxy = StaticProxy(setUpContract("StaticProxy")); // placeholder to disable UUPS contracts
 
         setUpProxy(address(staticProxy), abi.encodeCall(staticProxy.init, (address(0))), "GMCRoot");
         setUpProxy(address(staticProxy), abi.encodeCall(staticProxy.init, (address(0))), "GoudaRootRelay");

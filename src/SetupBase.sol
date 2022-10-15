@@ -11,8 +11,31 @@ import {FxBaseRootTunnel} from "fx-contracts/base/FxBaseRootTunnel.sol";
 import {FxBaseChildTunnel} from "fx-contracts/base/FxBaseChildTunnel.sol";
 import {MockVRFCoordinator} from "../test/mocks/MockVRFCoordinator.sol";
 
+// ROOT
+import {GMC as GMCRoot} from "/tokens/GMCRoot.sol";
+import {GoudaRootRelay} from "/tokens/GoudaRootRelay.sol";
+import {SafeHouseClaim} from "/tokens/SafeHouseClaim.sol";
+
+import "solmate/test/utils/mocks/MockERC721.sol";
+import "solmate/test/utils/mocks/MockERC20.sol";
+
+// CHILD
+import "/GangWar.sol";
+import "/lib/VRFConsumerV2.sol";
+import {Mice} from "/tokens/Mice.sol";
+// import {GangWar} from "/GangWar.sol";
+import {GangToken} from "/tokens/GangToken.sol";
+import {SafeHouses} from "/tokens/SafeHouses.sol";
+import {GoudaChild} from "/tokens/GoudaChild.sol";
+import {StaticProxy} from "/utils/StaticProxy.sol";
+import {LibPackedMap} from "./lib/LibPackedMap.sol";
+import {DIAMOND_STORAGE_GMC_MARKET} from "/GMCMarket.sol";
+import {DIAMOND_STORAGE_GANG_WAR, SEASON} from "/GangWar.sol";
+import {DIAMOND_STORAGE_GMC_CHILD, GMCChild} from "/tokens/GMCChild.sol";
+import {DIAMOND_STORAGE_GANG_VAULT, DIAMOND_STORAGE_GANG_VAULT_FX, GangVault} from "/GangVault.sol";
+
 contract SetupBase is UpgradeScripts {
-    bool constant MOCK_TUNNEL_TESTING = true; // set to true to deploy MockFxTunnel (mock tunnel on same chain)
+    bool immutable MOCK_TUNNEL_TESTING = false || block.chainid == CHAINID_TEST; // set to true to deploy MockFxTunnel (mock tunnel on same chain)
 
     address coordinator;
     bytes32 linkKeyHash;
@@ -21,8 +44,6 @@ contract SetupBase is UpgradeScripts {
     address fxRoot;
     address fxChild;
     address fxRootCheckpointManager;
-
-    address constant GOUDA_ROOT = 0x3aD30C5E3496BE07968579169a96f00D56De4C1A;
 
     uint256 constant CHAINID_MAINNET = 1;
     uint256 constant CHAINID_RINKEBY = 4;
@@ -34,13 +55,46 @@ contract SetupBase is UpgradeScripts {
     uint256 chainIdChild;
     uint256 chainIdRoot;
 
+    uint256 lastDeployConfirmation = 1665831179;
+
+    // ROOT
+    GMCRoot gmcRoot;
+    GoudaRootRelay goudaTunnel;
+    SafeHouseClaim safeHouseClaim;
+    MockERC20 goudaRoot = MockERC20(0x3aD30C5E3496BE07968579169a96f00D56De4C1A);
+    MockERC721 troupe = MockERC721(0x74d9d90a7fc261FBe92eD47B606b6E0E00d75E70);
+
+    // CHILD
+    Mice mice;
+    GangWar game;
+    GMCChild gmc;
+    GangVault vault;
+    GangToken badges;
+    GoudaChild gouda;
+    GangToken[3] tokens;
+    StaticProxy staticProxy;
+    SafeHouses safeHouses;
+
     constructor() {
+        if (!isTestnet() && !UPGRADE_SCRIPTS_DRY_RUN) {
+            if (block.timestamp - lastDeployConfirmation > 10 minutes) {
+                console.log("\nMust reconfirm mainnet deployment:");
+                console.log("```");
+                console.log("uint256 lastDeployConfirmation = %s;", block.timestamp);
+                console.log("```");
+                revert(
+                    string.concat(
+                        "CONFIRMATION REQUIRED: ```\nuint256 lastDeployConfirmation = ",
+                        vm.toString(block.timestamp),
+                        ";\n```"
+                    )
+                );
+            }
+        }
         if (block.chainid == CHAINID_TEST) {
             vm.warp(1660993892);
             vm.roll(27702338);
         }
-
-        vm.label(GOUDA_ROOT, "GOUDA_ROOT");
     }
 
     function setUpChainlink() internal {
@@ -64,12 +118,11 @@ contract SetupBase is UpgradeScripts {
     }
 
     function setUpFxPortal() internal {
-        require(!MOCK_TUNNEL_TESTING || isTestnet(), "can't set mock tunnel tests on mainnet");
+        if (MOCK_TUNNEL_TESTING && !isTestnet()) revert("Mock Tunnel not allowed on mainnet.");
 
-        if (MOCK_TUNNEL_TESTING || block.chainid == CHAINID_TEST) {
+        if (MOCK_TUNNEL_TESTING) {
             // link these on same chain via MockTunnel for testing
-            fxRoot = setUpContract("MockFxTunnel");
-            fxChild = fxRoot;
+            fxChild = fxRoot = setUpContract("MockFxTunnel");
             chainIdRoot = block.chainid;
             chainIdChild = block.chainid;
         } else if (block.chainid == CHAINID_MAINNET) {
