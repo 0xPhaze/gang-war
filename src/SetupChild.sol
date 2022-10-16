@@ -233,11 +233,11 @@ contract SetupChild is SetupRoot {
     uint256 constant GANGSTER_CYBERP_3 = 9;
 
     uint256 constant BARON_YAKUZA_1 = 10_001;
-    uint256 constant BARON_CARTEL_1 = 10_002;
-    uint256 constant BARON_CYBERP_1 = 10_003;
-    uint256 constant BARON_YAKUZA_2 = 10_004;
-    uint256 constant BARON_CARTEL_2 = 10_005;
-    uint256 constant BARON_CYBERP_2 = 10_006;
+    uint256 constant BARON_YAKUZA_2 = 10_002;
+    uint256 constant BARON_CARTEL_1 = 10_008;
+    uint256 constant BARON_CARTEL_2 = 10_009;
+    uint256 constant BARON_CYBERP_1 = 10_015;
+    uint256 constant BARON_CYBERP_2 = 10_016;
 
     uint256 constant DISTRICT_YAKUZA_1 = 2;
     uint256 constant DISTRICT_CARTEL_1 = 0;

@@ -50,36 +50,36 @@ contract deploy is SetupChild {
 
     function run() external {
         startBroadcastIfNotDryRun();
-        isUpgradeSafe[137][0x2df5845ddC30B6ffb58C1B221f1e95BB927DF2EC][
-            0xFe4e4fD40f69BB08E01A745829d80091c1Aa7523
-        ] = true;
-        isUpgradeSafe[137][0x2df5845ddC30B6ffb58C1B221f1e95BB927DF2EC][
-            0x0925BD5f35a37a0754Ef108110B13Ea4ff15E016
-        ] = true;
 
         // console.log("chainid", block.chainid, block.chainid == 80_001);
         setUpContracts();
 
+        if (isTestnet()) {
+            game.reset(occupants, yields);
+            game.setBaronItemBalances(0.range(NUM_BARON_ITEMS), 3.repeat(NUM_BARON_ITEMS));
+            game.setSeason(1665421200, 1668099600);
+            gmc.resyncIds(msg.sender, 1.range(21));
+            gmc.resyncIds(0x2181838c46bEf020b8Beb756340ad385f5BD82a8, 21.range(41));
+            gmc.resyncBarons(
+                [
+                    msg.sender,
+                    msg.sender,
+                    msg.sender,
+                    0x2181838c46bEf020b8Beb756340ad385f5BD82a8,
+                    0x2181838c46bEf020b8Beb756340ad385f5BD82a8,
+                    0x2181838c46bEf020b8Beb756340ad385f5BD82a8
+                ].toMemory()
+            );
+            bytes32 CONTROLLER = keccak256("GANG.VAULT.CONTROLLER");
+            vault.grantRole(CONTROLLER, msg.sender);
+            vault.setYield(0, [uint256(7_700_000), 7_700_000, 7_700_000]);
+            vault.setYield(1, [uint256(7_700_000), 7_700_000, 7_700_000]);
+            vault.setYield(2, [uint256(7_700_000), 7_700_000, 7_700_000]);
+        }
+
         // goudaRoot.mint(msg.sender, 100e18);
         // goudaRoot.approve(address(goudaTunnel), type(uint256).max);
         // goudaTunnel.lock(msg.sender, 50e18);
-
-        // game.reset(occupants, yields);
-        // game.setBaronItemBalances(0.range(NUM_BARON_ITEMS), 3.repeat(NUM_BARON_ITEMS));
-        // game.setSeason(1665421200, 1668099600);
-
-        // gmc.resyncIds(msg.sender, 1.range(21));
-        // gmc.resyncIds(0x2181838c46bEf020b8Beb756340ad385f5BD82a8, 21.range(41));
-        // gmc.resyncBarons(
-        //     [
-        //         msg.sender,
-        //         msg.sender,
-        //         msg.sender,
-        //         0x2181838c46bEf020b8Beb756340ad385f5BD82a8,
-        //         0x2181838c46bEf020b8Beb756340ad385f5BD82a8,
-        //         0x2181838c46bEf020b8Beb756340ad385f5BD82a8
-        //     ].toMemory()
-        // );
 
         vm.stopBroadcast();
 

@@ -3,8 +3,6 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Script.sol";
 
-import "/lib/VRFConsumerV2.sol";
-
 import {MockFxTunnel} from "fx-contracts/../test/mocks/MockFxTunnel.sol";
 import {UpgradeScripts} from "upgrade-scripts/UpgradeScripts.sol";
 import {FxBaseRootTunnel} from "fx-contracts/base/FxBaseRootTunnel.sol";
@@ -23,7 +21,6 @@ import "solmate/test/utils/mocks/MockERC20.sol";
 import "/GangWar.sol";
 import "/lib/VRFConsumerV2.sol";
 import {Mice} from "/tokens/Mice.sol";
-// import {GangWar} from "/GangWar.sol";
 import {GangToken} from "/tokens/GangToken.sol";
 import {SafeHouses} from "/tokens/SafeHouses.sol";
 import {GoudaChild} from "/tokens/GoudaChild.sol";
@@ -35,25 +32,29 @@ import {DIAMOND_STORAGE_GMC_CHILD, GMCChild} from "/tokens/GMCChild.sol";
 import {DIAMOND_STORAGE_GANG_VAULT, DIAMOND_STORAGE_GANG_VAULT_FX, GangVault} from "/GangVault.sol";
 
 contract SetupBase is UpgradeScripts {
-    bool immutable MOCK_TUNNEL_TESTING = false || block.chainid == CHAINID_TEST; // set to true to deploy MockFxTunnel (mock tunnel on same chain)
-
+    // chainlink
     address coordinator;
     bytes32 linkKeyHash;
     uint64 linkSubId;
 
+    // PoS Bridge
     address fxRoot;
     address fxChild;
     address fxRootCheckpointManager;
 
+    uint256 chainIdChild;
+    uint256 chainIdRoot;
+
+    // set to true to deploy MockFxTunnel (mock tunnel on same chain)
+    bool immutable MOCK_TUNNEL_TESTING = false || block.chainid == CHAINID_TEST;
+
+    // Chains
     uint256 constant CHAINID_MAINNET = 1;
     uint256 constant CHAINID_RINKEBY = 4;
     uint256 constant CHAINID_GOERLI = 5;
     uint256 constant CHAINID_POLYGON = 137;
     uint256 constant CHAINID_MUMBAI = 80_001;
     uint256 constant CHAINID_TEST = 31_337;
-
-    uint256 chainIdChild;
-    uint256 chainIdRoot;
 
     uint256 lastDeployConfirmation = 1665908601;
 
@@ -141,7 +142,7 @@ contract SetupBase is UpgradeScripts {
             fxRootCheckpointManager = 0x2890bA17EfE978480615e330ecB65333b880928e;
         } else if (block.chainid == CHAINID_MUMBAI) {
             chainIdRoot = CHAINID_GOERLI;
-            chainIdChild = CHAINID_MUMBAI;
+
             fxChild = 0xCf73231F28B7331BBe3124B907840A94851f9f11;
         } else if (block.chainid == CHAINID_RINKEBY) {}
 

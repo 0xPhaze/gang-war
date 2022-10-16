@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-// import "./Constants.sol";
 import {GangVault} from "./GangVault.sol";
 import {GangToken} from "./tokens/GangToken.sol";
 import {LibPackedMap} from "./lib/LibPackedMap.sol";
@@ -40,15 +39,15 @@ uint256 constant BADGES_EARNED_DEFEAT = 2e18;
 
 uint256 constant UPKEEP_INTERVAL = 1 minutes;
 
+uint256 constant NUM_BARON_ITEMS = 5;
 uint256 constant ITEM_SEWER = 0;
 uint256 constant ITEM_BLITZ = 1;
 uint256 constant ITEM_BARRICADES = 2;
 uint256 constant ITEM_SMOKE = 3;
 uint256 constant ITEM_911 = 4;
 
-uint256 constant ITEM_911_REQUEST = 1 << 40;
-
-uint256 constant NUM_BARON_ITEMS = 5;
+uint256 constant REQUEST_SLOT_ITEM_911 = 40;
+uint256 constant REQUEST_SLOT_VRF = 255;
 
 uint256 constant ITEM_BLITZ_TIME_REDUCTION = 80;
 uint256 constant ITEM_SMOKE_ATTACK_INCREASE = 30;
@@ -109,7 +108,7 @@ struct District {
     uint256 attackDeclarationTime;
     uint256 baronAttackId;
     uint256 baronDefenseId;
-    uint256 lastUpkeepTime; // time when upkeep is last triggered
+    uint256 lastUpkeepTime; // UNUSED; time when upkeep is last triggered
     uint256 lastOutcomeTime; // time when vrf result is in
     uint256 lockupTime;
     uint256 yield;
@@ -137,7 +136,7 @@ struct GangWarDS {
     /*      Gang =>        itemId   => balance  */
     mapping(Gang => mapping(uint256 => uint256)) baronItems;
     /*   districtId => districtIds  */
-    mapping(uint256 => uint256) requestIdToDistrictIds; // used by chainlink VRF request callbacks
+    mapping(uint256 => uint256) unused_requestIdToDistrictIds; // UNUSED; placeholder
     /*   districtId =>     roundId     => outcome  */
     mapping(uint256 => mapping(uint256 => uint256)) gangWarOutcomes;
     /*   districtId =>     roundId     => numForces */
@@ -146,6 +145,7 @@ struct GangWarDS {
     mapping(uint256 => uint256) baronItemLastPurchased;
     mapping(uint256 => uint256) baronItemLastUsed;
     uint40 lastGlobalLockupTime;
+    uint256 latestRequests;
 }
 
 // ------------- storage
@@ -353,9 +353,12 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
         (DISTRICT_STATE districtState, int256 stateCountdown) = _districtStateAndCountdown(district);
 
         if (itemId == ITEM_911) {
-            uint256 requestId = requestVRF();
+            uint256 requests = s().latestRequests;
 
-            s().requestIdToDistrictIds[requestId] = ITEM_911_REQUEST;
+            if ((requests >> REQUEST_SLOT_ITEM_911) & 1 != 0) revert MinimumTimeDelayNotPassed();
+            if ((requests >> REQUEST_SLOT_VRF) & 1 == 0) requestVRF();
+
+            s().latestRequests = requests | (1 << REQUEST_SLOT_ITEM_911) | (1 << REQUEST_SLOT_VRF);
         } else {
             if (districtState != DISTRICT_STATE.IDLE && districtState != DISTRICT_STATE.REINFORCEMENT) {
                 revert DistrictInvalidState();
@@ -935,61 +938,62 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
     /* ------------- upkeep ------------- */
 
     function checkUpkeep(bytes calldata) external view returns (bool, bytes memory) {
-        uint256 ids;
         District storage district;
-
-        for (uint256 id; id < 21; ++id) {
-            district = s().districts[id];
-
-            (DISTRICT_STATE districtState, ) = _districtStateAndCountdown(district);
-
-            if (
-                districtState == DISTRICT_STATE.POST_GANG_WAR &&
-                block.timestamp - district.lastUpkeepTime > UPKEEP_INTERVAL // at least wait 1 minute for re-run
-            ) {
-                ids |= 1 << id;
-            }
-        }
-
-        return (ids > 0, abi.encode(ids));
-    }
-
-    function performUpkeep(bytes calldata performData) external {
-        uint256 ids = abi.decode(performData, (uint256));
-
-        District storage district;
-
         uint256 upkeepIds;
+        uint256 requestedIds = s().latestRequests;
 
         for (uint256 id; id < 21; ++id) {
-            if ((ids >> id) & 1 != 0) {
+            if ((requestedIds >> id) & 1 == 0) {
                 district = s().districts[id];
 
                 (DISTRICT_STATE districtState, ) = _districtStateAndCountdown(district);
 
-                if (
-                    districtState == DISTRICT_STATE.POST_GANG_WAR &&
-                    block.timestamp - district.lastUpkeepTime > UPKEEP_INTERVAL // at least wait 1 minute for re-run
-                ) {
-                    district.lastUpkeepTime = block.timestamp;
+                if (districtState == DISTRICT_STATE.POST_GANG_WAR) {
                     upkeepIds |= 1 << id;
                 }
             }
         }
 
-        if (upkeepIds != 0) {
-            uint256 requestId = requestVRF();
+        return (upkeepIds > 0, abi.encode(upkeepIds));
+    }
 
-            s().requestIdToDistrictIds[requestId] = upkeepIds;
+    function performUpkeep(bytes calldata performData) external {
+        uint256 upkeepIds = uint256(bytes32(performData));
+
+        District storage district;
+
+        uint256 requestedIds = s().latestRequests;
+        uint256 newRequestedIds = requestedIds;
+
+        // should normally always only add new ids, but never remove any
+        uint256 diffIds = newRequestedIds ^ upkeepIds;
+
+        for (uint256 id; id < 21; ++id) {
+            if ((diffIds >> id) & 1 != 0) {
+                district = s().districts[id];
+
+                (DISTRICT_STATE districtState, ) = _districtStateAndCountdown(district);
+
+                if (districtState == DISTRICT_STATE.POST_GANG_WAR) {
+                    newRequestedIds |= 1 << id;
+                }
+            }
         }
+
+        if (newRequestedIds != 0 && (requestedIds >> REQUEST_SLOT_VRF) & 1 == 0) {
+            requestVRF();
+
+            newRequestedIds |= 1 << REQUEST_SLOT_VRF;
+        }
+        if (newRequestedIds != requestedIds) s().latestRequests = newRequestedIds;
     }
 
     function fulfillRandomWords(uint256 requestId, uint256[] calldata randomWords) internal override {
-        uint256 ids = s().requestIdToDistrictIds[requestId];
+        uint256 requestIds = s().latestRequests;
 
-        if (ids == 0) revert InvalidVRFRequest();
+        if (requestIds == 0) revert InvalidVRFRequest();
 
-        bool copsLockupRequest = ids == ITEM_911_REQUEST;
+        bool copsLockupRequest = (requestIds >> REQUEST_SLOT_ITEM_911) & 1 == 1;
 
         uint256 rand = randomWords[0];
         District storage district;
@@ -1018,69 +1022,65 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
             }
         }
 
-        if (!copsLockupRequest) {
-            bool validUpkeep;
+        // bool validUpkeep = copsLockupRequest;
 
-            for (uint256 id; id < 21; ) {
-                if (gasleft() < 2_000) break; // get better estimate
+        for (uint256 id; id < 21; ) {
+            // fail-safe to not get stuck
+            if (gasleft() < 2_000) break;
 
-                if ((ids >> id) & 1 != 0) {
-                    district = s().districts[id];
+            if ((requestIds >> id) & 1 != 0) {
+                district = s().districts[id];
 
-                    // 911 call might've changed the district state
-                    // note that we need to mark the call as valid
-                    if (lockup && lockupDistrictId == id) {
-                        validUpkeep = true;
-                        unchecked {
-                            ++id;
-                        }
-                        continue;
+                if (lockup && lockupDistrictId == id) {
+                    unchecked {
+                        ++id;
                     }
-
-                    (DISTRICT_STATE districtState, ) = _districtStateAndCountdown(district);
-
-                    if (districtState == DISTRICT_STATE.POST_GANG_WAR) {
-                        Gang attackers = district.attackers;
-                        Gang occupants = district.occupants;
-
-                        uint256 roundId = district.roundId;
-
-                        uint256 r = uint256(keccak256(abi.encode(rand, id)));
-
-                        s().gangWarOutcomes[id][roundId] = r;
-
-                        if (gangAttackSuccess(id, roundId)) {
-                            vault.transferYield(
-                                uint256(occupants),
-                                uint256(attackers),
-                                uint256(district.token),
-                                district.yield
-                            );
-
-                            district.occupants = attackers;
-
-                            emit GangWarWon(id, occupants, attackers);
-                        } else {
-                            emit GangWarWon(id, attackers, occupants);
-                        }
-
-                        _advanceDistrictRound(id);
-                    }
-
-                    validUpkeep = true;
+                    continue;
                 }
 
-                unchecked {
-                    ++id;
+                (DISTRICT_STATE districtState, ) = _districtStateAndCountdown(district);
+
+                if (districtState == DISTRICT_STATE.POST_GANG_WAR) {
+                    Gang attackers = district.attackers;
+                    Gang occupants = district.occupants;
+
+                    uint256 roundId = district.roundId;
+
+                    uint256 r = uint256(keccak256(abi.encode(rand, id)));
+
+                    s().gangWarOutcomes[id][roundId] = r;
+
+                    if (gangAttackSuccess(id, roundId)) {
+                        vault.transferYield(
+                            uint256(occupants),
+                            uint256(attackers),
+                            uint256(district.token),
+                            district.yield
+                        );
+
+                        district.occupants = attackers;
+
+                        emit GangWarWon(id, occupants, attackers);
+                    } else {
+                        emit GangWarWon(id, attackers, occupants);
+                    }
+
+                    _advanceDistrictRound(id);
                 }
+
+                // validUpkeep = true;
             }
 
-            // revert, because we don't want any lockup
-            // to be triggered for invalid/duplicate requests
-            if (!validUpkeep) revert InvalidUpkeep();
+            unchecked {
+                ++id;
+            }
         }
 
-        delete s().requestIdToDistrictIds[requestId];
+        // // revert, because we don't want any lockup
+        // // to be triggered for invalid requests
+        // if (!validUpkeep) revert InvalidUpkeep();
+
+        delete s().latestRequests;
     }
 
     /* ------------- modifier ------------- */

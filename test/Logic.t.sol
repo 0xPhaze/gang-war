@@ -520,53 +520,29 @@ contract TestGangWarGameLogic is TestGangWar {
 
         skip(10 days);
 
-        (upkeepNeeded, ) = game.checkUpkeep("");
+        (upkeepNeeded, data) = game.checkUpkeep("");
         assertFalse(upkeepNeeded);
 
         // first district that will need upkeep
         vm.prank(bob);
         game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, BARON_YAKUZA_1, false);
 
-        (upkeepNeeded, ) = game.checkUpkeep("");
+        (upkeepNeeded, data) = game.checkUpkeep("");
         assertFalse(upkeepNeeded);
 
-        // upkeep is needed after time passage
+        // upkeep is needed only after time passage
         skip(TIME_REINFORCEMENTS);
 
-        (upkeepNeeded, ) = game.checkUpkeep("");
+        (upkeepNeeded, data) = game.checkUpkeep("");
         assertFalse(upkeepNeeded);
 
         // upkeep is needed after gang war
         skip(TIME_GANG_WAR);
 
         (upkeepNeeded, data) = game.checkUpkeep("");
-        assertTrue(upkeepNeeded);
-    }
-
-    function test_performUpkeep() public {
-        bool upkeepNeeded;
-        bytes memory data;
-        bytes32[] memory writes;
-
-        vm.prank(bob);
-        game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, BARON_YAKUZA_1, false);
-
-        skip(TIME_REINFORCEMENTS + TIME_GANG_WAR);
-
-        (upkeepNeeded, data) = game.checkUpkeep("");
 
         assertTrue(upkeepNeeded);
         assertEq(abi.decode(data, (uint256)), 1 << DISTRICT_CARTEL_1);
-
-        // performing upkeep does not do anything (all true except for district cartel 1)
-        vm.record();
-
-        // vm.expectRevert(InvalidUpkeep.selector);
-        game.performUpkeep(abi.encode(~uint256(1 << DISTRICT_CARTEL_1)));
-
-        (, writes) = vm.accesses(address(game));
-
-        assertEq(writes.length, 0);
 
         // add an additional attack that needs upkeep
         vm.prank(bob);
@@ -574,16 +550,68 @@ contract TestGangWarGameLogic is TestGangWar {
 
         skip(TIME_REINFORCEMENTS + TIME_GANG_WAR);
 
-        (, data) = game.checkUpkeep("");
-        assertEq(abi.decode(data, (uint256)), (1 << DISTRICT_CARTEL_1) | (1 << DISTRICT_CARTEL_2));
+        (upkeepNeeded, data) = game.checkUpkeep("");
 
-        // perform upkeep on 2
+        assertTrue(upkeepNeeded);
+        assertEq(abi.decode(data, (uint256)), (1 << DISTRICT_CARTEL_1) | (1 << DISTRICT_CARTEL_2));
+    }
+
+    function test_performUpkeep_noWrites() public {
+        bool upkeepNeeded;
+        bytes memory data;
+        bytes32[] memory writes;
+
+        test_checkUpkeep();
+
+        (upkeepNeeded, data) = game.checkUpkeep("");
+
+        vm.record();
+
+        // performing upkeep does not do anything
+        // when selecting all ids except those that need upkeep
+        game.performUpkeep(abi.encode(~abi.decode(data, (uint256))));
+
+        (, writes) = vm.accesses(address(game));
+
+        assertEq(writes.length, 0);
+    }
+
+    function test_performUpkeep() public {
+        bool upkeepNeeded;
+        bytes memory data;
+        bytes32[] memory writes;
+
+        test_checkUpkeep();
+
+        (upkeepNeeded, data) = game.checkUpkeep("");
+
+        assertTrue(upkeepNeeded);
+
+        game.performUpkeep(data);
+
+        (upkeepNeeded, data) = game.checkUpkeep("");
+
+        assertFalse(upkeepNeeded);
+    }
+
+    function test_performUpkeep2() public {
+        bool upkeepNeeded;
+        bytes memory data;
+        bytes32[] memory writes;
+
+        test_checkUpkeep();
+
+        (upkeepNeeded, data) = game.checkUpkeep("");
+
+        // perform upkeep on 1; leaves 2 with upkeep needed
         game.performUpkeep(abi.encode(1 << DISTRICT_CARTEL_1));
 
         (, data) = game.checkUpkeep("");
-        assertEq(abi.decode(data, (uint256)), (1 << DISTRICT_CARTEL_2));
 
-        // performing upkeep twice does not do anything
+        assertEq(abi.decode(data, (uint256)), (1 << DISTRICT_CARTEL_2));
+        assertEq(MockVRFCoordinator(coordinator).numPendingRequests(), 1);
+
+        // performing upkeep twice on 1 does not do anything
         vm.record();
 
         game.performUpkeep(abi.encode(1 << DISTRICT_CARTEL_1));
@@ -591,39 +619,30 @@ contract TestGangWarGameLogic is TestGangWar {
         (, writes) = vm.accesses(address(game));
         assertEq(writes.length, 0);
 
-        // upkeep 5
+        // upkeep 2
         game.performUpkeep(abi.encode(1 << DISTRICT_CARTEL_2));
 
         // checkUpkeep should be false after perform
         (upkeepNeeded, data) = game.checkUpkeep("");
+
         assertFalse(upkeepNeeded);
         assertEq(abi.decode(data, (uint256)), 0);
+        // it should not have added a new request to vrf
+        assertEq(MockVRFCoordinator(coordinator).numPendingRequests(), 1);
 
         // waiting for 1 minute without confirming VRF call should reset request status
-        skip(5 minutes + 1);
+        skip(1 << 40);
 
         (upkeepNeeded, data) = game.checkUpkeep("");
-        assertTrue(upkeepNeeded);
-        assertEq(abi.decode(data, (uint256)), (1 << DISTRICT_CARTEL_1) | (1 << DISTRICT_CARTEL_2));
+        assertFalse(upkeepNeeded);
+        assertEq(abi.decode(data, (uint256)), 0);
     }
 
-    /* ------------- fullfillRandomWords() ------------- */
+    /* ------------- fulfillRandomWords() ------------- */
 
-    function test_fullfillRandomWords() public {
+    function test_fulfillRandomWords() public {
         bool upkeepNeeded;
         bytes memory data;
-
-        vm.prank(bob);
-        game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_1, BARON_YAKUZA_1, false);
-
-        vm.prank(bob);
-        game.baronDeclareAttack(DISTRICT_YAKUZA_1, DISTRICT_CARTEL_2, BARON_YAKUZA_2, false);
-
-        skip(TIME_REINFORCEMENTS + TIME_GANG_WAR);
-
-        (upkeepNeeded, data) = game.checkUpkeep("");
-
-        game.performUpkeep(data);
 
         // assertions
         District memory district1;
@@ -632,25 +651,19 @@ contract TestGangWarGameLogic is TestGangWar {
         district1 = game.getDistrict(DISTRICT_CARTEL_1);
         district2 = game.getDistrict(DISTRICT_CARTEL_2);
 
-        assertEq(district1.state, DISTRICT_STATE.POST_GANG_WAR);
-        assertEq(district2.state, DISTRICT_STATE.POST_GANG_WAR);
-        assertEq(district1.roundId, 1); // starts at 1
+        assertEq(district1.state, DISTRICT_STATE.IDLE);
+        assertEq(district2.state, DISTRICT_STATE.IDLE);
+        assertEq(district1.roundId, 1);
         assertEq(district2.roundId, 1);
-        assertEq(district1.lastUpkeepTime, block.timestamp);
-        assertEq(district2.lastUpkeepTime, block.timestamp);
         assertEq(district1.lastOutcomeTime, 0);
         assertEq(district2.lastOutcomeTime, 0);
         assertEq(game.gangWarOutcome(DISTRICT_CARTEL_1, 1), 0);
         assertEq(game.gangWarOutcome(DISTRICT_CARTEL_2, 1), 0);
 
-        // upkeepNeeded should be false now
-        (upkeepNeeded, data) = game.checkUpkeep("");
-        uint256[] memory ids = abi.decode(data, (uint256[]));
-
-        assertFalse(upkeepNeeded);
-        assertEq(ids.length, 0);
+        test_performUpkeep();
 
         MockVRFCoordinator(coordinator).fulfillLatestRequest();
+        assertEq(MockVRFCoordinator(coordinator).numPendingRequests(), 0);
 
         district1 = game.getDistrict(DISTRICT_CARTEL_1);
         district2 = game.getDistrict(DISTRICT_CARTEL_2);
@@ -659,20 +672,31 @@ contract TestGangWarGameLogic is TestGangWar {
         assertEq(district2.state, DISTRICT_STATE.TRUCE);
         assertEq(district1.roundId, 2);
         assertEq(district2.roundId, 2);
-        assertEq(district1.lastOutcomeTime, block.timestamp);
-        assertEq(district2.lastOutcomeTime, block.timestamp);
         assertTrue(game.gangWarOutcome(DISTRICT_CARTEL_1, 1) > 0);
         assertTrue(game.gangWarOutcome(DISTRICT_CARTEL_2, 1) > 0);
 
-        // check district state
+        // upkeep should remain false
+        skip(10 minutes);
 
-        // upkeep should remain false, even after 1 additional minute
-        skip(1 minutes + 1);
         (upkeepNeeded, data) = game.checkUpkeep("");
-        ids = abi.decode(data, (uint256[]));
-
         assertFalse(upkeepNeeded);
-        assertEq(ids.length, 0);
+
+        // try another
+        vm.prank(bob);
+        game.baronDeclareAttack(DISTRICT_CYBERP_2, DISTRICT_YAKUZA_2, BARON_CYBERP_1, false);
+
+        skip(TIME_REINFORCEMENTS + TIME_GANG_WAR);
+
+        (upkeepNeeded, data) = game.checkUpkeep("");
+        game.performUpkeep(data);
+
+        assertEq(MockVRFCoordinator(coordinator).numPendingRequests(), 1);
+        MockVRFCoordinator(coordinator).fulfillLatestRequest();
+
+        district1 = game.getDistrict(DISTRICT_YAKUZA_2);
+        assertEq(district1.state, DISTRICT_STATE.TRUCE);
+        assertEq(district1.roundId, 2);
+        assertTrue(game.gangWarOutcome(DISTRICT_YAKUZA_2, 1) > 0);
     }
 
     /* ------------- injury() ------------- */

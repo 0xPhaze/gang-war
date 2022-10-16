@@ -8,6 +8,10 @@ contract MockVRFCoordinator is IVRFCoordinatorV2 {
     address public game;
     uint256[] public pendingRequests;
 
+    function numPendingRequests() public view returns (uint256) {
+        return pendingRequests.length;
+    }
+
     function requestRandomWords(
         bytes32,
         uint64,

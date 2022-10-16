@@ -61,9 +61,7 @@ abstract contract VRFConsumerV2 {
     /* ------------- external ------------- */
 
     function rawFulfillRandomWords(uint256 requestId, uint256[] calldata randomWords) external payable {
-        if (msg.sender != coordinator) {
-            revert CallerNotCoordinator();
-        }
+        if (msg.sender != coordinator) revert CallerNotCoordinator();
 
         fulfillRandomWords(requestId, randomWords);
     }

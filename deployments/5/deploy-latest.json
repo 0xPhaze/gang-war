@@ -1,9 +1,8 @@
 {
-  "git-commit-hash": "04b235f9511d7e8bda39405d438bcbc8bc4777f5",
+  "git-commit-hash": "2d062874eb90e8888c816d1f64da74f34fc22f20",
   "GoudaRoot": "0x1bbe2a5a20b8C2d484F4da131e3c566229030Ed1",
   "Troupe": "0x2D70089484d0789e92d8a2ae1F006CbFD975874E",
   "GoudaRootRelay": "0x8a8cD089C996181C56b23Fd370e8ECF7f2679206",
   "GMCRoot": "0x3407064ee2Cf92754B4273bF576Ac61c7d21B47D",
-  "SafeHouseClaimImplementation": "0x08DEb34ff567021E037ed511235D6F4e3137f8AB",
-  "SafeHouseClaim": "0xb6B17A40578E7c6411253f699Ab12Bfcd64cDa5c"
+  "SafeHouseClaim": "0xEF615AB3816022926794642d73edb7ee29CE98fe"
 }
