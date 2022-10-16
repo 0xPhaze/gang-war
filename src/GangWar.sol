@@ -16,7 +16,7 @@ import {UUPSUpgrade} from "UDS/proxy/UUPSUpgrade.sol";
 // ------------- constants
 
 uint256 constant TIME_TRUCE = 4 hours;
-uint256 constant TIME_LOCKUP = 8 hours;
+uint256 constant TIME_LOCKUP = 12 hours;
 uint256 constant TIME_GANG_WAR = 3 hours;
 uint256 constant TIME_RECOVERY = 12 hours;
 uint256 constant TIME_REINFORCEMENTS = 5 hours;

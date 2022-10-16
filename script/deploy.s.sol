@@ -50,6 +50,12 @@ contract deploy is SetupChild {
 
     function run() external {
         startBroadcastIfNotDryRun();
+        isUpgradeSafe[137][0x2df5845ddC30B6ffb58C1B221f1e95BB927DF2EC][
+            0xFe4e4fD40f69BB08E01A745829d80091c1Aa7523
+        ] = true;
+        isUpgradeSafe[137][0x2df5845ddC30B6ffb58C1B221f1e95BB927DF2EC][
+            0x0925BD5f35a37a0754Ef108110B13Ea4ff15E016
+        ] = true;
 
         // console.log("chainid", block.chainid, block.chainid == 80_001);
         setUpContracts();

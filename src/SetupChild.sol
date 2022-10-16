@@ -104,7 +104,7 @@ contract SetupChild is SetupRoot {
             1_500_000
         );
 
-        bool keepExistingGangWar = true;
+        bool keepExistingGangWar = false;
         address gangWarImpl = setUpContract("GangWar", gangWarArgs, "GangWarImplementation", keepExistingGangWar);
         game = GangWar(setUpProxy(gangWarImpl, abi.encodeWithSelector(GangWar.init.selector), "GangWar", keepExistingGangWar)); // prettier-ignore
 

@@ -55,7 +55,7 @@ contract SetupBase is UpgradeScripts {
     uint256 chainIdChild;
     uint256 chainIdRoot;
 
-    uint256 lastDeployConfirmation = 1665831179;
+    uint256 lastDeployConfirmation = 1665908601;
 
     // ROOT
     GMCRoot gmcRoot;
@@ -84,7 +84,7 @@ contract SetupBase is UpgradeScripts {
                 console.log("```");
                 revert(
                     string.concat(
-                        "CONFIRMATION REQUIRED: ```\nuint256 lastDeployConfirmation = ",
+                        "CONFIRMATION REQUIRED: \n```\nuint256 lastDeployConfirmation = ",
                         vm.toString(block.timestamp),
                         ";\n```"
                     )
