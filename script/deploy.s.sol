@@ -51,7 +51,6 @@ contract deploy is SetupChild {
     function run() external {
         startBroadcastIfNotDryRun();
 
-        // console.log("chainid", block.chainid, block.chainid == 80_001);
         setUpContracts();
 
         if (isTestnet()) {

@@ -579,7 +579,6 @@ contract TestGangWarGameLogic is TestGangWar {
     function test_performUpkeep() public {
         bool upkeepNeeded;
         bytes memory data;
-        bytes32[] memory writes;
 
         test_checkUpkeep();
 

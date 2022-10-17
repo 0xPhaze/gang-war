@@ -162,7 +162,6 @@ function s() pure returns (GangWarDS storage diamondStorage) {
 // ------------- errors
 
 error InvalidToken();
-error InvalidUpkeep();
 error NotAuthorized();
 error InvalidItemId();
 error InvalidItemUsage();
@@ -271,7 +270,7 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
     function gangAttackSuccess(uint256 districtId, uint256 roundId) public view returns (bool) {
         uint256 gRand = s().gangWarOutcomes[districtId][roundId];
 
-        uint256 p = _gangWarWonDistrictProb(districtId, roundId);
+        uint256 p = gangWarWinProbability(districtId, roundId);
 
         return gRand >> 128 < p;
     }
@@ -712,7 +711,7 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
     ) private view returns (bool) {
         uint256 gRand = s().gangWarOutcomes[districtId][roundId];
 
-        uint256 wonP = _gangWarWonDistrictProb(districtId, roundId);
+        uint256 wonP = gangWarWinProbability(districtId, roundId);
 
         bool won = gRand >> 128 < wonP;
 
@@ -723,7 +722,7 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
         return pRand >> 128 < p;
     }
 
-    function _gangWarWonDistrictProb(uint256 districtId, uint256 roundId) private view returns (uint256) {
+    function gangWarWinProbability(uint256 districtId, uint256 roundId) public view returns (uint256) {
         uint256 attackForce = s().districtAttackForces[districtId][roundId];
         uint256 defenseForce = s().districtDefenseForces[districtId][roundId];
 
@@ -922,7 +921,7 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
 
                 badges.mint(owner, badgesEarned);
 
-                uint256 p = _gangWarWonDistrictProb(districtId, roundId);
+                uint256 p = gangWarWinProbability(districtId, roundId);
 
                 emit BadgesEarned(districtId, gangsterId, gangOf(gangsterId), lastRoundVictory, p);
 
@@ -988,7 +987,7 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
         if (newRequestedIds != requestedIds) s().latestRequests = newRequestedIds;
     }
 
-    function fulfillRandomWords(uint256 requestId, uint256[] calldata randomWords) internal override {
+    function fulfillRandomWords(uint256, uint256[] calldata randomWords) internal override {
         uint256 requestIds = s().latestRequests;
 
         if (requestIds == 0) revert InvalidVRFRequest();
@@ -1021,8 +1020,6 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
                 }
             }
         }
-
-        // bool validUpkeep = copsLockupRequest;
 
         for (uint256 id; id < 21; ) {
             // fail-safe to not get stuck
@@ -1067,18 +1064,12 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
 
                     _advanceDistrictRound(id);
                 }
-
-                // validUpkeep = true;
             }
 
             unchecked {
                 ++id;
             }
         }
-
-        // // revert, because we don't want any lockup
-        // // to be triggered for invalid requests
-        // if (!validUpkeep) revert InvalidUpkeep();
 
         delete s().latestRequests;
     }
