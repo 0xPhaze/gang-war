@@ -86,6 +86,10 @@ abstract contract GMCMarket {
         return s().listedIds[0].includes(id);
     }
 
+    function getTimeNextRentAvailable(address user) external view returns (uint256) {
+        return s().lastRentalAcceptance[user] + RENTAL_ACCEPTANCE_MINIMUM_TIME_DELAY;
+    }
+
     /* ------------- external ------------- */
 
     function listOffer(uint256[] calldata ids, Offer[] calldata offers) external {

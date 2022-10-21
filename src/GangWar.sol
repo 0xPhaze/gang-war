@@ -19,6 +19,7 @@ uint256 constant TIME_LOCKUP = 24 hours;
 uint256 constant TIME_GANG_WAR = 5 hours;
 uint256 constant TIME_RECOVERY = 24 hours;
 uint256 constant TIME_REINFORCEMENTS = 12 hours;
+uint256 constant REST_DAY = 1667102400; // Oct 30 2022 6:00:00 GMT+0200 (Central European Summer Time)
 
 uint256 constant DEFENSE_FAVOR_LIM = 60;
 uint256 constant BARON_DEFENSE_FORCE = 10;
@@ -159,6 +160,7 @@ function s() pure returns (GangWarDS storage diamondStorage) {
 // ------------- errors
 
 error InvalidToken();
+error SundayWeRest();
 error NotAuthorized();
 error InvalidItemId();
 error InvalidItemUsage();
@@ -1075,6 +1077,7 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
 
     modifier isActiveSeason() {
         if (block.timestamp < s().seasonStart || s().seasonEnd < block.timestamp) revert GangWarNotActive();
+        if (REST_DAY < block.timestamp && (block.timestamp - REST_DAY) % 1 weeks < 1 days) revert SundayWeRest();
         _;
     }
 
