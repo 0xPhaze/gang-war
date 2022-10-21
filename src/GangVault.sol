@@ -50,7 +50,7 @@ contract GangVault is UUPSUpgrade, AccessControlUDS {
     GangToken immutable token1;
     GangToken immutable token2;
 
-    uint256 immutable gangVaultFeePercent;
+    uint256 public immutable gangVaultFeePercent;
     bytes32 constant CONTROLLER = keccak256("GANG.VAULT.CONTROLLER");
 
     constructor(address[3] memory gangTokens, uint256 gangVaultFee) {

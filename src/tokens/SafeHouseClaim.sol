@@ -6,6 +6,7 @@ import {OwnableUDS} from "UDS/auth/OwnableUDS.sol";
 import {UUPSUpgrade} from "UDS/proxy/UUPSUpgrade.sol";
 import {FxBaseRootTunnel} from "fx-contracts/base/FxBaseRootTunnel.sol";
 
+// @FIX typo
 bytes4 constant CONSECUTIVE_MINT_ERC721_SELECTOR = bytes4(keccak256("conescutiveMint(address)"));
 
 error ExceedsLimit();

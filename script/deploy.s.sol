@@ -53,6 +53,9 @@ contract deploy is SetupChild {
 
         setUpContracts();
 
+        // game.setSeason(1666447200, 1668099600);
+        // game.reset(occupants, yields);
+
         if (isTestnet()) {
             game.reset(occupants, yields);
             game.setBaronItemBalances(0.range(NUM_BARON_ITEMS), 3.repeat(NUM_BARON_ITEMS));

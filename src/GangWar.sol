@@ -14,13 +14,13 @@ import {UUPSUpgrade} from "UDS/proxy/UUPSUpgrade.sol";
 
 // ------------- constants
 
-uint256 constant TIME_TRUCE = 4 hours;
-uint256 constant TIME_LOCKUP = 12 hours;
-uint256 constant TIME_GANG_WAR = 3 hours;
-uint256 constant TIME_RECOVERY = 12 hours;
-uint256 constant TIME_REINFORCEMENTS = 5 hours;
+uint256 constant TIME_TRUCE = 7 hours;
+uint256 constant TIME_LOCKUP = 24 hours;
+uint256 constant TIME_GANG_WAR = 5 hours;
+uint256 constant TIME_RECOVERY = 24 hours;
+uint256 constant TIME_REINFORCEMENTS = 12 hours;
 
-uint256 constant DEFENSE_FAVOR_LIM = 60; // 150
+uint256 constant DEFENSE_FAVOR_LIM = 60;
 uint256 constant BARON_DEFENSE_FORCE = 10;
 uint256 constant ATTACK_FAVOR = 65;
 uint256 constant DEFENSE_FAVOR = 200;
@@ -32,10 +32,10 @@ uint256 constant RECOVERY_BARON_COST = 25_000e18;
 uint256 constant INJURED_WON_FACTOR = 35;
 uint256 constant INJURED_LOST_FACTOR = 65;
 
-uint256 constant GANG_VAULT_FEE = 20;
+uint256 constant GANG_VAULT_FEE = 40;
 
-uint256 constant BADGES_EARNED_VICTORY = 6e18;
-uint256 constant BADGES_EARNED_DEFEAT = 2e18;
+uint256 constant BADGES_EARNED_VICTORY = 12e18;
+uint256 constant BADGES_EARNED_DEFEAT = 4e18;
 
 uint256 constant UPKEEP_INTERVAL = 1 minutes;
 
@@ -108,7 +108,6 @@ struct District {
     uint256 attackDeclarationTime;
     uint256 baronAttackId;
     uint256 baronDefenseId;
-    uint256 lastUpkeepTime; // UNUSED; time when upkeep is last triggered
     uint256 lastOutcomeTime; // time when vrf result is in
     uint256 lockupTime;
     uint256 yield;
@@ -135,8 +134,6 @@ struct GangWarDS {
     mapping(address => uint256) briberyFee;
     /*      Gang =>        itemId   => balance  */
     mapping(Gang => mapping(uint256 => uint256)) baronItems;
-    /*   districtId => districtIds  */
-    mapping(uint256 => uint256) unused_requestIdToDistrictIds; // UNUSED; placeholder
     /*   districtId =>     roundId     => outcome  */
     mapping(uint256 => mapping(uint256 => uint256)) gangWarOutcomes;
     /*   districtId =>     roundId     => numForces */
@@ -150,9 +147,9 @@ struct GangWarDS {
 
 // ------------- storage
 
-string constant SEASON = "season.1";
+string constant SEASON = "season.2.x"; // .x for cleaning up unused placeholders in storage
 
-bytes32 constant DIAMOND_STORAGE_GANG_WAR = keccak256("diamond.storage.gang.war.season.1");
+bytes32 constant DIAMOND_STORAGE_GANG_WAR = keccak256("diamond.storage.gang.war.season.2.x");
 
 function s() pure returns (GangWarDS storage diamondStorage) {
     bytes32 slot = DIAMOND_STORAGE_GANG_WAR;

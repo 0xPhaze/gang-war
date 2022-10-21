@@ -14,6 +14,9 @@ import "futils/futils.sol";
 contract TestGangVault is TestGangWar {
     using futils for *;
 
+    uint256 fee;
+    uint256 baseShares;
+
     function setUp() public virtual override {
         setUpContracts();
 
@@ -28,6 +31,9 @@ contract TestGangVault is TestGangWar {
         vault.setYield(2, [uint256(0), uint256(0), uint256(0)]); //prettier-ignore
 
         vault.setSeason(uint40(block.timestamp), type(uint40).max);
+
+        fee = vault.gangVaultFeePercent();
+        baseShares = 100 - fee;
 
         // @note add vault scramble
         // vault.scrambleStorage();
@@ -73,14 +79,17 @@ contract TestGangVault is TestGangWar {
         skip(10_000 days);
 
         for (uint256 token; token < 3; token++) {
-            vm.prank(address(0));
-            assertApproxEqAbs(vault.getClaimableUserBalance(self)[token], (10_000 * 1e12 * 1 ether * 80) / 100, 1e1);
+            assertApproxEqAbs(
+                vault.getClaimableUserBalance(self)[token],
+                (10_000 * 1e12 * 1 ether * baseShares) / 100,
+                1e1
+            );
         }
 
         vault.claimUserBalance();
 
         for (uint256 token; token < 3; token++) {
-            assertApproxEqAbs(tokens[0].balanceOf(self), (10_000 * 1e12 * 1 ether * 80) / 100, 1e1);
+            assertApproxEqAbs(tokens[0].balanceOf(self), (10_000 * 1e12 * 1 ether * baseShares) / 100, 1e1);
         }
     }
 
@@ -102,13 +111,13 @@ contract TestGangVault is TestGangWar {
 
         assertApproxEqAbs(
             tokens[0].balanceOf(self),
-            uint256(10_000 * 1e6 * 1 ether * 10 hours * 80) / (10_001 * 1 days * 100),
+            uint256(10_000 * 1e6 * 1 ether * 10 hours * baseShares) / (10_001 * 1 days * 100),
             0.0001 ether
         );
 
         assertApproxEqAbs(
             tokens[0].balanceOf(alice),
-            uint256(1e6 * 1 ether * 10 hours * 80) / (10_001 * 1 days * 100),
+            uint256(1e6 * 1 ether * 10 hours * baseShares) / (10_001 * 1 days * 100),
             0.0000001 ether
         );
     }
@@ -143,9 +152,9 @@ contract TestGangVault is TestGangWar {
 
             vault.claimUserBalance();
 
-            assertApproxEqAbs(tokens[0].balanceOf(self), (100 ether * (gang + 1) * 80) / 100, 1e1);
-            assertApproxEqAbs(tokens[1].balanceOf(self), (100 ether * (gang + 1) * 80) / 100, 1e1);
-            assertApproxEqAbs(tokens[2].balanceOf(self), (100 ether * (gang + 1) * 80) / 100, 1e1);
+            assertApproxEqAbs(tokens[0].balanceOf(self), (100 ether * (gang + 1) * baseShares) / 100, 1e1);
+            assertApproxEqAbs(tokens[1].balanceOf(self), (100 ether * (gang + 1) * baseShares) / 100, 1e1);
+            assertApproxEqAbs(tokens[2].balanceOf(self), (100 ether * (gang + 1) * baseShares) / 100, 1e1);
 
             // tokens[0].burnFrom(self, tokens[0].balanceOf(self));
             // tokens[1].burnFrom(self, tokens[1].balanceOf(self));
@@ -182,13 +191,13 @@ contract TestGangVault is TestGangWar {
 
             vault.claimUserBalance();
 
-            assertApproxEqAbs(tokens[0].balanceOf(self), (((100 ether * 7) / 8) * 80) / 100, 1e1);
-            assertApproxEqAbs(tokens[1].balanceOf(self), (((100 ether * 7) / 8) * 80) / 100, 1e1);
-            assertApproxEqAbs(tokens[2].balanceOf(self), (((100 ether * 7) / 8) * 80) / 100, 1e1);
+            assertApproxEqAbs(tokens[0].balanceOf(self), (((100 ether * 7) / 8) * baseShares) / 100, 1e1);
+            assertApproxEqAbs(tokens[1].balanceOf(self), (((100 ether * 7) / 8) * baseShares) / 100, 1e1);
+            assertApproxEqAbs(tokens[2].balanceOf(self), (((100 ether * 7) / 8) * baseShares) / 100, 1e1);
 
-            assertApproxEqAbs(tokens[0].balanceOf(alice), (((100 ether * 1) / 8) * 80) / 100, 1e1);
-            assertApproxEqAbs(tokens[1].balanceOf(alice), (((100 ether * 1) / 8) * 80) / 100, 1e1);
-            assertApproxEqAbs(tokens[2].balanceOf(alice), (((100 ether * 1) / 8) * 80) / 100, 1e1);
+            assertApproxEqAbs(tokens[0].balanceOf(alice), (((100 ether * 1) / 8) * baseShares) / 100, 1e1);
+            assertApproxEqAbs(tokens[1].balanceOf(alice), (((100 ether * 1) / 8) * baseShares) / 100, 1e1);
+            assertApproxEqAbs(tokens[2].balanceOf(alice), (((100 ether * 1) / 8) * baseShares) / 100, 1e1);
 
             tokens[0].burnFrom(self, tokens[0].balanceOf(self));
             tokens[1].burnFrom(self, tokens[1].balanceOf(self));
@@ -225,9 +234,9 @@ contract TestGangVault is TestGangWar {
 
             vault.claimUserBalance();
 
-            assertApproxEqAbs(tokens[0].balanceOf(self), (300 ether * (gang + 1) * 80) / 100, 1e1);
-            assertApproxEqAbs(tokens[1].balanceOf(self), (600 ether * (gang + 1) * 80) / 100, 1e1);
-            assertApproxEqAbs(tokens[2].balanceOf(self), (900 ether * (gang + 1) * 80) / 100, 1e1);
+            assertApproxEqAbs(tokens[0].balanceOf(self), (300 ether * (gang + 1) * baseShares) / 100, 1e1);
+            assertApproxEqAbs(tokens[1].balanceOf(self), (600 ether * (gang + 1) * baseShares) / 100, 1e1);
+            assertApproxEqAbs(tokens[2].balanceOf(self), (900 ether * (gang + 1) * baseShares) / 100, 1e1);
         }
     }
 
@@ -261,39 +270,39 @@ contract TestGangVault is TestGangWar {
 
             claimable = vault.getClaimableUserBalance(self);
 
-            assertEq(claimable[0], 80 ether * (gang + 1));
-            assertEq(claimable[1], 80 ether * (gang + 1));
-            assertEq(claimable[2], 80 ether * (gang + 1));
+            assertEq(claimable[0], 1 ether * baseShares * (gang + 1));
+            assertEq(claimable[1], 1 ether * baseShares * (gang + 1));
+            assertEq(claimable[2], 1 ether * baseShares * (gang + 1));
 
             vault.claimUserBalance();
 
             balances = vault.getGangVaultBalance(gang);
             claimable = vault.getClaimableUserBalance(self);
 
-            assertApproxEqAbs(tokens[0].balanceOf(self), 80 ether * (gang + 1), 1e1);
-            assertApproxEqAbs(tokens[1].balanceOf(self), 80 ether * (gang + 1), 1e1);
-            assertApproxEqAbs(tokens[2].balanceOf(self), 80 ether * (gang + 1), 1e1);
+            assertApproxEqAbs(tokens[0].balanceOf(self), 1 ether * baseShares * (gang + 1), 1e1);
+            assertApproxEqAbs(tokens[1].balanceOf(self), 1 ether * baseShares * (gang + 1), 1e1);
+            assertApproxEqAbs(tokens[2].balanceOf(self), 1 ether * baseShares * (gang + 1), 1e1);
 
-            assertApproxEqAbs(balances[0], 20 ether, 1e1);
-            assertApproxEqAbs(balances[1], 20 ether, 1e1);
-            assertApproxEqAbs(balances[2], 20 ether, 1e1);
+            assertApproxEqAbs(balances[0], 1 ether * fee, 1e1);
+            assertApproxEqAbs(balances[1], 1 ether * fee, 1e1);
+            assertApproxEqAbs(balances[2], 1 ether * fee, 1e1);
 
             assertEq(claimable[0], 0);
             assertEq(claimable[1], 0);
             assertEq(claimable[2], 0);
 
-            vault.spendGangVaultBalance(gang, 4 ether, 3 ether, 20 ether, true);
+            vault.spendGangVaultBalance(gang, 4 ether, 3 ether, 1 ether * fee, true);
             balances = vault.getGangVaultBalance(gang);
 
-            assertApproxEqAbs(balances[0], 16 ether, 1e1);
-            assertApproxEqAbs(balances[1], 17 ether, 1e1);
+            assertApproxEqAbs(balances[0], 1 ether * fee - 4 ether, 1e1);
+            assertApproxEqAbs(balances[1], 1 ether * fee - 3 ether, 1e1);
             assertApproxEqAbs(balances[2], 0 ether, 1e1);
 
             vault.spendGangVaultBalance(gang, 4 ether, 5 ether, 0 ether, true);
             balances = vault.getGangVaultBalance(gang);
 
-            assertApproxEqAbs(balances[0], 12 ether, 1e1);
-            assertApproxEqAbs(balances[1], 12 ether, 1e1);
+            assertApproxEqAbs(balances[0], 1 ether * fee - 8 ether, 1e1);
+            assertApproxEqAbs(balances[1], 1 ether * fee - 8 ether, 1e1);
             assertApproxEqAbs(balances[2], 0 ether, 1e1);
 
             tokens[0].burnFrom(self, tokens[0].balanceOf(self));
@@ -303,24 +312,24 @@ contract TestGangVault is TestGangWar {
             // gang 0
             accrued = vault.getAccruedGangVaultBalances(0);
 
-            assertEq(accrued[0], 20 ether * (gang + 1));
-            assertEq(accrued[1], 20 ether * (gang + 1));
-            assertEq(accrued[2], 20 ether * (gang + 1));
+            assertEq(accrued[0], 1 ether * fee * (gang + 1));
+            assertEq(accrued[1], 1 ether * fee * (gang + 1));
+            assertEq(accrued[2], 1 ether * fee * (gang + 1));
 
             // gang 1
             accrued = vault.getAccruedGangVaultBalances(1);
 
-            assertEq(accrued[0], 20 ether * (gang + 0));
-            assertEq(accrued[1], 20 ether * (gang + 0));
-            assertEq(accrued[2], 20 ether * (gang + 0));
+            assertEq(accrued[0], 1 ether * fee * (gang + 0));
+            assertEq(accrued[1], 1 ether * fee * (gang + 0));
+            assertEq(accrued[2], 1 ether * fee * (gang + 0));
 
             // gang 2
             if (gang > 0) {
                 accrued = vault.getAccruedGangVaultBalances(2);
 
-                assertEq(accrued[0], 20 ether * (gang - 1));
-                assertEq(accrued[1], 20 ether * (gang - 1));
-                assertEq(accrued[2], 20 ether * (gang - 1));
+                assertEq(accrued[0], 1 ether * fee * (gang - 1));
+                assertEq(accrued[1], 1 ether * fee * (gang - 1));
+                assertEq(accrued[2], 1 ether * fee * (gang - 1));
             }
         }
     }
@@ -362,14 +371,14 @@ contract TestGangVault is TestGangWar {
         accrued = vault.getAccruedGangVaultBalances(0);
         claimable = vault.getClaimableUserBalance(self);
 
-        assertEq(accrued[0], 20 ether);
-        assertEq(accrued[1], 40 ether);
-        assertEq(accrued[2], 60 ether);
-        assertEq(balances[0], 20 ether);
-        assertEq(balances[1], 40 ether);
-        assertEq(balances[2], 60 ether);
-        assertEq(claimable[0], 80 ether);
-        assertEq(claimable[1], 160 ether);
-        assertEq(claimable[2], 240 ether);
+        assertEq(accrued[0], 1 ether * fee);
+        assertEq(accrued[1], 2 ether * fee);
+        assertEq(accrued[2], 3 ether * fee);
+        assertEq(balances[0], 1 ether * fee);
+        assertEq(balances[1], 2 ether * fee);
+        assertEq(balances[2], 3 ether * fee);
+        assertEq(claimable[0], 1 ether * baseShares);
+        assertEq(claimable[1], 2 ether * baseShares);
+        assertEq(claimable[2], 3 ether * baseShares);
     }
 }

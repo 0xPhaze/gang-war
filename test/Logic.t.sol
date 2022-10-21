@@ -25,7 +25,7 @@ contract TestGangWarGameLogic is TestGangWar {
             assertEq(district.attackDeclarationTime, 0);
             assertEq(district.baronAttackId, 0);
             assertEq(district.baronDefenseId, 0);
-            assertEq(district.lastUpkeepTime, 0);
+            // assertEq(district.lastUpkeepTime, 0);
             assertEq(district.lockupTime, 0);
 
             assertEq(district.state, DISTRICT_STATE.IDLE);

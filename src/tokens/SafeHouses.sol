@@ -53,13 +53,13 @@ contract SafeHouses is UUPSUpgrade, OwnableUDS, ERC721EnumerableUDS, VRFConsumer
     string public constant override name = "Safe Houses";
     string public constant override symbol = "SAFE";
 
-    uint256 public constant MINT_MICE_COST = 100_000e18;
-    uint256 public constant LEVEL_2_MICE_COST = 150_000e18;
-    uint256 public constant LEVEL_3_MICE_COST = 300_000e18;
+    uint256 public constant MINT_MICE_COST = 250_000e18;
+    uint256 public constant LEVEL_2_MICE_COST = 375_000e18;
+    uint256 public constant LEVEL_3_MICE_COST = 550_000e18;
 
-    uint256 public constant MINT_BADGES_COST = 200;
-    uint256 public constant LEVEL_2_BADGES_COST = 250;
-    uint256 public constant LEVEL_3_BADGES_COST = 300;
+    uint256 public constant MINT_BADGES_COST = 500;
+    uint256 public constant LEVEL_2_BADGES_COST = 625;
+    uint256 public constant LEVEL_3_BADGES_COST = 750;
 
     uint256 public constant MAX_SUPPLY = 3333;
     uint256 public constant MAX_SUPPLY_BARRACKS = 2000;
