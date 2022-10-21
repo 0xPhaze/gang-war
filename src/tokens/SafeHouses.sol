@@ -7,7 +7,7 @@ import {OwnableUDS} from "UDS/auth/OwnableUDS.sol";
 import {UUPSUpgrade} from "UDS/proxy/UUPSUpgrade.sol";
 import {VRFConsumerV2} from "../lib/VRFConsumerV2.sol";
 import {FxBaseChildTunnel} from "fx-contracts/base/FxBaseChildTunnel.sol";
-import {ERC721EnumerableUDS} from "./ERC721EnumerableUDS.sol";
+import {ERC721EnumerableUDS} from "UDS/tokens/extensions/ERC721EnumerableUDS.sol";
 import {CONSECUTIVE_MINT_ERC721_SELECTOR} from "./SafeHouseClaim.sol";
 
 import "solady/utils/LibString.sol";

@@ -6,8 +6,7 @@ import {OwnableUDS} from "UDS/auth/OwnableUDS.sol";
 import {UUPSUpgrade} from "UDS/proxy/UUPSUpgrade.sol";
 import {FxBaseRootTunnel} from "fx-contracts/base/FxBaseRootTunnel.sol";
 
-// @FIX typo
-bytes4 constant CONSECUTIVE_MINT_ERC721_SELECTOR = bytes4(keccak256("conescutiveMint(address)"));
+bytes4 constant CONSECUTIVE_MINT_ERC721_SELECTOR = bytes4(keccak256("consecutiveMint(address)"));
 
 error ExceedsLimit();
 error InvalidBurnAmount();
@@ -35,16 +34,18 @@ contract SafeHouseClaim is OwnableUDS, FxBaseRootTunnel {
     /* ------------- external ------------- */
 
     function claim(uint256[][] calldata ids) external {
-        if (ids.length > 20) revert ExceedsLimit();
+        unchecked {
+            if (ids.length > 20) revert ExceedsLimit();
 
-        for (uint256 c; c < ids.length; ++c) {
-            if (ids[c].length != burnAmount) revert InvalidBurnAmount();
+            for (uint256 c; c < ids.length; ++c) {
+                if (ids[c].length != burnAmount) revert InvalidBurnAmount();
 
-            for (uint256 i; i < ids[c].length; ++i) {
-                ERC721UDS(troupe).transferFrom(msg.sender, burnAddress, ids[c][i]);
+                for (uint256 i; i < ids[c].length; ++i) {
+                    ERC721UDS(troupe).transferFrom(msg.sender, burnAddress, ids[c][i]);
+                }
+
+                _sendMessageToChild(abi.encodeWithSelector(CONSECUTIVE_MINT_ERC721_SELECTOR, msg.sender));
             }
-
-            _sendMessageToChild(abi.encodeWithSelector(CONSECUTIVE_MINT_ERC721_SELECTOR, msg.sender));
         }
     }
 
