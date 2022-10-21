@@ -65,6 +65,9 @@ contract mint is SetupChild {
         // '0x02C1422931439B3e945e2F2F721c80F6c0feaF56',
         // '0x205FfDa46164C3e6ae60AF559c82F26f9470072E',
         //                  ]);
+
+        // game.reset(occupants, yields);
+
         vm.stopBroadcast();
     }
 }

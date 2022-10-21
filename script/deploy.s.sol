@@ -53,8 +53,9 @@ contract deploy is SetupChild {
 
         setUpContracts();
 
-        // game.setSeason(1666447200, 1668099600);
-        // game.reset(occupants, yields);
+        // Sat Oct 22 2022 16:00:00 GMT+0200 (Central European Summer Time)
+        // Sat Nov 05 2022 15:00:00 GMT+0100 (Central European Standard Time)
+        game.setSeason(1666447200, 1667656800);
 
         if (isTestnet()) {
             game.reset(occupants, yields);
