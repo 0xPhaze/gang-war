@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import {ERC721UDS} from "UDS/tokens/ERC721UDS.sol";
 import {OwnableUDS} from "UDS/auth/OwnableUDS.sol";
 import {UUPSUpgrade} from "UDS/proxy/UUPSUpgrade.sol";
-import {LibEnumerableSet, Uint256Set} from "UDS/lib/LibEnumerableSet.sol";
+import {LibEnumerableSet} from "UDS/lib/LibEnumerableSet.sol";
 
 uint256 constant RENTAL_ACCEPTANCE_MINIMUM_TIME_DELAY = 1 hours;
 
@@ -23,8 +23,8 @@ struct GangMarketDS {
     mapping(address => uint256) lastRentalAcceptance;
     // `listedIds` is stuck in a mapping at [0],
     // in order to avoid nested structs.
-    mapping(uint256 => Uint256Set) listedIds;
-    mapping(address => Uint256Set) rentedIds;
+    mapping(uint256 => LibEnumerableSet.Uint256Set) listedIds;
+    mapping(address => LibEnumerableSet.Uint256Set) rentedIds;
 }
 
 function s() pure returns (GangMarketDS storage diamondStorage) {
@@ -45,7 +45,7 @@ error MinimumTimeDelayNotReached();
 /// @title Gangsta Mice City Market
 /// @author phaze (https://github.com/0xPhaze)
 abstract contract GMCMarket {
-    using LibEnumerableSet for Uint256Set;
+    using LibEnumerableSet for LibEnumerableSet.Uint256Set;
 
     GangMarketDS private __storageLayout;
 

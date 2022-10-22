@@ -107,10 +107,6 @@ contract SafeHouses is UUPSUpgrade, OwnableUDS, ERC721EnumerableUDS, VRFConsumer
 
     /* ------------- view ------------- */
 
-    function totalSupply() public view returns (uint256) {
-        return s().totalSupply;
-    }
-
     function totalSupplyBarracks() public view returns (uint256) {
         return s().totalSupplyBarracks;
     }
@@ -283,7 +279,7 @@ contract SafeHouses is UUPSUpgrade, OwnableUDS, ERC721EnumerableUDS, VRFConsumer
         if (quantity == 0) revert InvalidQuantity();
 
         for (uint256 i; i < quantity; ++i) {
-            uint256 id = ++s().totalSupply;
+            uint256 id = totalSupply() + 1;
 
             if (id > MAX_SUPPLY) revert ExceedsLimit();
 

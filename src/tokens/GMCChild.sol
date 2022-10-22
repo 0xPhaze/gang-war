@@ -11,7 +11,7 @@ import {OwnableUDS} from "UDS/auth/OwnableUDS.sol";
 import {UUPSUpgrade} from "UDS/proxy/UUPSUpgrade.sol";
 import {FxERC721Child} from "fx-contracts/FxERC721Child.sol";
 import {FxERC721EnumerableChild} from "fx-contracts/extensions/FxERC721EnumerableChild.sol";
-import {LibEnumerableSet, Uint256Set} from "UDS/lib/LibEnumerableSet.sol";
+import {LibEnumerableSet} from "UDS/lib/LibEnumerableSet.sol";
 
 import "solady/utils/ECDSA.sol";
 import "solady/utils/LibString.sol";
@@ -47,7 +47,7 @@ contract GMCChild is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChild, GMCMarket
     using ECDSA for bytes32;
     using LibString for uint256;
     using LibCrumbMap for mapping(uint256 => uint256);
-    using LibEnumerableSet for Uint256Set;
+    using LibEnumerableSet for LibEnumerableSet.Uint256Set;
 
     address public immutable vault;
 

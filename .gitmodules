@@ -8,15 +8,9 @@
 	path = lib/solmate
 	url = https://github.com/transmissions11/solmate
 	branch = v7
-[submodule "lib/UDS"]
-	path = lib/UDS
-	url = https://github.com/0xPhaze/UDS
 [submodule "lib/futils"]
 	path = lib/futils
 	url = https://github.com/0xPhaze/futils
-[submodule "lib/upgrade-scripts"]
-	path = lib/upgrade-scripts
-	url = https://github.com/0xPhaze/upgrade-scripts
 [submodule "lib/solady"]
 	path = lib/solady
 	url = https://github.com/Vectorized/solady
@@ -26,3 +20,9 @@
 [submodule "lib/ERC721M"]
 	path = lib/ERC721M
 	url = https://github.com/0xPhaze/ERC721M
+[submodule "lib/UDS"]
+	path = lib/UDS
+	url = https://github.com/0xPhaze/UDS
+[submodule "lib/upgrade-scripts"]
+	path = lib/upgrade-scripts
+	url = https://github.com/0xPhaze/upgrade-scripts
