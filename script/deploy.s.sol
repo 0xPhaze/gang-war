@@ -54,8 +54,9 @@ contract deploy is SetupChild {
         setUpContracts();
 
         // new Date('Oct 23 2022 16:00:00 GMT+0200 (Central European Summer Time)')
-        // new Date('Nov 06 2022 16:00:00 GMT+0100 (Central European Standard Time)')
-        game.setSeason(1666533600, 1667746800);
+        // new Date('Nov 07 2022 16:00:00 GMT+0100 (Central European Standard Time)')
+
+        game.setSeason(1666533600, 1667833200);
 
         // game.reset(occupants, yields);
 
