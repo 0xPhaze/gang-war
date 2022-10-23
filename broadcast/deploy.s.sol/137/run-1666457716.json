@@ -1,0 +1,30 @@
+{
+  "transactions": [
+    {
+      "hash": null,
+      "transactionType": "CREATE",
+      "contractName": null,
+      "contractAddress": "0xa49ff206cc067c024d1fbffe2a5233faeaf2d9ba",
+      "function": null,
+      "arguments": null,
+      "transaction": {
+        "type": "0x02",
+        "from": "0x74de159b3a9372b7e85fd00569a0929265b630ef",
+        "to": "0xa49ff206cc067c024d1fbffe2a5233faeaf2d9ba",
+        "gas": "0x124e0",
+        "value": "0x0",
+        "data": "0xf436f1de00000000000000000000000000000000000000000000000000000000635548e00000000000000000000000000000000000000000000000000000000063691d70",
+        "nonce": "0x18c",
+        "accessList": []
+      },
+      "additionalContracts": []
+    }
+  ],
+  "receipts": [],
+  "libraries": [],
+  "pending": [],
+  "path": "/mnt/e/Projets/gang-war/broadcast/deploy.s.sol/137/run-latest.json",
+  "returns": {},
+  "timestamp": 1666457716,
+  "commit": "2ea6a83"
+}

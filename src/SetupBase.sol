@@ -56,7 +56,7 @@ contract SetupBase is UpgradeScripts {
     uint256 constant CHAINID_MUMBAI = 80_001;
     uint256 constant CHAINID_TEST = 31_337;
 
-    uint256 lastDeployConfirmation = 1666456043;
+    uint256 lastDeployConfirmation = 1666527177;
 
     // ROOT
     GMCRoot gmcRoot;
