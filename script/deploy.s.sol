@@ -48,6 +48,10 @@ cp ~/git/eth/gang-war/deployments/1/deploy-latest.json ~/git/eth/gmc-website/dat
 contract deploy is SetupChild {
     using futils for *;
 
+    constructor() {
+        MOCK_TUNNEL_TESTING = block.chainid == CHAINID_MUMBAI;
+    }
+
     function run() external {
         startBroadcastIfNotDryRun();
 

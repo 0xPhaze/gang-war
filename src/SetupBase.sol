@@ -46,7 +46,7 @@ contract SetupBase is UpgradeScripts {
     uint256 chainIdRoot;
 
     // set to true to deploy MockFxTunnel (mock tunnel on same chain)
-    bool immutable MOCK_TUNNEL_TESTING = false || block.chainid == CHAINID_TEST;
+    bool MOCK_TUNNEL_TESTING = block.chainid == CHAINID_TEST;
 
     // Chains
     uint256 constant CHAINID_MAINNET = 1;
@@ -64,6 +64,7 @@ contract SetupBase is UpgradeScripts {
     SafeHouseClaim safeHouseClaim;
     MockERC20 goudaRoot = MockERC20(0x3aD30C5E3496BE07968579169a96f00D56De4C1A);
     MockERC721 troupe = MockERC721(0x74d9d90a7fc261FBe92eD47B606b6E0E00d75E70);
+    MockERC721 genesis = MockERC721(0x3aD30c5e2985e960E89F4a28eFc91BA73e104b77);
 
     // CHILD
     Mice mice;

@@ -255,10 +255,7 @@ contract SafeHouses is UUPSUpgrade, OwnableUDS, ERC721EnumerableUDS, VRFConsumer
     }
 
     function fulfillRandomWords(uint256, uint256[] calldata randomWords) internal override {
-        s().pendingVRFRequest = false;
-
         uint256 rand = randomWords[0];
-
         uint256 numPending = s().requestQueue.length;
 
         for (uint256 i; i < numPending; ++i) {
@@ -271,6 +268,7 @@ contract SafeHouses is UUPSUpgrade, OwnableUDS, ERC721EnumerableUDS, VRFConsumer
         }
 
         delete s().requestQueue;
+        delete s().pendingVRFRequest;
     }
 
     /* ------------- internal ------------- */
