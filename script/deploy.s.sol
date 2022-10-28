@@ -64,6 +64,8 @@ contract deploy is SetupChild {
         // game.setSeason(1666533600, 1667833200);
 
         // game.reset(occupants, yields);
+        safeHouses.setBaseURI("ipfs://QmRJUciN3rdfUK9TjnsNNB5nbSCy3oRmmh2yaJC9k4QP76/");
+        safeHouses.setPostFixURI(".json");
 
         if (isFirstTimeDeployed(address(game)) && isTestnet()) {
             game.reset(occupants, yields);

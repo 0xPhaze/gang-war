@@ -194,6 +194,9 @@ contract SetupChild is SetupRoot {
 
             game.reset(occupants, yields);
             game.setBaronItemBalances(0.range(NUM_BARON_ITEMS), 3.repeat(NUM_BARON_ITEMS));
+
+            safeHouses.setBaseURI("ipfs://QmRJUciN3rdfUK9TjnsNNB5nbSCy3oRmmh2yaJC9k4QP76/");
+            safeHouses.setPostFixURI(".json");
         }
 
         // CI: make sure permissions are good
