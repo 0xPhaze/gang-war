@@ -10,6 +10,10 @@ contract MockGenesis is MockERC721EnumerableUDS {
         __ERC721_init(name, symbol);
     }
 
+    function tokenIdsOf(address user, uint256) external view returns (uint256[] memory) {
+        return getOwnedIds(user);
+    }
+
     function trueOwnerOf(uint256 id) external view returns (address) {
         return ownerOf(id);
     }
