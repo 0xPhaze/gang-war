@@ -22,17 +22,17 @@ source .env && forge script mintRoot --rpc-url $RPC_GOERLI --private-key $PRIVAT
 
 */
 
-import {ERC721UDS} from "UDS/tokens/ERC721UDS.sol";
+// import {ERC721UDS} from "UDS/tokens/ERC721UDS.sol";
 
-contract Airdrop {
-    function transfer(address collection, uint256[] calldata data) external payable {
-        unchecked {
-            for (uint256 i; i < data.length; ++i) {
-                ERC721UDS(collection).transferFrom(msg.sender, address(uint160(data[i])), data[i] >> 160);
-            }
-        }
-    }
-}
+// contract Airdrop {
+//     function transfer(address collection, uint256[] calldata data) external payable {
+//         unchecked {
+//             for (uint256 i; i < data.length; ++i) {
+//                 ERC721UDS(collection).transferFrom(msg.sender, address(uint160(data[i])), data[i] >> 160);
+//             }
+//         }
+//     }
+// }
 
 contract mintRoot is SetupRoot {
     using futils for *;

@@ -21,7 +21,6 @@ struct SafeHouseData {
 }
 
 struct SafeHouseDS {
-    bool pendingVRFRequest;
     uint16 totalSupply;
     uint16 totalSupplyBarracks;
     uint16 totalSupplyHeadquarters;
@@ -42,8 +41,10 @@ function s() pure returns (SafeHouseDS storage diamondStorage) {
 // ------------- error
 
 error ExceedsLimit();
+error NotAuthorized();
 error InvalidQuantity();
 error InvalidSelector();
+error InvalidDistrictId();
 
 /// @title Safe Houses
 /// @author phaze (https://github.com/0xPhaze)
@@ -57,9 +58,9 @@ contract SafeHouses is UUPSUpgrade, OwnableUDS, ERC721EnumerableUDS, VRFConsumer
     uint256 public constant LEVEL_2_MICE_COST = 375_000e18;
     uint256 public constant LEVEL_3_MICE_COST = 550_000e18;
 
-    uint256 public constant MINT_BADGES_COST = 500;
-    uint256 public constant LEVEL_2_BADGES_COST = 625;
-    uint256 public constant LEVEL_3_BADGES_COST = 750;
+    uint256 public constant MINT_BADGES_COST = 500e18;
+    uint256 public constant LEVEL_2_BADGES_COST = 625e18;
+    uint256 public constant LEVEL_3_BADGES_COST = 750e18;
 
     uint256 public constant MAX_SUPPLY = 3333;
     uint256 public constant MAX_SUPPLY_BARRACKS = 2000;
@@ -128,9 +129,9 @@ contract SafeHouses is UUPSUpgrade, OwnableUDS, ERC721EnumerableUDS, VRFConsumer
     }
 
     function goudaDailyRate(uint256 level) public pure returns (uint256) {
-        if (level == 1) return 2;
-        if (level == 2) return 4;
-        if (level == 3) return 7;
+        if (level == 1) return 2e18;
+        if (level == 2) return 4e18;
+        if (level == 3) return 7e18;
         return 0;
     }
 
@@ -142,6 +143,7 @@ contract SafeHouses is UUPSUpgrade, OwnableUDS, ERC721EnumerableUDS, VRFConsumer
     }
 
     function districtToGang(uint256 id) public pure returns (uint256) {
+        if (id == 0) revert InvalidDistrictId();
         return 3 & (gangEncoding >> ((id - 1) << 1));
     }
 
@@ -173,35 +175,6 @@ contract SafeHouses is UUPSUpgrade, OwnableUDS, ERC721EnumerableUDS, VRFConsumer
 
     /* ------------- external ------------- */
 
-    function claim(uint256[] calldata ids) external {
-        SafeHouseData storage data;
-
-        uint256 totalGoudaReward;
-        uint256[3] memory totalTokenReward;
-
-        for (uint256 i; i < ids.length; ++i) {
-            data = s().safeHouseData[ids[i]];
-
-            uint256 level = data.level;
-            uint256 lastClaim = data.lastClaim;
-            uint256 districtId = data.districtId;
-
-            uint256 gang = districtToGang(districtId);
-
-            if (lastClaim == 0) lastClaim = rewardStart;
-
-            totalGoudaReward += ((block.timestamp - lastClaim) * goudaDailyRate(level)) / 1 days;
-            totalTokenReward[gang] += ((block.timestamp - lastClaim) * tokenDailyRate(level)) / 1 days;
-
-            data.lastClaim = uint40(block.timestamp);
-        }
-
-        if (totalGoudaReward != 0) GangToken(gouda).mint(msg.sender, totalGoudaReward);
-        if (totalTokenReward[0] != 0) GangToken(tokenAddress(0)).mint(msg.sender, totalTokenReward[0]);
-        if (totalTokenReward[1] != 0) GangToken(tokenAddress(1)).mint(msg.sender, totalTokenReward[1]);
-        if (totalTokenReward[2] != 0) GangToken(tokenAddress(2)).mint(msg.sender, totalTokenReward[2]);
-    }
-
     function mint(uint256 quantity) external {
         uint256 totalMiceCost = quantity * MINT_MICE_COST;
         uint256 totalBadgesCost = quantity * MINT_BADGES_COST;
@@ -217,6 +190,8 @@ contract SafeHouses is UUPSUpgrade, OwnableUDS, ERC721EnumerableUDS, VRFConsumer
         uint256 totalBadgesCost;
 
         for (uint256 i; i < ids.length; ++i) {
+            if (ownerOf(ids[i]) != msg.sender) revert NotAuthorized();
+
             uint8 level = ++s().safeHouseData[ids[i]].level;
 
             if (level == 2) {
@@ -242,6 +217,37 @@ contract SafeHouses is UUPSUpgrade, OwnableUDS, ERC721EnumerableUDS, VRFConsumer
         ERC20UDS(badges).transferFrom(msg.sender, address(this), totalBadgesCost);
     }
 
+    function claimReward(uint256[] calldata ids) external {
+        SafeHouseData storage data;
+
+        uint256 totalGoudaReward;
+        uint256[3] memory totalTokenReward;
+
+        for (uint256 i; i < ids.length; ++i) {
+            if (ownerOf(ids[i]) != msg.sender) revert NotAuthorized();
+
+            data = s().safeHouseData[ids[i]];
+
+            uint256 level = data.level;
+            uint256 lastClaim = data.lastClaim;
+            uint256 districtId = data.districtId;
+
+            uint256 gang = districtToGang(districtId);
+
+            if (lastClaim == 0) lastClaim = rewardStart;
+
+            totalGoudaReward += ((block.timestamp - lastClaim) * goudaDailyRate(level)) / 1 days;
+            totalTokenReward[gang] += ((block.timestamp - lastClaim) * tokenDailyRate(level)) / 1 days;
+
+            data.lastClaim = uint40(block.timestamp);
+        }
+
+        if (totalGoudaReward != 0) GangToken(gouda).mint(msg.sender, totalGoudaReward);
+        if (totalTokenReward[0] != 0) GangToken(tokenAddress(0)).mint(msg.sender, totalTokenReward[0]);
+        if (totalTokenReward[1] != 0) GangToken(tokenAddress(1)).mint(msg.sender, totalTokenReward[1]);
+        if (totalTokenReward[2] != 0) GangToken(tokenAddress(2)).mint(msg.sender, totalTokenReward[2]);
+    }
+
     /* ------------- overrides ------------- */
 
     function tokenURI(uint256 id) public view override returns (string memory) {
@@ -263,12 +269,10 @@ contract SafeHouses is UUPSUpgrade, OwnableUDS, ERC721EnumerableUDS, VRFConsumer
 
             uint256 id = s().requestQueue[i];
 
-            s().safeHouseData[id].level = 1;
             s().safeHouseData[id].districtId = uint8(1 + (rand % 21));
         }
 
         delete s().requestQueue;
-        delete s().pendingVRFRequest;
     }
 
     /* ------------- internal ------------- */
@@ -276,18 +280,24 @@ contract SafeHouses is UUPSUpgrade, OwnableUDS, ERC721EnumerableUDS, VRFConsumer
     function _mintInternal(address to, uint256 quantity) internal {
         if (quantity == 0) revert InvalidQuantity();
 
+        SafeHouseData storage data;
+
+        uint256 supply = totalSupply();
+
         for (uint256 i; i < quantity; ++i) {
-            uint256 id = totalSupply() + 1;
+            uint256 id = 1 + supply + i;
 
             if (id > MAX_SUPPLY) revert ExceedsLimit();
 
             _mint(to, id);
 
+            data = s().safeHouseData[id];
+            data.level = 1;
+            data.lastClaim = uint40(block.timestamp);
+
             s().requestQueue.push(id);
 
-            if (!s().pendingVRFRequest) {
-                s().pendingVRFRequest = true;
-
+            if (s().requestQueue.length == 1) {
                 requestVRF();
             }
         }

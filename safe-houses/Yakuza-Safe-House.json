@@ -1,0 +1,22 @@
+{
+  "name": "Yakuza Safe House",
+  "description": "Gangsta Mice City Yakuza Safe House",
+  "attributes": [
+    {
+      "trait_type": "Gang",
+      "value": "Yakuza"
+    },
+    {
+      "trait_type": "District",
+      "value": "Sakura Park"
+    },
+    {
+      "trait_type": "Type",
+      "value": "Safe House"
+    },
+    {
+      "trait_type": "Level",
+      "value": "1"
+    }
+  ]
+}

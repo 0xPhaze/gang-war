@@ -29,6 +29,9 @@ import "futils/futils.sol";
 contract SetupChild is SetupRoot {
     using futils for *;
 
+    address banana = 0xbC91347e80886453F3f8bBd6d7aC07C122D87735;
+    address spit = 0x5c947eB80D096A5e332bF79bfDc9feb3D0a201d7;
+
     constructor() {
         setUpGangWarConstants();
     }
@@ -45,6 +48,8 @@ contract SetupChild is SetupRoot {
     }
 
     function setUpContracts() internal virtual override {
+        checkDeployConfirmation();
+
         assertStorageSeasonSet();
 
         setUpFxPortal();
@@ -159,13 +164,20 @@ contract SetupChild is SetupRoot {
             tokens[0].grantRole(AUTHORITY, address(vault));
             tokens[1].grantRole(AUTHORITY, address(vault));
             tokens[2].grantRole(AUTHORITY, address(vault));
+            tokens[0].grantRole(AUTHORITY, address(safeHouses));
+            tokens[1].grantRole(AUTHORITY, address(safeHouses));
+            tokens[2].grantRole(AUTHORITY, address(safeHouses));
 
             badges.grantRole(AUTHORITY, address(mice));
             tokens[0].grantRole(AUTHORITY, address(mice));
             tokens[1].grantRole(AUTHORITY, address(mice));
             tokens[2].grantRole(AUTHORITY, address(mice));
+            tokens[0].grantRole(AUTHORITY, address(safeHouses));
+            tokens[1].grantRole(AUTHORITY, address(safeHouses));
+            tokens[2].grantRole(AUTHORITY, address(safeHouses));
 
             gouda.grantRole(AUTHORITY, address(gmc));
+            gouda.grantRole(AUTHORITY, address(safeHouses));
 
             vault.grantRole(GANG_VAULT_CONTROLLER, address(gmc));
             vault.grantRole(GANG_VAULT_CONTROLLER, address(game));
@@ -175,9 +187,6 @@ contract SetupChild is SetupRoot {
             game.setBaronItemCost(ITEM_BARRICADES, 2_250_000e18);
             game.setBaronItemCost(ITEM_SMOKE, 2_250_000e18);
             game.setBaronItemCost(ITEM_911, 1_500_000e18);
-
-            address banana = 0xbC91347e80886453F3f8bBd6d7aC07C122D87735;
-            address spit = 0x5c947eB80D096A5e332bF79bfDc9feb3D0a201d7;
 
             game.setBriberyFee(address(gouda), 2e18);
             game.setBriberyFee(address(banana), 5e18);
@@ -206,7 +215,11 @@ contract SetupChild is SetupRoot {
             if (!vault.hasRole(GANG_VAULT_CONTROLLER, address(game)))
                 vault.grantRole(GANG_VAULT_CONTROLLER, address(game));
 
-            if (game.briberyFee(address(gouda)) == 0) game.setBriberyFee(address(gouda), 2e18);
+            if (game.briberyFee(address(gouda)) == 0) {
+                game.setBriberyFee(address(gouda), 2e18);
+                game.setBriberyFee(address(banana), 5e18);
+                game.setBriberyFee(address(spit), 10e18);
+            }
 
             if (game.baronItemCost(0) == 0) {
                 game.setBaronItemCost(ITEM_SEWER, 3_000_000e18);

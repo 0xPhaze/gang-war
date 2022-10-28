@@ -78,6 +78,13 @@ contract SetupBase is UpgradeScripts {
     SafeHouses safeHouses;
 
     constructor() {
+        if (block.chainid == CHAINID_TEST) {
+            vm.warp(1660993892);
+            vm.roll(27702338);
+        }
+    }
+
+    function checkDeployConfirmation() internal {
         if (!isTestnet() && !UPGRADE_SCRIPTS_DRY_RUN) {
             if (block.timestamp - lastDeployConfirmation > 10 minutes) {
                 console.log("\nMust reconfirm mainnet deployment:");
@@ -92,10 +99,6 @@ contract SetupBase is UpgradeScripts {
                     )
                 );
             }
-        }
-        if (block.chainid == CHAINID_TEST) {
-            vm.warp(1660993892);
-            vm.roll(27702338);
         }
     }
 

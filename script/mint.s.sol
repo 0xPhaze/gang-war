@@ -10,8 +10,7 @@ import "forge-std/Script.sol";
 /* 
 
 # Polygon Mainnet 
-source .env && US_DRY_RUN=true forge script mint --rpc-url $RPC_POLYGON --private-key $PRIVATE_KEY -vvvv --ffi 
-source .env && forge script mint --rpc-url $RPC_POLYGON --private-key $PRIVATE_KEY --verify --etherscan-api-key $POLYGONSCAN_KEY -vvvv --ffi --slow --broadcast 
+source .env && US_DRY_RUN=true forge script mint --rpc-url $RPC_POLYGON --private-key $PRIVATE_KEY_GMC -vvvv --ffi 
 source .env && forge script mint --rpc-url $RPC_POLYGON --private-key $PRIVATE_KEY_GMC --verify --etherscan-api-key $POLYGONSCAN_KEY -vvvv --ffi --slow --broadcast
 
 # Anvil
@@ -31,12 +30,15 @@ contract mint is SetupChild {
 
     function setUpUpgradeScripts() internal override {
         UPGRADE_SCRIPTS_ATTACH_ONLY = true;
+        lastDeployConfirmation = 1666944159;
     }
 
     function run() external {
         startBroadcastIfNotDryRun();
 
         setUpContracts();
+        // game.setBriberyFee(address(banana), 5e18);
+        // game.setBriberyFee(address(spit), 10e18);
 
         // gmc.resyncBarons(
         //     [
