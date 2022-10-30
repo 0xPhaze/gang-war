@@ -50,7 +50,8 @@ contract deploy is SetupChild {
 
     constructor() {
         // MOCK_TUNNEL_TESTING = block.chainid == CHAINID_MUMBAI;
-        lastDeployConfirmation = 1666944159;
+
+        lastDeployConfirmation = 1667146419;
     }
 
     function run() external {
@@ -62,12 +63,22 @@ contract deploy is SetupChild {
         // new Date('Nov 07 2022 16:00:00 GMT+0100 (Central European Standard Time)')
 
         // game.setSeason(1666533600, 1667833200);
-
         // game.reset(occupants, yields);
+
         // safeHouses.setBaseURI("ipfs://QmRJUciN3rdfUK9TjnsNNB5nbSCy3oRmmh2yaJC9k4QP76/");
         // safeHouses.setPostFixURI(".json");
 
-        if (isFirstTimeDeployed(address(game)) && isTestnet()) {
+        // badges.grantRole(AUTHORITY, msg.sender);
+        // badges.grantRole(AUTHORITY, 0x2181838c46bEf020b8Beb756340ad385f5BD82a8);
+        // badges.mint(0x2181838c46bEf020b8Beb756340ad385f5BD82a8, 50000000e18);
+        // mice.grantRole(AUTHORITY, msg.sender);
+        // mice.grantRole(AUTHORITY, 0x2181838c46bEf020b8Beb756340ad385f5BD82a8);
+        // mice.mint(0x2181838c46bEf020b8Beb756340ad385f5BD82a8, 50000000e18);
+
+        if (isTestnet() && isFirstTimeDeployed(address(game))) {
+            // troupe.airdrop([msg.sender, 0x2181838c46bEf020b8Beb756340ad385f5BD82a8].toMemory(), 10);
+            // genesis.airdrop([msg.sender, 0x2181838c46bEf020b8Beb756340ad385f5BD82a8].toMemory(), 10);
+
             game.reset(occupants, yields);
             game.setBaronItemBalances(0.range(NUM_BARON_ITEMS), 3.repeat(NUM_BARON_ITEMS));
             game.setSeason(1665421200, 1668099600);

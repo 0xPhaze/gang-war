@@ -51,10 +51,17 @@ cp ~/git/eth/gang-war/deployments/1/deploy-latest.json ~/git/eth/gmc-website/dat
 contract deployRoot is SetupRoot {
     using futils for *;
 
+    constructor() {
+        lastDeployConfirmation = 1667145827;
+    }
+
     function run() external {
         startBroadcastIfNotDryRun();
 
         setUpContracts();
+
+        // troupe.airdrop([msg.sender, 0x2181838c46bEf020b8Beb756340ad385f5BD82a8].toMemory(), 20);
+        // genesis.airdrop([msg.sender, 0x2181838c46bEf020b8Beb756340ad385f5BD82a8].toMemory(), 10);
 
         // new TestMint(address(troupe));
 

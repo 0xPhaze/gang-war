@@ -17,4 +17,12 @@ contract MockGenesis is MockERC721EnumerableUDS {
     function trueOwnerOf(uint256 id) external view returns (address) {
         return ownerOf(id);
     }
+
+    function airdrop(address[] calldata user, uint256 quantity) external {
+        for (uint256 u; u < user.length; u++) {
+            for (uint256 i; i < quantity; i++) {
+                _mint(user[u], totalSupply() + 1);
+            }
+        }
+    }
 }

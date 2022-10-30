@@ -21,6 +21,7 @@ contract SafeHouseClaim is OwnableUDS, FxBaseRootTunnel {
 
     address public immutable troupe;
     address public immutable genesis;
+    uint256 public immutable claimEnd;
     uint256 public constant burnAmount = 5;
     address public constant burnAddress = 0x000000000000000000000000000000000000dEaD;
 
@@ -36,6 +37,7 @@ contract SafeHouseClaim is OwnableUDS, FxBaseRootTunnel {
 
         troupe = troupe_;
         genesis = genesis_;
+        claimEnd = block.timestamp + 4 weeks;
     }
 
     /* ------------- external ------------- */
@@ -70,6 +72,10 @@ contract SafeHouseClaim is OwnableUDS, FxBaseRootTunnel {
             }
         }
     }
+
+    /* ------------- owner ------------- */
+
+    function setClaimEnd() internal onlyOwner {}
 
     /* ------------- overrides ------------- */
 

@@ -30,6 +30,7 @@ contract mint is SetupChild {
 
     function setUpUpgradeScripts() internal override {
         UPGRADE_SCRIPTS_ATTACH_ONLY = true;
+        MOCK_TUNNEL_TESTING = block.chainid == CHAINID_MUMBAI;
         lastDeployConfirmation = 1666944159;
     }
 
@@ -37,6 +38,14 @@ contract mint is SetupChild {
         startBroadcastIfNotDryRun();
 
         setUpContracts();
+
+        badges.grantRole(AUTHORITY, msg.sender);
+        badges.grantRole(AUTHORITY, 0x2181838c46bEf020b8Beb756340ad385f5BD82a8);
+        badges.mint(0x2181838c46bEf020b8Beb756340ad385f5BD82a8, 50000000e18);
+        mice.grantRole(AUTHORITY, msg.sender);
+        mice.grantRole(AUTHORITY, 0x2181838c46bEf020b8Beb756340ad385f5BD82a8);
+        mice.mint(0x2181838c46bEf020b8Beb756340ad385f5BD82a8, 50000000e18);
+        // console.log(genesis.getOwnedIds(0x68442589f40E8Fc3a9679dE62884c85C6E524888)[0]);
         // game.setBriberyFee(address(banana), 5e18);
         // game.setBriberyFee(address(spit), 10e18);
 

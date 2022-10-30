@@ -7,6 +7,8 @@ import {MockFxTunnel} from "fx-contracts/../test/mocks/MockFxTunnel.sol";
 import {UpgradeScripts} from "upgrade-scripts/UpgradeScripts.sol";
 import {FxBaseRootTunnel} from "fx-contracts/base/FxBaseRootTunnel.sol";
 import {FxBaseChildTunnel} from "fx-contracts/base/FxBaseChildTunnel.sol";
+
+import {MockGenesis} from "../test/mocks/MockGenesis.sol";
 import {MockVRFCoordinator} from "../test/mocks/MockVRFCoordinator.sol";
 
 // ROOT
@@ -63,8 +65,8 @@ contract SetupBase is UpgradeScripts {
     GoudaRootRelay goudaTunnel;
     SafeHouseClaim safeHouseClaim;
     MockERC20 goudaRoot = MockERC20(0x3aD30C5E3496BE07968579169a96f00D56De4C1A);
-    MockERC721 troupe = MockERC721(0x74d9d90a7fc261FBe92eD47B606b6E0E00d75E70);
-    MockERC721 genesis = MockERC721(0x3aD30c5e2985e960E89F4a28eFc91BA73e104b77);
+    MockGenesis troupe = MockGenesis(0x74d9d90a7fc261FBe92eD47B606b6E0E00d75E70);
+    MockGenesis genesis = MockGenesis(0x3aD30c5e2985e960E89F4a28eFc91BA73e104b77);
 
     // CHILD
     Mice mice;

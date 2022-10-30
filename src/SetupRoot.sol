@@ -22,8 +22,8 @@ contract SetupRoot is SetupBase {
             bytes memory goudaArgs = abi.encode("Gouda", "GOUDA", 18);
             goudaRoot = MockERC20(setUpContract("MockERC20", goudaArgs, "GoudaRoot"));
 
-            troupe = MockERC721(address(setUpContract("MockERC721", abi.encode("Troupe", "TRP"), "Troupe")));
-            genesis = MockERC721(address(setUpContract("MockGenesis", abi.encode("Genesis", "GNS"), "Genesis")));
+            troupe = MockGenesis(address(setUpContract("MockGenesis", abi.encode("Troupe", "TRP"), "Troupe")));
+            genesis = MockGenesis(address(setUpContract("MockGenesis", abi.encode("Genesis", "GNS"), "Genesis")));
         } else if (fxRootCheckpointManager == address(0) || fxRoot == address(0)) {
             revert("Invalid FxPortal setup.");
         }
@@ -31,7 +31,7 @@ contract SetupRoot is SetupBase {
         bool attachOnly = block.chainid == 1;
 
         bytes memory goudaTunnelArgs = abi.encode(address(goudaRoot), fxRootCheckpointManager, fxRoot);
-        goudaTunnel = GoudaRootRelay(setUpContract("GoudaRootRelay", goudaTunnelArgs));
+        goudaTunnel = GoudaRootRelay(setUpContract("GoudaRootRelay", goudaTunnelArgs, "GoudaRootRelay", true));
 
         bytes memory gmcArgs = abi.encode(fxRootCheckpointManager, fxRoot);
         gmcRoot = GMCRoot(setUpContract("GMCRoot.sol:GMC", gmcArgs, "GMCRoot", attachOnly));
