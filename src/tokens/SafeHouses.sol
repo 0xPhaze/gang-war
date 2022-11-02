@@ -264,15 +264,18 @@ contract SafeHouses is UUPSUpgrade, OwnableUDS, ERC721EnumerableUDS, VRFConsumer
         uint256 rand = randomWords[0];
         uint256 numPending = s().requestQueue.length;
 
-        for (uint256 i; i < numPending; ++i) {
+        for (uint256 i; i < numPending && i < 50; ++i) {
             if (i != 0) rand = uint256(keccak256(abi.encode(rand, i)));
 
-            uint256 id = s().requestQueue[i];
+            uint256 id = s().requestQueue[numPending - i - 1];
+            s().requestQueue.pop();
 
             s().safeHouseData[id].districtId = uint8(1 + (rand % 21));
         }
 
-        delete s().requestQueue;
+        // if (s().requestQueue.length != 0) {
+        //     requestVRF();
+        // }
     }
 
     /* ------------- internal ------------- */
@@ -319,8 +322,14 @@ contract SafeHouses is UUPSUpgrade, OwnableUDS, ERC721EnumerableUDS, VRFConsumer
 
     /* ------------- owner ------------- */
 
+    function forceRequestVRF() external onlyOwner {
+        if (s().requestQueue.length == 0) revert();
+
+        requestVRF();
+    }
+
     function airdrop(address[] calldata tos, uint256 quantity) external onlyOwner {
-        for (uint256 i; i < quantity; ++i) {
+        for (uint256 i; i < tos.length; ++i) {
             _mintInternal(tos[i], quantity);
         }
     }

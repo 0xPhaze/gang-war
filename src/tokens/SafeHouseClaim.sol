@@ -75,7 +75,7 @@ contract SafeHouseClaim is OwnableUDS, FxBaseRootTunnel {
 
     /* ------------- owner ------------- */
 
-    function setClaimEnd() internal onlyOwner {}
+    function setClaimEnd() external onlyOwner {}
 
     /* ------------- overrides ------------- */
 

@@ -125,7 +125,7 @@ contract SetupChild is SetupRoot {
             linkKeyHash,
             linkSubId,
             3,
-            1_500_000
+            2_500_000
         );
         address safeHousesImplementation = setUpContract("SafeHouses", safeHousesArgs, "SafeHousesImplementation");
         safeHouses = SafeHouses(setUpProxy(safeHousesImplementation, abi.encodeWithSelector(SafeHouses.init.selector), "SafeHouses")); // prettier-ignore
@@ -210,6 +210,11 @@ contract SetupChild is SetupRoot {
             if (!tokens[0].hasRole(AUTHORITY, address(mice))) tokens[0].grantRole(AUTHORITY, address(mice));
             if (!tokens[1].hasRole(AUTHORITY, address(mice))) tokens[1].grantRole(AUTHORITY, address(mice));
             if (!tokens[2].hasRole(AUTHORITY, address(mice))) tokens[2].grantRole(AUTHORITY, address(mice));
+
+            if (!gouda.hasRole(AUTHORITY, address(safeHouses))) gouda.grantRole(AUTHORITY, address(safeHouses));
+            if (!tokens[0].hasRole(AUTHORITY, address(safeHouses))) tokens[0].grantRole(AUTHORITY, address(safeHouses));
+            if (!tokens[1].hasRole(AUTHORITY, address(safeHouses))) tokens[1].grantRole(AUTHORITY, address(safeHouses));
+            if (!tokens[2].hasRole(AUTHORITY, address(safeHouses))) tokens[2].grantRole(AUTHORITY, address(safeHouses));
 
             if (!gouda.hasRole(AUTHORITY, address(gmc))) gouda.grantRole(AUTHORITY, address(gmc));
 

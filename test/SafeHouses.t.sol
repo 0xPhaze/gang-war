@@ -103,7 +103,7 @@ contract TestSafeHouses is TestGangWar {
         skip(2 days);
 
         safeHouses.claimReward([1, 1].toMemory());
-        assertEq(token.balanceDiff(self), 2 * int256(safeHouses.tokenDailyRate(1)));
+        assertEq(address(token).balanceDiff(self), 2 * int256(safeHouses.tokenDailyRate(1)));
         assertEq(address(gouda).balanceDiff(self), 2 * int256(safeHouses.goudaDailyRate(1)));
     }
 
@@ -121,7 +121,8 @@ contract TestSafeHouses is TestGangWar {
 
         safeHouses.claimReward([1, 2].toMemory());
 
-        assertEq(token1.balanceDiff(self), 4 * int256(safeHouses.tokenDailyRate(1)));
+        assertEq(address(token1).balanceDiff(self), 2 * int256(safeHouses.tokenDailyRate(1)));
+        assertEq(address(token2).balanceDiff(self), 2 * int256(safeHouses.tokenDailyRate(1)));
         assertEq(address(gouda).balanceDiff(self), 4 * int256(safeHouses.goudaDailyRate(1)));
     }
 
