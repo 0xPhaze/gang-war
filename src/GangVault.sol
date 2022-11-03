@@ -396,7 +396,7 @@ contract GangVault is UUPSUpgrade, AccessControlUDS {
 
     /* ------------- upgrade ------------- */
 
-    function _authorizeUpgrade() internal view override onlyRole(DEFAULT_ADMIN_ROLE) {}
+    function _authorizeUpgrade(address) internal view override onlyRole(DEFAULT_ADMIN_ROLE) {}
 }
 
 function max(uint256 a, uint256 b) pure returns (uint256) {

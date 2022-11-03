@@ -20,7 +20,7 @@ contract GoudaRootRelay is UUPSUpgrade, OwnableUDS, FxERC20RelayRoot {
 
     /* ------------- owner ------------- */
 
-    function _authorizeUpgrade() internal override onlyOwner {}
+    function _authorizeUpgrade(address) internal override onlyOwner {}
 
     function _authorizeTunnelController() internal override onlyOwner {}
 }

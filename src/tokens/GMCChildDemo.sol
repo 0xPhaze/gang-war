@@ -225,7 +225,7 @@ contract GMCChildDemo is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChild, GMCMa
         for (uint256 i; i < ids.length; ++i) s().gang[ids[i]] = gang[i] + 1;
     }
 
-    function _authorizeUpgrade() internal override onlyOwner {}
+    function _authorizeUpgrade(address) internal override onlyOwner {}
 
     function _authorizeTunnelController() internal override onlyOwner {}
 }

@@ -315,7 +315,7 @@ contract GMCChild is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChild, GMCMarket
         }
     }
 
-    function _authorizeUpgrade() internal override onlyOwner {}
+    function _authorizeUpgrade(address) internal override onlyOwner {}
 
     function _authorizeTunnelController() internal override onlyOwner {}
 }

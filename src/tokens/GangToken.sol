@@ -34,5 +34,5 @@ contract GangToken is UUPSUpgrade, OwnableUDS, ERC20BurnableUDS, AccessControlUD
 
     /* ------------- owner ------------- */
 
-    function _authorizeUpgrade() internal override onlyOwner {}
+    function _authorizeUpgrade(address) internal override onlyOwner {}
 }

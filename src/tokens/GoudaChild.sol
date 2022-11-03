@@ -50,7 +50,7 @@ contract GoudaChild is UUPSUpgrade, OwnableUDS, ERC20BurnableUDS, FxERC20UDSChil
 
     /* ------------- owner ------------- */
 
-    function _authorizeUpgrade() internal override onlyOwner {}
+    function _authorizeUpgrade(address) internal override onlyOwner {}
 
     function _authorizeTunnelController() internal override onlyOwner {}
 }

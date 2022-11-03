@@ -1106,7 +1106,7 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
         s().briberyFee[token] = amount;
     }
 
-    function _authorizeUpgrade() internal override onlyOwner {}
+    function _authorizeUpgrade(address) internal override onlyOwner {}
 }
 
 function gangWarWonProbFn(

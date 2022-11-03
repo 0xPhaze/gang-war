@@ -348,7 +348,7 @@ contract SafeHouses is UUPSUpgrade, OwnableUDS, ERC721EnumerableUDS, VRFConsumer
 
     /* ------------- override ------------- */
 
-    function _authorizeUpgrade() internal override onlyOwner {}
+    function _authorizeUpgrade(address) internal override onlyOwner {}
 
     function _authorizeTunnelController() internal override onlyOwner {}
 }

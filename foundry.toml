@@ -15,7 +15,6 @@ fs_permissions = [{ access = "read-write", path = "./" }]
 
 [rpc_endpoints]
 mainnet = "${RPC_MAINNET}"
-rinkeby = "${RPC_RINKEBY}"
 polygon = "${RPC_POLYGON}"
 
 anvil = "${RPC_ANVIL}"
@@ -24,7 +23,6 @@ goerli = "${RPC_GOERLI}"
 
 [etherscan]
 mainnet = { key = "${ETHERSCAN_KEY}" }
-rinkeby = { key = "${ETHERSCAN_KEY}" }
 goerli = { key = "${ETHERSCAN_KEY}" }
 
 polygon = { key = "${POLYGONSCAN_KEY}" }

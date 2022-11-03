@@ -44,12 +44,12 @@ contract StaticProxy is UUPSUpgrade, OwnableUDS {
     /* ------------- external ------------- */
 
     // function upgradeToAndCall(address logic, bytes calldata data) external override {
-    //     _authorizeUpgrade();
+    //     _authorizeUpgrade(address);
     //     _upgradeToAndCall(logic, data);
     // }
 
     function upgradeStaticImplementation(address logic) external {
-        _authorizeUpgrade();
+        _authorizeUpgrade(logic);
         s().staticImplementation = logic;
     }
 
@@ -101,5 +101,5 @@ contract StaticProxy is UUPSUpgrade, OwnableUDS {
 
     /* ------------- override ------------- */
 
-    function _authorizeUpgrade() internal override onlyOwner {}
+    function _authorizeUpgrade(address) internal override onlyOwner {}
 }

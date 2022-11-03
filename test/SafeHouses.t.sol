@@ -121,8 +121,12 @@ contract TestSafeHouses is TestGangWar {
 
         safeHouses.claimReward([1, 2].toMemory());
 
-        assertEq(address(token1).balanceDiff(self), 2 * int256(safeHouses.tokenDailyRate(1)));
-        assertEq(address(token2).balanceDiff(self), 2 * int256(safeHouses.tokenDailyRate(1)));
+        if (token1 == token2) {
+            assertEq(address(token1).balanceDiff(self), 4 * int256(safeHouses.tokenDailyRate(1)));
+        } else {
+            assertEq(address(token1).balanceDiff(self), 2 * int256(safeHouses.tokenDailyRate(1)));
+            assertEq(address(token2).balanceDiff(self), 2 * int256(safeHouses.tokenDailyRate(1)));
+        }
         assertEq(address(gouda).balanceDiff(self), 4 * int256(safeHouses.goudaDailyRate(1)));
     }
 
