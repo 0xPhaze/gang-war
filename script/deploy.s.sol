@@ -50,8 +50,6 @@ contract deploy is SetupChild {
 
     constructor() {
         // MOCK_TUNNEL_TESTING = block.chainid == CHAINID_MUMBAI;
-
-        lastDeployConfirmation = 1667390165;
     }
 
     function run() external {

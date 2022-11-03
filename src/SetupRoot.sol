@@ -7,8 +7,6 @@ import "./SetupBase.sol";
 
 contract SetupRoot is SetupBase {
     function setUpContracts() internal virtual {
-        checkDeployConfirmation();
-
         setUpFxPortal();
         setUpChainlink();
 

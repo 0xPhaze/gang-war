@@ -48,8 +48,6 @@ contract SetupChild is SetupRoot {
     }
 
     function setUpContracts() internal virtual override {
-        checkDeployConfirmation();
-
         assertStorageSeasonSet();
 
         setUpFxPortal();

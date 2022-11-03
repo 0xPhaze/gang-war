@@ -58,8 +58,6 @@ contract SetupBase is UpgradeScripts {
     uint256 constant CHAINID_MUMBAI = 80_001;
     uint256 constant CHAINID_TEST = 31_337;
 
-    uint256 lastDeployConfirmation = 1666527177;
-
     // ROOT
     GMCRoot gmcRoot;
     GoudaRootRelay goudaTunnel;
@@ -83,24 +81,6 @@ contract SetupBase is UpgradeScripts {
         if (block.chainid == CHAINID_TEST) {
             vm.warp(1660993892);
             vm.roll(27702338);
-        }
-    }
-
-    function checkDeployConfirmation() internal {
-        if (!isTestnet() && !UPGRADE_SCRIPTS_DRY_RUN) {
-            if (block.timestamp - lastDeployConfirmation > 10 minutes) {
-                console.log("\nMust reconfirm mainnet deployment:");
-                console.log("```");
-                console.log("uint256 lastDeployConfirmation = %s;", block.timestamp);
-                console.log("```");
-                revert(
-                    string.concat(
-                        "CONFIRMATION REQUIRED: \n```\nuint256 lastDeployConfirmation = ",
-                        vm.toString(block.timestamp),
-                        ";\n```"
-                    )
-                );
-            }
         }
     }
 
