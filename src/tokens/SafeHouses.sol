@@ -136,9 +136,9 @@ contract SafeHouses is UUPSUpgrade, OwnableUDS, ERC721EnumerableUDS, VRFConsumer
     }
 
     function tokenDailyRate(uint256 level) public pure returns (uint256) {
-        if (level == 1) return 300e18;
-        if (level == 2) return 450e18;
-        if (level == 3) return 600e18;
+        if (level == 1) return 900e18;
+        if (level == 2) return 1_350e18;
+        if (level == 3) return 1_800e18;
         return 0;
     }
 

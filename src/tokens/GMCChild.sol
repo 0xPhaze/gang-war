@@ -75,7 +75,8 @@ contract GMCChild is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChild, GMCMarket
 
     function isAuthorizedUser(address user, uint256 id) public view returns (bool) {
         if (isBaron(id)) {
-            return user == ownerOf(id);
+            // any baron holder is able to control other barons
+            return s().baronBalanceOf[user] != 0;
         }
 
         address renter = renterOf(id);
@@ -89,9 +90,7 @@ contract GMCChild is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChild, GMCMarket
     }
 
     function gangOf(uint256 id) public view returns (Gang gang) {
-        if (isBaron(id)) {
-            return Gang((id - 10_001) / 7);
-        }
+        if (isBaron(id)) return Gang((id - 10_001) / 7);
 
         uint256 gangEnc = s().gangMap.get(id - 1);
 
@@ -193,6 +192,12 @@ contract GMCChild is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChild, GMCMarket
             if (to != address(0)) {
                 GangVault(vault).addShares(to, uint256(gang), shares);
             }
+        }
+
+        // store baron balances
+        if (isBaron(id)) {
+            if (from != address(0)) s().baronBalanceOf[from]--;
+            if (to != address(0)) s().baronBalanceOf[to]++;
         }
     }
 
