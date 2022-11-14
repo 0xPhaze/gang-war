@@ -31,7 +31,6 @@ contract mint is SetupChild {
     function setUpUpgradeScripts() internal override {
         UPGRADE_SCRIPTS_ATTACH_ONLY = true;
         MOCK_TUNNEL_TESTING = block.chainid == CHAINID_MUMBAI;
-        lastDeployConfirmation = 1666944159;
     }
 
     function run() external {

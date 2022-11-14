@@ -26,6 +26,7 @@ struct GMCDS {
     mapping(uint256 => string) name;
     mapping(address => string) playerName;
     mapping(uint256 => uint256) gangMap;
+    mapping(address => uint256) baronBalanceOf;
 }
 
 function s() pure returns (GMCDS storage diamondStorage) {
@@ -73,6 +74,10 @@ contract GMCChild is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChild, GMCMarket
     }
 
     function isAuthorizedUser(address user, uint256 id) public view returns (bool) {
+        if (isBaron(id)) {
+            return user == ownerOf(id);
+        }
+
         address renter = renterOf(id);
 
         // first check renter (active user), and only if 0, check owner
@@ -142,6 +147,14 @@ contract GMCChild is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChild, GMCMarket
         s().playerName[msg.sender] = name_;
     }
 
+    function delegate(address to, uint256[] calldata ids) external {
+        for (uint256 i; i < ids.length; ++i) {
+            if (ownerOf(ids[i]) != msg.sender) revert NotAuthorized();
+
+            _registerId(to, ids[i]);
+        }
+    }
+
     /* ------------- hooks ------------- */
 
     /// @dev these hooks are called by Polygon's PoS bridge
@@ -178,7 +191,7 @@ contract GMCChild is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChild, GMCMarket
             }
 
             if (to != address(0)) {
-                GangVault(vault).addShares(to, uint256(gangOf(id)), shares);
+                GangVault(vault).addShares(to, uint256(gang), shares);
             }
         }
     }

@@ -60,7 +60,7 @@ contract SetupChild is SetupRoot {
         bytes memory goudaArgs = abi.encode(fxChild);
         bytes memory goudaInit = abi.encodeWithSelector(GoudaChild.init.selector);
 
-        address goudaChildImplementation = setUpContract("GoudaChild", goudaArgs, "GoudaChildImplementation");
+        address goudaChildImplementation = setUpContract("GoudaChild", goudaArgs, "GoudaChildImplementation", true);
         gouda = GoudaChild(setUpProxy(goudaChildImplementation, goudaInit, "GoudaChild"));
 
         bytes memory yakuzaInitCall = abi.encodeWithSelector(GangToken.init.selector, "Yakuza Token", "YKZ");
@@ -70,13 +70,13 @@ contract SetupChild is SetupRoot {
 
         address gangTokenImpl = setUpContract("GangToken");
 
-        badges = GangToken(setUpProxy(gangTokenImpl, badgesInitCall, "Badges"));
-        tokens[0] = GangToken(setUpProxy(gangTokenImpl, yakuzaInitCall, "YakuzaToken"));
-        tokens[1] = GangToken(setUpProxy(gangTokenImpl, cartelInitCall, "CartelToken"));
-        tokens[2] = GangToken(setUpProxy(gangTokenImpl, cyberpInitCall, "CyberpunkToken"));
+        badges = GangToken(setUpProxy(gangTokenImpl, badgesInitCall, "Badges", true));
+        tokens[0] = GangToken(setUpProxy(gangTokenImpl, yakuzaInitCall, "YakuzaToken", true));
+        tokens[1] = GangToken(setUpProxy(gangTokenImpl, cartelInitCall, "CartelToken", true));
+        tokens[2] = GangToken(setUpProxy(gangTokenImpl, cyberpInitCall, "CyberpunkToken", true));
 
         bytes memory vaultArgs = abi.encode(tokens[0], tokens[1], tokens[2], GANG_VAULT_FEE); // prettier-ignore
-        address vaultImpl = setUpContract("GangVault", vaultArgs, "GangVaultImplementation");
+        address vaultImpl = setUpContract("GangVault", vaultArgs, "GangVaultImplementation", true);
         vault = GangVault(setUpProxy(vaultImpl, abi.encode(GangVault.init.selector), "Vault"));
 
         bool DEMO = false;
@@ -87,12 +87,12 @@ contract SetupChild is SetupRoot {
         address gmcImpl = setUpContract(GMCContractName, gmcArgs, "GMCChildImplementation");
         gmc = GMCChild(setUpProxy(gmcImpl, abi.encodeWithSelector(GMCChild.init.selector), "GMCChild"));
 
-        setUpContract("GangProxy", abi.encode(gmc, 0), "YakuzaGangProxy");
-        setUpContract("GangProxy", abi.encode(gmc, 1), "CartelGangProxy");
-        setUpContract("GangProxy", abi.encode(gmc, 2), "CyberpunkGangProxy");
+        setUpContract("GangProxy", abi.encode(gmc, 0), "YakuzaGangProxy", true);
+        setUpContract("GangProxy", abi.encode(gmc, 1), "CartelGangProxy", true);
+        setUpContract("GangProxy", abi.encode(gmc, 2), "CyberpunkGangProxy", true);
 
         bytes memory miceArgs = abi.encode(tokens[0], tokens[1], tokens[2], badges);
-        address miceImpl = setUpContract("Mice", miceArgs, "MiceImplementation");
+        address miceImpl = setUpContract("Mice", miceArgs, "MiceImplementation", true);
         mice = Mice(setUpProxy(miceImpl, abi.encode(Mice.init.selector), "Mice"));
 
         bytes memory gangWarArgs = abi.encode(
@@ -125,7 +125,12 @@ contract SetupChild is SetupRoot {
             3,
             2_500_000
         );
-        address safeHousesImplementation = setUpContract("SafeHouses", safeHousesArgs, "SafeHousesImplementation");
+        address safeHousesImplementation = setUpContract(
+            "SafeHouses",
+            safeHousesArgs,
+            "SafeHousesImplementation",
+            true
+        );
         safeHouses = SafeHouses(setUpProxy(safeHousesImplementation, abi.encodeWithSelector(SafeHouses.init.selector), "SafeHouses")); // prettier-ignore
 
         if (MOCK_TUNNEL_TESTING) {

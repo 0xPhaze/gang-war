@@ -51,9 +51,7 @@ cp ~/git/eth/gang-war/deployments/1/deploy-latest.json ~/git/eth/gmc-website/dat
 contract deployRoot is SetupRoot {
     using futils for *;
 
-    constructor() {
-        lastDeployConfirmation = 1667145827;
-    }
+    constructor() {}
 
     function run() external {
         startBroadcastIfNotDryRun();

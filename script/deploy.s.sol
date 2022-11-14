@@ -54,13 +54,14 @@ contract deploy is SetupChild {
 
     function run() external {
         startBroadcastIfNotDryRun();
+        mainnetConfirmation = 1667647653;
 
         setUpContracts();
 
         // new Date('Oct 23 2022 16:00:00 GMT+0200 (Central European Summer Time)')
-        // new Date('Nov 07 2022 16:00:00 GMT+0100 (Central European Standard Time)')
+        // new Date('Nov 20 2022 16:00:00 GMT+0100 (Central European Standard Time)') / 1000
 
-        // game.setSeason(1666533600, 1667833200);
+        // game.setSeason(1666533600, 1668956400);
         // game.reset(occupants, yields);
 
         // safeHouses.setBaseURI("ipfs://QmRJUciN3rdfUK9TjnsNNB5nbSCy3oRmmh2yaJC9k4QP76/");
@@ -103,7 +104,7 @@ contract deploy is SetupChild {
         // goudaRoot.approve(address(goudaTunnel), type(uint256).max);
         // goudaTunnel.lock(msg.sender, 50e18);
 
-        vm.stopBroadcast();
+        // vm.stopBroadcast();
 
         storeDeployments();
     }
