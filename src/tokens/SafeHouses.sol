@@ -173,6 +173,18 @@ contract SafeHouses is UUPSUpgrade, OwnableUDS, ERC721EnumerableUDS, VRFConsumer
         }
     }
 
+    function numSafehousesByDistrictId() public view returns (uint256[21] memory count) {
+        uint256 supply = totalSupply();
+
+        for (uint256 i = 1; i <= supply; ++i) {
+            uint256 districtId = s().safeHouseData[i].districtId;
+
+            if (districtId != 0) {
+                ++count[districtId - 1];
+            }
+        }
+    }
+
     /* ------------- external ------------- */
 
     function mint(uint256 quantity) external {

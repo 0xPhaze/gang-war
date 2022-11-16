@@ -26,7 +26,7 @@ struct GMCDS {
     mapping(uint256 => string) name;
     mapping(address => string) playerName;
     mapping(uint256 => uint256) gangMap;
-    mapping(address => uint256) baronBalanceOf;
+    mapping(address => mapping(Gang => uint256)) baronBalanceOf;
 }
 
 function s() pure returns (GMCDS storage diamondStorage) {
@@ -74,9 +74,11 @@ contract GMCChild is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChild, GMCMarket
     }
 
     function isAuthorizedUser(address user, uint256 id) public view returns (bool) {
+        // any baron holder is able to control other barons of their gang
         if (isBaron(id)) {
-            // any baron holder is able to control other barons
-            return s().baronBalanceOf[user] != 0;
+            Gang gang = gangOf(id);
+
+            return s().baronBalanceOf[user][gang] != 0;
         }
 
         address renter = renterOf(id);
@@ -196,8 +198,8 @@ contract GMCChild is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChild, GMCMarket
 
         // store baron balances
         if (isBaron(id)) {
-            if (from != address(0)) s().baronBalanceOf[from]--;
-            if (to != address(0)) s().baronBalanceOf[to]++;
+            if (from != address(0)) s().baronBalanceOf[from][gang]--;
+            if (to != address(0)) s().baronBalanceOf[to][gang]++;
         }
     }
 
