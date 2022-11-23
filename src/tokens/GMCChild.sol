@@ -31,7 +31,9 @@ struct GMCDS {
 
 function s() pure returns (GMCDS storage diamondStorage) {
     bytes32 slot = DIAMOND_STORAGE_GMC_CHILD;
-    assembly { diamondStorage.slot := slot } // prettier-ignore
+    assembly {
+        diamondStorage.slot := slot
+    } // prettier-ignore
 }
 
 error GangUnset();
@@ -65,7 +67,7 @@ contract GMCChild is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChild, GMCMarket
 
     /* ------------- view ------------- */
 
-    function ownerOf(uint256 id) public view override(FxERC721Child, GMCMarket) returns (address) {
+    function ownerOf(uint256 id) public view override (FxERC721Child, GMCMarket) returns (address) {
         return FxERC721Child.ownerOf(id);
     }
 
@@ -127,10 +129,9 @@ contract GMCChild is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChild, GMCMarket
     }
 
     function tokenURI(uint256 id) public view returns (string memory) {
-        return 
-            bytes(s().baseURI).length == 0 
-              ? s().unrevealedURI 
-              : string.concat(s().baseURI, id.toString(), s().postFixURI); // prettier-ignore
+        return bytes(s().baseURI).length == 0
+            ? s().unrevealedURI
+            : string.concat(s().baseURI, id.toString(), s().postFixURI); // prettier-ignore
     }
 
     /* ------------- external ------------- */
@@ -164,11 +165,9 @@ contract GMCChild is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChild, GMCMarket
     /// - `from` = 0
     /// - `to` = 0
     /// - `from`, `to` != 0
-    function _afterIdRegistered(
-        address from,
-        address to,
-        uint256 id
-    ) internal override {
+    function _afterIdRegistered(address from, address to, uint256 id) internal override {
+        if (from == to) return;
+
         super._afterIdRegistered(from, to, id);
 
         Gang gang = gangOf(id);
@@ -203,12 +202,7 @@ contract GMCChild is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChild, GMCMarket
         }
     }
 
-    function _afterStartRent(
-        address owner,
-        address renter,
-        uint256 id,
-        uint256 renterShares
-    ) internal override {
+    function _afterStartRent(address owner, address renter, uint256 id, uint256 renterShares) internal override {
         Gang gang = gangOf(id);
 
         if (gang == Gang.NONE) revert GangUnset();
@@ -219,12 +213,7 @@ contract GMCChild is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChild, GMCMarket
         emit Transfer(owner, renter, id);
     }
 
-    function _afterEndRent(
-        address owner,
-        address renter,
-        uint256 id,
-        uint256 renterShares
-    ) internal override {
+    function _afterEndRent(address owner, address renter, uint256 id, uint256 renterShares) internal override {
         Gang gang = gangOf(id);
 
         if (gang == Gang.NONE) revert GangUnset();
@@ -352,10 +341,10 @@ function isValidString(string calldata str, uint256 maxLen) pure returns (bool) 
         char = b[i];
 
         if (
-            (char > 0x60 && char < 0x7B) || //a-z
-            (char > 0x40 && char < 0x5B) || //A-Z
-            (char == 0x20 && lastChar != 0x20) || //space
-            (char > 0x2F && char < 0x3A) //9-0
+            (char > 0x60 && char < 0x7B) //a-z
+                || (char > 0x40 && char < 0x5B) //A-Z
+                || (char == 0x20 && lastChar != 0x20) //space
+                || (char > 0x2F && char < 0x3A) //9-0
         ) {
             lastChar = char;
         } else {

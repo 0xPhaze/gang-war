@@ -9,7 +9,7 @@ import {AccessControlUDS} from "UDS/auth/AccessControlUDS.sol";
 
 bytes32 constant DIAMOND_STORAGE_GANG_VAULT = keccak256("diamond.storage.gang.vault");
 // @note flexible storage, can be changed to reset accumulated yields
-bytes32 constant DIAMOND_STORAGE_GANG_VAULT_FX = keccak256("diamond.storage.gang.vault.season.1");
+bytes32 constant DIAMOND_STORAGE_GANG_VAULT_FX = keccak256("diamond.storage.gang.vault.season.3");
 
 struct GangVaultDS {
     uint40 seasonStart;
@@ -29,12 +29,16 @@ struct GangVaultFlexibleDS {
 
 function s() pure returns (GangVaultDS storage diamondStorage) {
     bytes32 slot = DIAMOND_STORAGE_GANG_VAULT;
-    assembly { diamondStorage.slot := slot } // prettier-ignore
+    assembly {
+        diamondStorage.slot := slot
+    }
 }
 
 function fx() pure returns (GangVaultFlexibleDS storage diamondStorage) {
     bytes32 slot = DIAMOND_STORAGE_GANG_VAULT_FX;
-    assembly { diamondStorage.slot := slot } // prettier-ignore
+    assembly {
+        diamondStorage.slot := slot
+    }
 }
 
 /// @title Gangsta Mice City Gang Vault Rewards
@@ -99,12 +103,16 @@ contract GangVault is UUPSUpgrade, AccessControlUDS {
 
     function getYield() external view returns (uint256[3][3] memory out) {
         uint80[3][3] memory yield = s().yield;
-        assembly { out := yield } // prettier-ignore
+        assembly {
+            out := yield
+        } // prettier-ignore
     }
 
     function getUserShares(address account) external view returns (uint256[3] memory out) {
         uint40[3] memory shares = s().userShares[account];
-        assembly { out := shares } // prettier-ignore
+        assembly {
+            out := shares
+        } // prettier-ignore
     }
 
     function getClaimableUserBalance(address account) public view returns (uint256[3] memory out) {
@@ -163,11 +171,7 @@ contract GangVault is UUPSUpgrade, AccessControlUDS {
         s().yield[gang][2] = uint80(yield[2]);
     }
 
-    function addShares(
-        address account,
-        uint256 gang,
-        uint40 amount
-    ) external onlyRole(CONTROLLER) {
+    function addShares(address account, uint256 gang, uint40 amount) external onlyRole(CONTROLLER) {
         _updateYieldPerShare(gang);
         _updateUserBalance(gang, account);
 
@@ -177,11 +181,7 @@ contract GangVault is UUPSUpgrade, AccessControlUDS {
         emit SharesAdded(account, gang, amount);
     }
 
-    function removeShares(
-        address account,
-        uint256 gang,
-        uint40 amount
-    ) external onlyRole(CONTROLLER) {
+    function removeShares(address account, uint256 gang, uint40 amount) external onlyRole(CONTROLLER) {
         _updateYieldPerShare(gang);
         _updateUserBalance(gang, account);
 
@@ -191,12 +191,7 @@ contract GangVault is UUPSUpgrade, AccessControlUDS {
         emit SharesRemoved(account, gang, amount);
     }
 
-    function transferShares(
-        address from,
-        address to,
-        uint256 gang,
-        uint40 amount
-    ) external onlyRole(CONTROLLER) {
+    function transferShares(address from, address to, uint256 gang, uint40 amount) external onlyRole(CONTROLLER) {
         _updateYieldPerShare(gang);
         _updateUserBalance(gang, from);
         _updateUserBalance(gang, to);
@@ -219,12 +214,10 @@ contract GangVault is UUPSUpgrade, AccessControlUDS {
         }
     }
 
-    function transferYield(
-        uint256 gangFrom,
-        uint256 gangTo,
-        uint256 token,
-        uint256 yield
-    ) external onlyRole(CONTROLLER) {
+    function transferYield(uint256 gangFrom, uint256 gangTo, uint256 token, uint256 yield)
+        external
+        onlyRole(CONTROLLER)
+    {
         _updateYieldPerShare(gangFrom);
         _updateYieldPerShare(gangTo);
 
@@ -232,13 +225,10 @@ contract GangVault is UUPSUpgrade, AccessControlUDS {
         s().yield[gangTo][token] += uint80(yield);
     }
 
-    function spendGangVaultBalance(
-        uint256 gang,
-        uint256 amount_0,
-        uint256 amount_1,
-        uint256 amount_2,
-        bool strict
-    ) external onlyRole(CONTROLLER) {
+    function spendGangVaultBalance(uint256 gang, uint256 amount_0, uint256 amount_1, uint256 amount_2, bool strict)
+        external
+        onlyRole(CONTROLLER)
+    {
         address gangAccount = _getGangAccount(gang);
         uint256 totalShares = s().totalShares[gang];
         uint256 numSharesTimes100 = max(totalShares, 1) * gangVaultFeePercent;
@@ -281,15 +271,7 @@ contract GangVault is UUPSUpgrade, AccessControlUDS {
         s().lastUpdateTime[gang] = uint40(block.timestamp);
     }
 
-    function _accruedYieldPerShare(uint256 gang)
-        private
-        view
-        returns (
-            uint256 yps_0,
-            uint256 yps_1,
-            uint256 yps_2
-        )
-    {
+    function _accruedYieldPerShare(uint256 gang) private view returns (uint256 yps_0, uint256 yps_1, uint256 yps_2) {
         yps_0 = fx().accruedYieldPerShare[gang][0];
         yps_1 = fx().accruedYieldPerShare[gang][1];
         yps_2 = fx().accruedYieldPerShare[gang][2];
@@ -333,11 +315,7 @@ contract GangVault is UUPSUpgrade, AccessControlUDS {
         _updateUserBalance(gang, account, numSharesTimes100);
     }
 
-    function _updateUserBalance(
-        uint256 gang,
-        address account,
-        uint256 numSharesTimes100
-    ) private {
+    function _updateUserBalance(uint256 gang, address account, uint256 numSharesTimes100) private {
         (uint256 yps_0, uint256 yps_1, uint256 yps_2) = _accruedYieldPerShare(gang);
 
         // userBalance <= max_yps < 1e24 < 2^80
@@ -374,11 +352,11 @@ contract GangVault is UUPSUpgrade, AccessControlUDS {
         out[2] = balances_0[2] + balances_1[2] + balances_2[2];
     }
 
-    function _getUnclaimedUserBalance(
-        uint256 gang,
-        address account,
-        uint256 numSharesTimes100
-    ) private view returns (uint256[3] memory balances) {
+    function _getUnclaimedUserBalance(uint256 gang, address account, uint256 numSharesTimes100)
+        private
+        view
+        returns (uint256[3] memory balances)
+    {
         (uint256 yps_0, uint256 yps_1, uint256 yps_2) = _accruedYieldPerShare(gang);
 
         balances[0] = numSharesTimes100 * (yps_0 - fx().lastUserYieldPerShare[account][gang][0]) * 1e10 / 100; // prettier-ignore

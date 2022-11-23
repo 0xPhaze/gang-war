@@ -14,11 +14,11 @@ import {UUPSUpgrade} from "UDS/proxy/UUPSUpgrade.sol";
 
 // ------------- constants
 
-uint256 constant TIME_TRUCE = 7 hours;
-uint256 constant TIME_LOCKUP = 24 hours;
-uint256 constant TIME_GANG_WAR = 5 hours;
-uint256 constant TIME_RECOVERY = 24 hours;
-uint256 constant TIME_REINFORCEMENTS = 12 hours;
+uint256 constant TIME_TRUCE = 4 hours;
+uint256 constant TIME_LOCKUP = 16 hours;
+uint256 constant TIME_GANG_WAR = 4 hours;
+uint256 constant TIME_RECOVERY = 16 hours;
+uint256 constant TIME_REINFORCEMENTS = 8 hours;
 uint256 constant REST_DAY = 1667102400; // Oct 30 2022 6:00:00 GMT+0200 (Central European Summer Time)
 
 uint256 constant DEFENSE_FAVOR_LIM = 60;
@@ -148,13 +148,15 @@ struct GangWarDS {
 
 // ------------- storage
 
-string constant SEASON = "season.2.x"; // .x for cleaning up unused placeholders in storage
+string constant SEASON = "season.3";
 
-bytes32 constant DIAMOND_STORAGE_GANG_WAR = keccak256("diamond.storage.gang.war.season.2.x");
+bytes32 constant DIAMOND_STORAGE_GANG_WAR = keccak256("diamond.storage.gang.war.season.3");
 
 function s() pure returns (GangWarDS storage diamondStorage) {
     bytes32 slot = DIAMOND_STORAGE_GANG_WAR;
-    assembly { diamondStorage.slot := slot } // prettier-ignore
+    assembly {
+        diamondStorage.slot := slot
+    }
 }
 
 // ------------- errors
@@ -193,11 +195,15 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
     event GangWarWon(uint256 indexed districtId, Gang indexed losers, Gang indexed winners);
     event ExitGangWar(uint256 indexed districtId, Gang indexed gang, uint256 tokenId);
     event EnterGangWar(uint256 indexed districtId, Gang indexed gang, uint256 tokenId);
-    event BadgesEarned(uint256 indexed districtId, uint256 indexed tokenId, Gang indexed gang, bool won, uint256 probability); // prettier-ignore
+    event BadgesEarned(
+        uint256 indexed districtId, uint256 indexed tokenId, Gang indexed gang, bool won, uint256 probability
+    );
     event BaronItemUsed(uint256 indexed districtId, uint256 indexed baronId, Gang indexed gang, uint256 itemId);
     event GangsterInjured(uint256 indexed districtId, uint256 indexed tokenId);
     event BaronItemPurchased(uint256 indexed baronId, Gang indexed gang, uint256 itemId, uint256 price);
-    event BaronAttackDeclared(uint256 indexed connectingId, uint256 indexed districtId, Gang indexed gang, uint256 tokenId); // prettier-ignore
+    event BaronAttackDeclared(
+        uint256 indexed connectingId, uint256 indexed districtId, Gang indexed gang, uint256 tokenId
+    );
     event BaronDefenseDeclared(uint256 indexed districtId, Gang indexed gang, uint256 tokenId);
 
     GMC public immutable gmc;
@@ -284,7 +290,9 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
 
     function getBaronItemBalances(uint256 gang) external view returns (uint256[] memory items) {
         items = new uint256[](NUM_BARON_ITEMS);
-        for (uint256 i; i < NUM_BARON_ITEMS; ++i) items[i] = s().baronItems[Gang(gang)][i];
+        for (uint256 i; i < NUM_BARON_ITEMS; ++i) {
+            items[i] = s().baronItems[Gang(gang)][i];
+        }
     }
 
     function getGangster(uint256 tokenId) external view returns (Gangster memory gangster) {
@@ -308,11 +316,7 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
 
     /* ------------- external ------------- */
 
-    function purchaseBaronItem(
-        uint256 baronId,
-        uint256 itemId,
-        uint256 exchangeType
-    ) external isActiveSeason {
+    function purchaseBaronItem(uint256 baronId, uint256 itemId, uint256 exchangeType) external isActiveSeason {
         _verifyAuthorizedUser(msg.sender, baronId);
 
         uint256 micePrice = s().baronItemCost[itemId];
@@ -332,11 +336,7 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
         s().baronItemLastPurchased[baronId] = block.timestamp;
     }
 
-    function useBaronItem(
-        uint256 baronId,
-        uint256 itemId,
-        uint256 districtId
-    ) external isActiveSeason {
+    function useBaronItem(uint256 baronId, uint256 itemId, uint256 districtId) external isActiveSeason {
         _verifyAuthorizedUser(msg.sender, baronId);
 
         uint256 lastUse = s().baronItemLastUsed[baronId];
@@ -365,28 +365,29 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
             if (itemId == ITEM_BLITZ) {
                 if (
                     // require attacking/defending
-                    (district.attackers != gang && district.occupants != gang) ||
-                    districtState != DISTRICT_STATE.REINFORCEMENT
+                    (district.attackers != gang && district.occupants != gang)
+                        || districtState != DISTRICT_STATE.REINFORCEMENT
                 ) {
                     revert InvalidItemUsage();
                 }
 
                 s().districts[districtId].blitzTimeReduction =
-                    (uint256(stateCountdown) * ITEM_BLITZ_TIME_REDUCTION) /
-                    100;
+                    (uint256(stateCountdown) * ITEM_BLITZ_TIME_REDUCTION) / 100;
             } else if (itemId == ITEM_BARRICADES) {
                 if (
-                    // require defending
-                    district.occupants != gang ||
-                    (districtState != DISTRICT_STATE.REINFORCEMENT && districtState != DISTRICT_STATE.GANG_WAR)
+                    district
+                        // require defending
+                        .occupants != gang
+                        || (districtState != DISTRICT_STATE.REINFORCEMENT && districtState != DISTRICT_STATE.GANG_WAR)
                 ) {
                     revert InvalidItemUsage();
                 }
             } else if (itemId == ITEM_SMOKE) {
                 if (
-                    // require attacking
-                    district.attackers != gang ||
-                    (districtState != DISTRICT_STATE.REINFORCEMENT && districtState != DISTRICT_STATE.GANG_WAR)
+                    district
+                        // require attacking
+                        .attackers != gang
+                        || (districtState != DISTRICT_STATE.REINFORCEMENT && districtState != DISTRICT_STATE.GANG_WAR)
                 ) {
                     revert InvalidItemUsage();
                 }
@@ -413,8 +414,9 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
 
             (PLAYER_STATE gangsterState, int256 stateCountdown) = _gangsterStateAndCountdown(tokenId);
 
-            if (gangsterState != PLAYER_STATE.INJURED && gangsterState != PLAYER_STATE.LOCKUP)
+            if (gangsterState != PLAYER_STATE.INJURED && gangsterState != PLAYER_STATE.LOCKUP) {
                 revert GangsterInvalidState();
+            }
 
             ERC20UDS(token).transferFrom(msg.sender, address(this), tokenFee);
 
@@ -440,8 +442,9 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
 
         (PLAYER_STATE gangsterState, int256 stateCountdown) = _gangsterStateAndCountdown(baronId);
 
-        if (gangsterState != PLAYER_STATE.INJURED && gangsterState != PLAYER_STATE.LOCKUP)
+        if (gangsterState != PLAYER_STATE.INJURED && gangsterState != PLAYER_STATE.LOCKUP) {
             revert GangsterInvalidState();
+        }
 
         uint256 timeReduction = uint256(stateCountdown) / 2;
 
@@ -451,19 +454,17 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
         else s().gangsters[baronId].recoveryTimeReduction += timeReduction;
     }
 
-    function baronDeclareAttack(
-        uint256 connectingId,
-        uint256 districtId,
-        uint256 tokenId,
-        bool sewers
-    ) external isActiveSeason {
+    function baronDeclareAttack(uint256 connectingId, uint256 districtId, uint256 tokenId, bool sewers)
+        external
+        isActiveSeason
+    {
         _verifyAuthorizedUser(msg.sender, tokenId);
 
         Gang gang = gangOf(tokenId);
         District storage district = s().districts[districtId];
 
-        (PLAYER_STATE baronState, ) = _gangsterStateAndCountdown(tokenId);
-        (DISTRICT_STATE districtState, ) = _districtStateAndCountdown(district);
+        (PLAYER_STATE baronState,) = _gangsterStateAndCountdown(tokenId);
+        (DISTRICT_STATE districtState,) = _districtStateAndCountdown(district);
 
         if (!isBaron(tokenId)) revert TokenMustBeBaron();
         if (district.occupants == gang) revert CannotAttackDistrictOwnedByGang();
@@ -499,8 +500,8 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
         Gang gang = gangOf(tokenId);
         District storage district = s().districts[districtId];
 
-        (PLAYER_STATE gangsterState, ) = _gangsterStateAndCountdown(tokenId);
-        (DISTRICT_STATE districtState, ) = _districtStateAndCountdown(district);
+        (PLAYER_STATE gangsterState,) = _gangsterStateAndCountdown(tokenId);
+        (DISTRICT_STATE districtState,) = _districtStateAndCountdown(district);
 
         if (!isBaron(tokenId)) revert TokenMustBeBaron();
         if (district.occupants != gang) revert DistrictNotOwnedByGang();
@@ -522,11 +523,10 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
         emit BaronDefenseDeclared(districtId, gang, tokenId);
     }
 
-    function joinGangAttack(
-        uint256 districtIdFrom,
-        uint256 districtIdTo,
-        uint256[] calldata tokenIds
-    ) external isActiveSeason {
+    function joinGangAttack(uint256 districtIdFrom, uint256 districtIdTo, uint256[] calldata tokenIds)
+        external
+        isActiveSeason
+    {
         Gang gang = gangOf(tokenIds[0]);
 
         District storage district = s().districts[districtIdTo];
@@ -558,7 +558,7 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
         for (uint256 i; i < tokenIds.length; ++i) {
             uint256 tokenId = tokenIds[i];
 
-            (PLAYER_STATE state, ) = _gangsterStateAndCountdown(tokenId);
+            (PLAYER_STATE state,) = _gangsterStateAndCountdown(tokenId);
 
             if (isBaron(tokenId)) revert TokenMustBeGangster();
             if (state != PLAYER_STATE.ATTACK && state != PLAYER_STATE.DEFEND) revert GangsterInvalidState();
@@ -592,18 +592,14 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
 
     /* ------------- enter ------------- */
 
-    function _enterGangWar(
-        uint256 districtId,
-        uint256[] calldata tokenIds,
-        Gang gang,
-        bool attack
-    ) private {
+    function _enterGangWar(uint256 districtId, uint256[] calldata tokenIds, Gang gang, bool attack) private {
         District storage district = s().districts[districtId];
 
-        (DISTRICT_STATE districtState, ) = _districtStateAndCountdown(district);
+        (DISTRICT_STATE districtState,) = _districtStateAndCountdown(district);
 
-        if (districtState != DISTRICT_STATE.IDLE && districtState != DISTRICT_STATE.REINFORCEMENT)
+        if (districtState != DISTRICT_STATE.IDLE && districtState != DISTRICT_STATE.REINFORCEMENT) {
             revert DistrictInvalidState();
+        }
 
         uint256 districtRoundId = district.roundId;
 
@@ -617,10 +613,11 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
 
             Gangster storage gangster = s().gangsters[tokenId];
 
-            (PLAYER_STATE state, ) = _gangsterStateAndCountdown(tokenId);
+            (PLAYER_STATE state,) = _gangsterStateAndCountdown(tokenId);
 
-            if (state != PLAYER_STATE.IDLE && state != PLAYER_STATE.ATTACK && state != PLAYER_STATE.DEFEND)
+            if (state != PLAYER_STATE.IDLE && state != PLAYER_STATE.ATTACK && state != PLAYER_STATE.DEFEND) {
                 revert GangsterInactionable();
+            }
 
             // already attacking/defending in another district
             if (state == PLAYER_STATE.ATTACK || state == PLAYER_STATE.DEFEND) {
@@ -670,11 +667,7 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
         return LibPackedMap.isConnecting(packedDistrictConnections, districtA, districtB);
     }
 
-    function _spendMice(
-        uint256 gang,
-        uint256 micePrice,
-        uint256 exchangeType
-    ) internal {
+    function _spendMice(uint256 gang, uint256 micePrice, uint256 exchangeType) internal {
         uint256 yakuzaTokenAmount;
         uint256 cartelTokenAmount;
         uint256 cyberpunkTokenAmount;
@@ -703,11 +696,7 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
         vault.spendGangVaultBalance(uint256(gang), yakuzaTokenAmount, cartelTokenAmount, cyberpunkTokenAmount, true);
     }
 
-    function _isInjured(
-        uint256 gangsterId,
-        uint256 districtId,
-        uint256 roundId
-    ) private view returns (bool) {
+    function _isInjured(uint256 gangsterId, uint256 districtId, uint256 roundId) private view returns (bool) {
         uint256 gRand = s().gangWarOutcomes[districtId][roundId];
 
         uint256 wonP = gangWarWinProbability(districtId, roundId);
@@ -756,9 +745,7 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
 
         if (lockupTime != 0) {
             stateCountdown =
-                int256(TIME_LOCKUP) -
-                int256(block.timestamp - lockupTime) -
-                int256(gangster.briberyTimeReduction);
+                int256(TIME_LOCKUP) - int256(block.timestamp - lockupTime) - int256(gangster.briberyTimeReduction);
             if (stateCountdown > 0) return (PLAYER_STATE.LOCKUP, stateCountdown);
         }
 
@@ -791,10 +778,8 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
         bool injured = _isInjured(gangsterId, districtId, districtRoundId);
 
         if (injured) {
-            stateCountdown =
-                int256(TIME_RECOVERY) -
-                int256(block.timestamp - district.lastOutcomeTime) -
-                int256(gangster.recoveryTimeReduction);
+            stateCountdown = int256(TIME_RECOVERY) - int256(block.timestamp - district.lastOutcomeTime)
+                - int256(gangster.recoveryTimeReduction);
 
             if (stateCountdown > 0) return (PLAYER_STATE.INJURED, stateCountdown);
         }
@@ -820,9 +805,7 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
         if (attackDeclarationTime == 0) return (DISTRICT_STATE.IDLE, 0);
 
         // check if district is in all other states
-        stateCountdown =
-            int256(TIME_REINFORCEMENTS)
-            - int256(block.timestamp - attackDeclarationTime)
+        stateCountdown = int256(TIME_REINFORCEMENTS) - int256(block.timestamp - attackDeclarationTime)
             - int256(district.blitzTimeReduction); // prettier-ignore
 
         if (stateCountdown > 0) return (DISTRICT_STATE.REINFORCEMENT, stateCountdown);
@@ -944,7 +927,7 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
             if ((requestedIds >> id) & 1 == 0) {
                 district = s().districts[id];
 
-                (DISTRICT_STATE districtState, ) = _districtStateAndCountdown(district);
+                (DISTRICT_STATE districtState,) = _districtStateAndCountdown(district);
 
                 if (districtState == DISTRICT_STATE.POST_GANG_WAR) {
                     upkeepIds |= 1 << id;
@@ -970,7 +953,7 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
             if ((diffIds >> id) & 1 != 0) {
                 district = s().districts[id];
 
-                (DISTRICT_STATE districtState, ) = _districtStateAndCountdown(district);
+                (DISTRICT_STATE districtState,) = _districtStateAndCountdown(district);
 
                 if (districtState == DISTRICT_STATE.POST_GANG_WAR) {
                     newRequestedIds |= 1 << id;
@@ -996,8 +979,8 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
         uint256 rand = randomWords[0];
         District storage district;
 
-        bool lockup = copsLockupRequest ||
-            (rand % 100 < LOCKUP_CHANCE && block.timestamp - s().lastGlobalLockupTime > COPS_LOCKUP_MINIMUM_INTERVAL);
+        bool lockup = copsLockupRequest
+            || (rand % 100 < LOCKUP_CHANCE && block.timestamp - s().lastGlobalLockupTime > COPS_LOCKUP_MINIMUM_INTERVAL);
         uint256 lockupDistrictId = rand % 21;
 
         if (lockup) {
@@ -1020,7 +1003,7 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
             }
         }
 
-        for (uint256 id; id < 21; ) {
+        for (uint256 id; id < 21;) {
             // fail-safe to not get stuck
             if (gasleft() < 2_000) break;
 
@@ -1034,7 +1017,7 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
                     continue;
                 }
 
-                (DISTRICT_STATE districtState, ) = _districtStateAndCountdown(district);
+                (DISTRICT_STATE districtState,) = _districtStateAndCountdown(district);
 
                 if (districtState == DISTRICT_STATE.POST_GANG_WAR) {
                     Gang attackers = district.attackers;
@@ -1048,10 +1031,7 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
 
                     if (gangAttackSuccess(id, roundId)) {
                         vault.transferYield(
-                            uint256(occupants),
-                            uint256(attackers),
-                            uint256(district.token),
-                            district.yield
+                            uint256(occupants), uint256(attackers), uint256(district.token), district.yield
                         );
 
                         district.occupants = attackers;
@@ -1109,11 +1089,7 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
     function _authorizeUpgrade(address) internal override onlyOwner {}
 }
 
-function gangWarWonProbFn(
-    uint256 attackForce,
-    uint256 defenseForce,
-    bool baronDefense
-) pure returns (uint256) {
+function gangWarWonProbFn(uint256 attackForce, uint256 defenseForce, bool baronDefense) pure returns (uint256) {
     attackForce += 1;
     defenseForce += 1;
 
@@ -1125,8 +1101,8 @@ function gangWarWonProbFn(
 
     uint256 p = (attackForce << 128) / ((attackForce << 64) + defenseForce);
 
-    if (p > 1 << 63) p = (1 << 192) - ((((1 << 64) - p)**3) << 2);
-    else p = (p**3) << 2;
+    if (p > 1 << 63) p = (1 << 192) - ((((1 << 64) - p) ** 3) << 2);
+    else p = (p ** 3) << 2;
 
     return p >> 64; // >> 128
 }
