@@ -14,7 +14,7 @@ struct Reward {
     uint248 amount;
 }
 
-struct GangWarRewardsDS {
+struct GangVaultRewardsDS {
     uint256 currentRewardId;
     mapping(uint256 => Reward) rewards;
     mapping(uint256 => mapping(uint256 => bool)) claimed;
@@ -22,10 +22,10 @@ struct GangWarRewardsDS {
 
 // ------------- storage
 
-bytes32 constant DIAMOND_STORAGE_GANG_WAR_REWARDS = keccak256("diamond.storage.gang.war.rewards");
+bytes32 constant DIAMOND_STORAGE_GANG_VAULT_REWARDS = keccak256("diamond.storage.gang.vault.rewards");
 
-function s() pure returns (GangWarRewardsDS storage diamondStorage) {
-    bytes32 slot = DIAMOND_STORAGE_GANG_WAR_REWARDS;
+function s() pure returns (GangVaultRewardsDS storage diamondStorage) {
+    bytes32 slot = DIAMOND_STORAGE_GANG_VAULT_REWARDS;
     assembly {
         diamondStorage.slot := slot
     }
@@ -38,10 +38,10 @@ error NotAuthorized();
 error InvalidReward();
 error RewardAlreadyClaimed();
 
-/// @title Gang War Rewards
+/// @title Gang Vault Rewards
 /// @author phaze (https://github.com/0xPhaze)
-contract GangWarRewards is UUPSUpgrade, OwnableUDS {
-    GangWarRewardsDS private __storageLayout;
+contract GangVaultRewards is UUPSUpgrade, OwnableUDS {
+    GangVaultRewardsDS private __storageLayout;
 
     GMCChild public immutable gmc;
     GangToken public immutable mice;
@@ -59,7 +59,7 @@ contract GangWarRewards is UUPSUpgrade, OwnableUDS {
 
     /* ------------- view ------------- */
 
-    function currentReward() external view returns (Reward memory reward) {
+    function currentReward() external view returns (Reward memory) {
         uint256 rewardId = s().currentRewardId;
 
         return s().rewards[rewardId];

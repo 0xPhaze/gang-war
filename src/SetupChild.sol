@@ -11,6 +11,7 @@ import {SafeHouses} from "/tokens/SafeHouses.sol";
 import {GoudaChild} from "/tokens/GoudaChild.sol";
 import {StaticProxy} from "/utils/StaticProxy.sol";
 import {LibPackedMap} from "./lib/LibPackedMap.sol";
+import {GangVaultRewards} from "/GangVaultRewards.sol";
 import {DIAMOND_STORAGE_GMC_MARKET} from "/GMCMarket.sol";
 import {DIAMOND_STORAGE_GANG_WAR, SEASON} from "/GangWar.sol";
 import {DIAMOND_STORAGE_GMC_CHILD, GMCChild} from "/tokens/GMCChild.sol";
@@ -38,13 +39,25 @@ contract SetupChild is SetupRoot {
 
     function assertStorageSeasonSet() internal pure {
         // these can be completely/partially reset
-        require(DIAMOND_STORAGE_GANG_WAR == keccak256(bytes(string.concat("diamond.storage.gang.war.", SEASON))), 'Storage season does not match.'); // prettier-ignore
+        require(
+            DIAMOND_STORAGE_GANG_WAR == keccak256(bytes(string.concat("diamond.storage.gang.war.", SEASON))),
+            "Storage season does not match."
+        ); // prettier-ignore
         // require(DIAMOND_STORAGE_GANG_VAULT_FX == keccak256(bytes(string.concat("diamond.storage.gang.vault.", SEASON))), 'Storage season does not match.'); // prettier-ignore
 
-        require(DIAMOND_STORAGE_GANG_VAULT == keccak256(bytes(string.concat("diamond.storage.gang.vault"))), 'Invalid storage location'); // prettier-ignore
-        require(DIAMOND_STORAGE_GMC_MARKET == keccak256(bytes(string.concat("diamond.storage.gmc.market.v2"))), 'Invalid storage location'); // prettier-ignore
+        require(
+            DIAMOND_STORAGE_GANG_VAULT == keccak256(bytes(string.concat("diamond.storage.gang.vault"))),
+            "Invalid storage location"
+        ); // prettier-ignore
+        require(
+            DIAMOND_STORAGE_GMC_MARKET == keccak256(bytes(string.concat("diamond.storage.gmc.market.v2"))),
+            "Invalid storage location"
+        ); // prettier-ignore
         // @note this one NEEDS TO STAY "rumble", because that's how it was initialized
-        require(DIAMOND_STORAGE_GMC_CHILD == keccak256(bytes(string.concat("diamond.storage.gmc.child.season.rumble"))), 'Invalid storage location'); // prettier-ignore
+        require(
+            DIAMOND_STORAGE_GMC_CHILD == keccak256(bytes(string.concat("diamond.storage.gmc.child.season.rumble"))),
+            "Invalid storage location"
+        ); // prettier-ignore
     }
 
     function setUpContracts() internal virtual override {
@@ -81,9 +94,8 @@ contract SetupChild is SetupRoot {
 
         bool DEMO = false;
         string memory GMCContractName = DEMO ? "GMCChildDemo" : "GMCChild";
-        bytes memory gmcArgs = DEMO
-            ? abi.encode(fxChild, address(vault), address(gouda))
-            : abi.encode(fxChild, address(vault));
+        bytes memory gmcArgs =
+            DEMO ? abi.encode(fxChild, address(vault), address(gouda)) : abi.encode(fxChild, address(vault));
         address gmcImpl = setUpContract(GMCContractName, gmcArgs, "GMCChildImplementation");
         gmc = GMCChild(setUpProxy(gmcImpl, abi.encodeWithSelector(GMCChild.init.selector), "GMCChild"));
 
@@ -95,21 +107,20 @@ contract SetupChild is SetupRoot {
         address miceImpl = setUpContract("Mice", miceArgs, "MiceImplementation", true);
         mice = Mice(setUpProxy(miceImpl, abi.encode(Mice.init.selector), "Mice"));
 
-        bytes memory gangWarArgs = abi.encode(
-            gmc,
-            vault,
-            badges,
-            connectionsPacked,
-            coordinator,
-            linkKeyHash,
-            linkSubId,
-            3,
-            1_500_000
-        );
+        bytes memory gangWarArgs =
+            abi.encode(gmc, vault, badges, connectionsPacked, coordinator, linkKeyHash, linkSubId, 3, 1_500_000);
 
         bool keepExistingGangWar = false;
         address gangWarImpl = setUpContract("GangWar", gangWarArgs, "GangWarImplementation", keepExistingGangWar);
-        game = GangWar(setUpProxy(gangWarImpl, abi.encodeWithSelector(GangWar.init.selector), "GangWar", keepExistingGangWar)); // prettier-ignore
+        game = GangWar(
+            setUpProxy(gangWarImpl, abi.encodeWithSelector(GangWar.init.selector), "GangWar", keepExistingGangWar)
+        ); // prettier-ignore
+
+        address gangVaultRewardsImpl =
+            setUpContract("GangVaultRewards", abi.encode(gmc, mice), "GangVaultRewardsImplementation");
+        gangVaultRewards = GangVaultRewards(
+            setUpProxy(gangVaultRewardsImpl, abi.encodeWithSelector(GangVaultRewards.init.selector), "GangVaultRewards")
+        ); // prettier-ignore
 
         bytes memory safeHousesArgs = abi.encode(
             mice,
@@ -125,13 +136,10 @@ contract SetupChild is SetupRoot {
             3,
             2_500_000
         );
-        address safeHousesImplementation = setUpContract(
-            "SafeHouses",
-            safeHousesArgs,
-            "SafeHousesImplementation",
-            true
-        );
-        safeHouses = SafeHouses(setUpProxy(safeHousesImplementation, abi.encodeWithSelector(SafeHouses.init.selector), "SafeHouses")); // prettier-ignore
+        address safeHousesImplementation = setUpContract("SafeHouses", safeHousesArgs, "SafeHousesImplementation", true);
+        safeHouses = SafeHouses(
+            setUpProxy(safeHousesImplementation, abi.encodeWithSelector(SafeHouses.init.selector), "SafeHouses")
+        ); // prettier-ignore
 
         if (MOCK_TUNNEL_TESTING) {
             // should normally be deployed on root-chain
@@ -185,6 +193,8 @@ contract SetupChild is SetupRoot {
             vault.grantRole(GANG_VAULT_CONTROLLER, address(gmc));
             vault.grantRole(GANG_VAULT_CONTROLLER, address(game));
 
+            mice.grantRole(AUTHORITY, address(gangVaultRewards));
+
             game.setBaronItemCost(ITEM_SEWER, 3_000_000e18);
             game.setBaronItemCost(ITEM_BLITZ, 3_000_000e18);
             game.setBaronItemCost(ITEM_BARRICADES, 2_250_000e18);
@@ -221,10 +231,16 @@ contract SetupChild is SetupRoot {
 
             if (!gouda.hasRole(AUTHORITY, address(gmc))) gouda.grantRole(AUTHORITY, address(gmc));
 
-            if (!vault.hasRole(GANG_VAULT_CONTROLLER, address(gmc)))
+            if (!vault.hasRole(GANG_VAULT_CONTROLLER, address(gmc))) {
                 vault.grantRole(GANG_VAULT_CONTROLLER, address(gmc));
-            if (!vault.hasRole(GANG_VAULT_CONTROLLER, address(game)))
+            }
+            if (!vault.hasRole(GANG_VAULT_CONTROLLER, address(game))) {
                 vault.grantRole(GANG_VAULT_CONTROLLER, address(game));
+            }
+
+            if (!mice.hasRole(AUTHORITY, address(gangVaultRewards))) {
+                mice.grantRole(AUTHORITY, address(gangVaultRewards));
+            }
 
             if (game.briberyFee(address(gouda)) == 0) {
                 game.setBriberyFee(address(gouda), 2e18);
@@ -402,11 +418,15 @@ contract SetupChild is SetupRoot {
         occupants_1[16] = Gang.CYBERP;
         occupants_1[17] = Gang.CYBERP;
 
-        for (uint256 i; i < 21; i++) occupants[i] = occupants_1[i + 1];
+        for (uint256 i; i < 21; i++) {
+            occupants[i] = occupants_1[i + 1];
+        }
 
         uint256[22] storage yields_1;
 
-        assembly { yields_1.slot := sub(yields.slot, 1) } // prettier-ignore
+        assembly {
+            yields_1.slot := sub(yields.slot, 1)
+        } // prettier-ignore
 
         yields_1[3] = 1_300_000;
         yields_1[4] = 1_000_000;

@@ -1,0 +1,137 @@
+{
+  "storage": [
+    {
+      "astId": 4767,
+      "contract": "src/GangVaultRewards.sol:GangVaultRewards",
+      "label": "__storageLayout",
+      "offset": 0,
+      "slot": "0",
+      "type": "t_struct(OwnableDS)4759_storage"
+    },
+    {
+      "astId": 43849,
+      "contract": "src/GangVaultRewards.sol:GangVaultRewards",
+      "label": "__storageLayout",
+      "offset": 0,
+      "slot": "1",
+      "type": "t_struct(GangVaultRewardsDS)43816_storage"
+    }
+  ],
+  "types": {
+    "t_address": {
+      "encoding": "inplace",
+      "label": "address",
+      "numberOfBytes": "20"
+    },
+    "t_bool": {
+      "encoding": "inplace",
+      "label": "bool",
+      "numberOfBytes": "1"
+    },
+    "t_mapping(t_uint256,t_bool)": {
+      "encoding": "mapping",
+      "key": "t_uint256",
+      "label": "mapping(uint256 => bool)",
+      "numberOfBytes": "32",
+      "value": "t_bool"
+    },
+    "t_mapping(t_uint256,t_mapping(t_uint256,t_bool))": {
+      "encoding": "mapping",
+      "key": "t_uint256",
+      "label": "mapping(uint256 => mapping(uint256 => bool))",
+      "numberOfBytes": "32",
+      "value": "t_mapping(t_uint256,t_bool)"
+    },
+    "t_mapping(t_uint256,t_struct(Reward)43802_storage)": {
+      "encoding": "mapping",
+      "key": "t_uint256",
+      "label": "mapping(uint256 => struct Reward)",
+      "numberOfBytes": "32",
+      "value": "t_struct(Reward)43802_storage"
+    },
+    "t_struct(GangVaultRewardsDS)43816_storage": {
+      "encoding": "inplace",
+      "label": "struct GangVaultRewardsDS",
+      "numberOfBytes": "96",
+      "members": [
+        {
+          "astId": 43804,
+          "contract": "src/GangVaultRewards.sol:GangVaultRewards",
+          "label": "currentRewardId",
+          "offset": 0,
+          "slot": "0",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 43809,
+          "contract": "src/GangVaultRewards.sol:GangVaultRewards",
+          "label": "rewards",
+          "offset": 0,
+          "slot": "1",
+          "type": "t_mapping(t_uint256,t_struct(Reward)43802_storage)"
+        },
+        {
+          "astId": 43815,
+          "contract": "src/GangVaultRewards.sol:GangVaultRewards",
+          "label": "claimed",
+          "offset": 0,
+          "slot": "2",
+          "type": "t_mapping(t_uint256,t_mapping(t_uint256,t_bool))"
+        }
+      ]
+    },
+    "t_struct(OwnableDS)4759_storage": {
+      "encoding": "inplace",
+      "label": "struct OwnableDS",
+      "numberOfBytes": "32",
+      "members": [
+        {
+          "astId": 4758,
+          "contract": "src/GangVaultRewards.sol:GangVaultRewards",
+          "label": "owner",
+          "offset": 0,
+          "slot": "0",
+          "type": "t_address"
+        }
+      ]
+    },
+    "t_struct(Reward)43802_storage": {
+      "encoding": "inplace",
+      "label": "struct Reward",
+      "numberOfBytes": "32",
+      "members": [
+        {
+          "astId": 43799,
+          "contract": "src/GangVaultRewards.sol:GangVaultRewards",
+          "label": "gang",
+          "offset": 0,
+          "slot": "0",
+          "type": "t_uint8"
+        },
+        {
+          "astId": 43801,
+          "contract": "src/GangVaultRewards.sol:GangVaultRewards",
+          "label": "amount",
+          "offset": 1,
+          "slot": "0",
+          "type": "t_uint248"
+        }
+      ]
+    },
+    "t_uint248": {
+      "encoding": "inplace",
+      "label": "uint248",
+      "numberOfBytes": "31"
+    },
+    "t_uint256": {
+      "encoding": "inplace",
+      "label": "uint256",
+      "numberOfBytes": "32"
+    },
+    "t_uint8": {
+      "encoding": "inplace",
+      "label": "uint8",
+      "numberOfBytes": "1"
+    }
+  }
+}

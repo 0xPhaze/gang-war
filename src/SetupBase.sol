@@ -28,6 +28,7 @@ import {SafeHouses} from "/tokens/SafeHouses.sol";
 import {GoudaChild} from "/tokens/GoudaChild.sol";
 import {StaticProxy} from "/utils/StaticProxy.sol";
 import {LibPackedMap} from "./lib/LibPackedMap.sol";
+import {GangVaultRewards} from "/GangVaultRewards.sol";
 import {DIAMOND_STORAGE_GMC_MARKET} from "/GMCMarket.sol";
 import {DIAMOND_STORAGE_GANG_WAR, SEASON} from "/GangWar.sol";
 import {DIAMOND_STORAGE_GMC_CHILD, GMCChild} from "/tokens/GMCChild.sol";
@@ -76,6 +77,7 @@ contract SetupBase is UpgradeScripts {
     GangToken[3] tokens;
     StaticProxy staticProxy;
     SafeHouses safeHouses;
+    GangVaultRewards gangVaultRewards;
 
     constructor() {
         if (block.chainid == CHAINID_TEST) {

@@ -1057,7 +1057,7 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
 
     modifier isActiveSeason() {
         if (block.timestamp < s().seasonStart || s().seasonEnd < block.timestamp) revert GangWarNotActive();
-        if (REST_DAY < block.timestamp && (block.timestamp - REST_DAY) % 1 weeks < 1 days) revert SundayWeRest();
+        // if (REST_DAY < block.timestamp && (block.timestamp - REST_DAY) % 1 weeks < 1 days) revert SundayWeRest();
         _;
     }
 

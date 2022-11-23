@@ -31,14 +31,14 @@ function s() pure returns (GangVaultDS storage diamondStorage) {
     bytes32 slot = DIAMOND_STORAGE_GANG_VAULT;
     assembly {
         diamondStorage.slot := slot
-    }
+    } // prettier-ignore
 }
 
 function fx() pure returns (GangVaultFlexibleDS storage diamondStorage) {
     bytes32 slot = DIAMOND_STORAGE_GANG_VAULT_FX;
     assembly {
         diamondStorage.slot := slot
-    }
+    } // prettier-ignore
 }
 
 /// @title Gangsta Mice City Gang Vault Rewards
