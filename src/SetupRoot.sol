@@ -34,14 +34,9 @@ contract SetupRoot is SetupBase {
         bytes memory gmcArgs = abi.encode(fxRootCheckpointManager, fxRoot);
         gmcRoot = GMCRoot(setUpContract("GMCRoot.sol:GMC", gmcArgs, "GMCRoot", attachOnly));
 
-        bytes memory safeHouseClaimArgs = abi.encode(
-            address(genesis),
-            address(troupe),
-            fxRootCheckpointManager,
-            fxRoot
-        );
+        bytes memory safeHouseClaimArgs = abi.encode(address(genesis), address(troupe), fxRootCheckpointManager, fxRoot);
         safeHouseClaim = SafeHouseClaim(setUpContract("SafeHouseClaim", safeHouseClaimArgs));
-        // safeHouseClaim = SafeHouseClaim(setUpProxy(safeHouseClaimImplementation, abi.encodeWithSelector(safeHouseClaim.init.selector), "SafeHouseClaim")); // prettier-ignore
+        // safeHouseClaim = SafeHouseClaim(setUpProxy(safeHouseClaimImplementation, abi.encodeWithSelector(safeHouseClaim.init.selector), "SafeHouseClaim")); // forgefmt: disable-line
 
         linkContractsRoot();
     }

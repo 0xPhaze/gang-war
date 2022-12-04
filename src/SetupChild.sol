@@ -42,22 +42,22 @@ contract SetupChild is SetupRoot {
         require(
             DIAMOND_STORAGE_GANG_WAR == keccak256(bytes(string.concat("diamond.storage.gang.war.", SEASON))),
             "Storage season does not match."
-        ); // prettier-ignore
-        // require(DIAMOND_STORAGE_GANG_VAULT_FX == keccak256(bytes(string.concat("diamond.storage.gang.vault.", SEASON))), 'Storage season does not match.'); // prettier-ignore
+        ); // forgefmt: disable-line
+        // require(DIAMOND_STORAGE_GANG_VAULT_FX == keccak256(bytes(string.concat("diamond.storage.gang.vault.", SEASON))), 'Storage season does not match.'); // forgefmt: disable-line
 
         require(
             DIAMOND_STORAGE_GANG_VAULT == keccak256(bytes(string.concat("diamond.storage.gang.vault"))),
             "Invalid storage location"
-        ); // prettier-ignore
+        ); // forgefmt: disable-line
         require(
             DIAMOND_STORAGE_GMC_MARKET == keccak256(bytes(string.concat("diamond.storage.gmc.market.v2"))),
             "Invalid storage location"
-        ); // prettier-ignore
+        ); // forgefmt: disable-line
         // @note this one NEEDS TO STAY "rumble", because that's how it was initialized
         require(
             DIAMOND_STORAGE_GMC_CHILD == keccak256(bytes(string.concat("diamond.storage.gmc.child.season.rumble"))),
             "Invalid storage location"
-        ); // prettier-ignore
+        ); // forgefmt: disable-line
     }
 
     function setUpContracts() internal virtual override {
@@ -88,8 +88,8 @@ contract SetupChild is SetupRoot {
         tokens[1] = GangToken(setUpProxy(gangTokenImpl, cartelInitCall, "CartelToken", true));
         tokens[2] = GangToken(setUpProxy(gangTokenImpl, cyberpInitCall, "CyberpunkToken", true));
 
-        bytes memory vaultArgs = abi.encode(tokens[0], tokens[1], tokens[2], GANG_VAULT_FEE); // prettier-ignore
-        address vaultImpl = setUpContract("GangVault", vaultArgs, "GangVaultImplementation", true);
+        bytes memory vaultArgs = abi.encode(tokens[0], tokens[1], tokens[2], GANG_VAULT_FEE); // forgefmt: disable-line
+        address vaultImpl = setUpContract("GangVault", vaultArgs, "GangVaultImplementation", false);
         vault = GangVault(setUpProxy(vaultImpl, abi.encode(GangVault.init.selector), "Vault"));
 
         bool DEMO = false;
@@ -112,15 +112,11 @@ contract SetupChild is SetupRoot {
 
         bool keepExistingGangWar = false;
         address gangWarImpl = setUpContract("GangWar", gangWarArgs, "GangWarImplementation", keepExistingGangWar);
-        game = GangWar(
-            setUpProxy(gangWarImpl, abi.encodeWithSelector(GangWar.init.selector), "GangWar", keepExistingGangWar)
-        ); // prettier-ignore
+        game = GangWar(setUpProxy(gangWarImpl, abi.encodeWithSelector(GangWar.init.selector), "GangWar", keepExistingGangWar)); // forgefmt: disable-line
 
         address gangVaultRewardsImpl =
             setUpContract("GangVaultRewards", abi.encode(gmc, mice), "GangVaultRewardsImplementation");
-        gangVaultRewards = GangVaultRewards(
-            setUpProxy(gangVaultRewardsImpl, abi.encodeWithSelector(GangVaultRewards.init.selector), "GangVaultRewards")
-        ); // prettier-ignore
+        gangVaultRewards = GangVaultRewards(setUpProxy(gangVaultRewardsImpl, abi.encodeWithSelector(GangVaultRewards.init.selector), "GangVaultRewards")); // forgefmt: disable-line
 
         bytes memory safeHousesArgs = abi.encode(
             mice,
@@ -137,9 +133,7 @@ contract SetupChild is SetupRoot {
             2_500_000
         );
         address safeHousesImplementation = setUpContract("SafeHouses", safeHousesArgs, "SafeHousesImplementation", true);
-        safeHouses = SafeHouses(
-            setUpProxy(safeHousesImplementation, abi.encodeWithSelector(SafeHouses.init.selector), "SafeHouses")
-        ); // prettier-ignore
+        safeHouses = SafeHouses(setUpProxy(safeHousesImplementation, abi.encodeWithSelector(SafeHouses.init.selector), "SafeHouses")); // forgefmt: disable-line
 
         if (MOCK_TUNNEL_TESTING) {
             // should normally be deployed on root-chain
@@ -392,7 +386,7 @@ contract SetupChild is SetupRoot {
 
         connectionsPacked = LibPackedMap.encode(connections);
 
-        // assembly { occupants_1.slot := sub(occupants.slot, 1) } // prettier-ignore
+        // assembly { occupants_1.slot := sub(occupants.slot, 1) } // forgefmt: disable-line
 
         occupants_1[3] = Gang.YAKUZA;
         occupants_1[4] = Gang.YAKUZA;
@@ -426,7 +420,7 @@ contract SetupChild is SetupRoot {
 
         assembly {
             yields_1.slot := sub(yields.slot, 1)
-        } // prettier-ignore
+        } // forgefmt: disable-line
 
         yields_1[3] = 1_300_000;
         yields_1[4] = 1_000_000;

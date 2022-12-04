@@ -33,7 +33,7 @@ function s() pure returns (GMCDS storage diamondStorage) {
     bytes32 slot = DIAMOND_STORAGE_GMC_CHILD;
     assembly {
         diamondStorage.slot := slot
-    } // prettier-ignore
+    } // forgefmt: disable-line
 }
 
 error GangUnset();
@@ -131,7 +131,7 @@ contract GMCChild is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChild, GMCMarket
     function tokenURI(uint256 id) public view returns (string memory) {
         return bytes(s().baseURI).length == 0
             ? s().unrevealedURI
-            : string.concat(s().baseURI, id.toString(), s().postFixURI); // prettier-ignore
+            : string.concat(s().baseURI, id.toString(), s().postFixURI); // forgefmt: disable-line
     }
 
     /* ------------- external ------------- */

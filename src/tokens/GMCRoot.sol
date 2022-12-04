@@ -100,12 +100,13 @@ contract GMC is OwnableUDS, FxERC721MRoot {
         }
     }
 
-    function whitelistMint(
-        uint256 quantity,
-        bool lock,
-        uint256 limit,
-        bytes calldata signature
-    ) external payable onlyEOA requireMintableSupply(quantity) requireMintableByUser(quantity, limit) {
+    function whitelistMint(uint256 quantity, bool lock, uint256 limit, bytes calldata signature)
+        external
+        payable
+        onlyEOA
+        requireMintableSupply(quantity)
+        requireMintableByUser(quantity, limit)
+    {
         unchecked {
             if (!validSignature(signature, limit)) revert InvalidSignature();
             if (mintStart + 2 hours < block.timestamp) revert WhitelistNotActive();
@@ -120,9 +121,8 @@ contract GMC is OwnableUDS, FxERC721MRoot {
             if (tokenIds.length > 20) revert ExceedsLimit();
             // don't repeat an unnecessary sload if we can avoid it
             if (
-                tokenIds.length != 0 &&
-                block.timestamp < DEPLOY_TIMESTAMP + 1 weeks &&
-                block.timestamp < mintStart + 2 hours
+                tokenIds.length != 0 && block.timestamp < DEPLOY_TIMESTAMP + 1 weeks
+                    && block.timestamp < mintStart + 2 hours
             ) {
                 emit SecondLegendaryRaffleEntered(from);
             }
@@ -166,11 +166,7 @@ contract GMC is OwnableUDS, FxERC721MRoot {
         }
     }
 
-    function mintWithPerks(
-        address to,
-        uint256 quantity,
-        bool lock
-    ) private {
+    function mintWithPerks(address to, uint256 quantity, bool lock) private {
         unchecked {
             if (quantity > 2) {
                 emit FirstLegendaryRaffleEntered(to);
@@ -230,21 +226,30 @@ contract GMC is OwnableUDS, FxERC721MRoot {
     }
 
     function setGangs(uint256[] calldata chunkIndices, uint256[] calldata chunks) external onlyOwner {
-        for (uint256 i; i < chunkIndices.length; ++i) gangs.set32BytesChunk(chunkIndices[i], chunks[i]);
+        for (uint256 i; i < chunkIndices.length; ++i) {
+            gangs.set32BytesChunk(chunkIndices[i], chunks[i]);
+        }
     }
 
-    function airdrop(
-        address[] calldata users,
-        uint256 quantity,
-        bool locked
-    ) external onlyOwner requireMintableSupply(quantity * users.length) {
-        if (locked) for (uint256 i; i < users.length; ++i) _mintLockedAndTransmit(users[i], quantity);
-        else for (uint256 i; i < users.length; ++i) _mint(users[i], quantity);
+    function airdrop(address[] calldata users, uint256 quantity, bool locked)
+        external
+        onlyOwner
+        requireMintableSupply(quantity * users.length)
+    {
+        if (locked) {
+            for (uint256 i; i < users.length; ++i) {
+                _mintLockedAndTransmit(users[i], quantity);
+            }
+        } else {
+            for (uint256 i; i < users.length; ++i) {
+                _mint(users[i], quantity);
+            }
+        }
     }
 
     function withdraw() external onlyOwner {
         uint256 balance = address(this).balance;
-        (bool success, ) = msg.sender.call{value: balance}("");
+        (bool success,) = msg.sender.call{value: balance}("");
 
         if (!success) revert TransferFailed();
     }
@@ -288,9 +293,6 @@ contract GMC is OwnableUDS, FxERC721MRoot {
     /* ------------- ERC721 ------------- */
 
     function tokenURI(uint256 id) public view override returns (string memory) {
-        return 
-            bytes(baseURI).length == 0 
-              ? unrevealedURI 
-              : string.concat(baseURI, id.toString(), postFixURI); // prettier-ignore
+        return bytes(baseURI).length == 0 ? unrevealedURI : string.concat(baseURI, id.toString(), postFixURI);// forgefmt: disable-line
     }
 }

@@ -806,7 +806,7 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
 
         // check if district is in all other states
         stateCountdown = int256(TIME_REINFORCEMENTS) - int256(block.timestamp - attackDeclarationTime)
-            - int256(district.blitzTimeReduction); // prettier-ignore
+            - int256(district.blitzTimeReduction);// forgefmt: disable-line
 
         if (stateCountdown > 0) return (DISTRICT_STATE.REINFORCEMENT, stateCountdown);
 
@@ -1093,7 +1093,7 @@ function gangWarWonProbFn(uint256 attackForce, uint256 defenseForce, bool baronD
     attackForce += 1;
     defenseForce += 1;
 
-    uint256 q = attackForce < DEFENSE_FAVOR_LIM ? ((1 << 32) - (attackForce << 32) / DEFENSE_FAVOR_LIM) ** 2 : 0; // prettier-ignore
+    uint256 q = attackForce < DEFENSE_FAVOR_LIM ? ((1 << 32) - (attackForce << 32) / DEFENSE_FAVOR_LIM) ** 2 : 0; // forgefmt: disable-line
 
     defenseForce = ((q * DEFENSE_FAVOR + ((1 << 64) - q) * ATTACK_FAVOR) * defenseForce) / 100;
 

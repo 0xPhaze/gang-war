@@ -19,9 +19,7 @@ source .env && forge script mint --rpc-url $RPC_ANVIL --private-key $PRIVATE_KEY
 
 # Mumbai
 source .env && US_DRY_RUN=true forge script mint --rpc-url $RPC_MUMBAI --private-key $PRIVATE_KEY -vvvv --ffi
-source .env && forge script mint --rpc-url $RPC_MUMBAI --private-key $PRIVATE_KEY --verify --etherscan-api-key $POLYGONSCAN_KEY -vvvv --ffi --broadcast 
-
-*/
+source .env && forge script mint --rpc-url $RPC_MUMBAI --private-key $PRIVATE_KEY --verify --etherscan-api-key $POLYGONSCAN_KEY -vvvv --ffi --broadcast */
 
 import "futils/futils.sol";
 
@@ -50,35 +48,5 @@ contract mint is SetupChild {
         //     // game.setBriberyFee(address(spit), 10e18);
         //     // game.reset(occupants, yields);
         // }
-
-        gmc.resyncBarons(
-            abi
-                .encode(
-                    [
-                        0x0000000000000000000000000000000000000000,
-                        0x0000000000000000000000000000000000000000,
-                        0x0000000000000000000000000000000000000000,
-                        0x0000000000000000000000000000000000000000,
-                        0x0000000000000000000000000000000000000000,
-                        0x0000000000000000000000000000000000000000,
-                        0x0000000000000000000000000000000000000000,
-                        0x0000000000000000000000000000000000000000,
-                        0x0000000000000000000000000000000000000000,
-                        0x0000000000000000000000000000000000000000,
-                        0x0000000000000000000000000000000000000000,
-                        0x0000000000000000000000000000000000000000,
-                        0x0000000000000000000000000000000000000000,
-                        0x0000000000000000000000000000000000000000,
-                        0x0000000000000000000000000000000000000000,
-                        0x0000000000000000000000000000000000000000,
-                        0x0000000000000000000000000000000000000000,
-                        0x0000000000000000000000000000000000000000,
-                        0x0000000000000000000000000000000000000000,
-                        0x0000000000000000000000000000000000000000,
-                        0x0000000000000000000000000000000000000000
-                    ]
-                )
-                ._toAddressArray()
-        );
     }
 }

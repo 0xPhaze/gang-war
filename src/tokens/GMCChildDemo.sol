@@ -26,7 +26,7 @@ struct GMCDS {
 
 function s() pure returns (GMCDS storage diamondStorage) {
     bytes32 slot = DIAMOND_STORAGE_GMC_CHILD;
-    assembly { diamondStorage.slot := slot } // prettier-ignore
+    assembly { diamondStorage.slot := slot } // forgefmt: disable-line
 }
 
 error InvalidName();
@@ -49,11 +49,7 @@ contract GMCChildDemo is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChild, GMCMa
 
     address private constant signer = 0x68442589f40E8Fc3a9679dE62884c85C6E524888;
 
-    constructor(
-        address fxChild,
-        address vault_,
-        address gouda_
-    ) FxERC721EnumerableChild(fxChild) {
+    constructor(address fxChild, address vault_, address gouda_) FxERC721EnumerableChild(fxChild) {
         vault = vault_;
         gouda = gouda_;
     }
@@ -64,7 +60,7 @@ contract GMCChildDemo is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChild, GMCMa
 
     /* ------------- view ------------- */
 
-    function ownerOf(uint256 id) public view override(FxERC721Child, GMCMarket) returns (address) {
+    function ownerOf(uint256 id) public view override (FxERC721Child, GMCMarket) returns (address) {
         return FxERC721Child.ownerOf(id);
     }
 
@@ -84,7 +80,9 @@ contract GMCChildDemo is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChild, GMCMa
 
         if (storedGang == 0) {
             if (id > 0) gang = Gang((id < 10_000 ? id - 1 : id - (10_001 - 3)) % 3);
-        } else gang = Gang(storedGang - 1);
+        } else {
+            gang = Gang(storedGang - 1);
+        }
 
         return gang;
     }
@@ -127,29 +125,15 @@ contract GMCChildDemo is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChild, GMCMa
 
     /* ------------- hooks ------------- */
 
-    function _afterStartRent(
-        address,
-        address,
-        uint256,
-        uint256
-    ) internal pure override {
+    function _afterStartRent(address, address, uint256, uint256) internal pure override {
         revert NotAuthorized();
     }
 
-    function _afterEndRent(
-        address,
-        address,
-        uint256,
-        uint256
-    ) internal pure override {
+    function _afterEndRent(address, address, uint256, uint256) internal pure override {
         revert NotAuthorized();
     }
 
-    function _mintGangsters(
-        address to,
-        uint256 gang,
-        uint16 numGangstersToMint
-    ) private {
+    function _mintGangsters(address to, uint256 gang, uint16 numGangstersToMint) private {
         uint256 startId = s().supplies[0] + 1;
         uint256 gangSupply = s().supplies[gang] += numGangstersToMint;
 
@@ -204,14 +188,12 @@ contract GMCChildDemo is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChild, GMCMa
         _registerId(to, id);
     }
 
-    function resyncIds(
-        address to,
-        uint256[] calldata ids,
-        uint256 gang
-    ) external onlyOwner {
+    function resyncIds(address to, uint256[] calldata ids, uint256 gang) external onlyOwner {
         _registerIds(to, ids);
 
-        for (uint256 i; i < ids.length; ++i) s().gang[ids[i]] = gang + 1;
+        for (uint256 i; i < ids.length; ++i) {
+            s().gang[ids[i]] = gang + 1;
+        }
     }
 
     function validSignature(bytes calldata signature) private view returns (bool) {
@@ -222,7 +204,9 @@ contract GMCChildDemo is UUPSUpgrade, OwnableUDS, FxERC721EnumerableChild, GMCMa
     }
 
     function setGang(uint256[] calldata ids, uint256[] calldata gang) external onlyOwner {
-        for (uint256 i; i < ids.length; ++i) s().gang[ids[i]] = gang[i] + 1;
+        for (uint256 i; i < ids.length; ++i) {
+            s().gang[ids[i]] = gang[i] + 1;
+        }
     }
 
     function _authorizeUpgrade(address) internal override onlyOwner {}
@@ -242,10 +226,10 @@ function isValidString(string calldata str, uint256 maxLen) pure returns (bool) 
         char = b[i];
 
         if (
-            (char > 0x60 && char < 0x7B) || //a-z
-            (char > 0x40 && char < 0x5B) || //A-Z
-            (char == 0x20 && lastChar != 0x20) || //space
-            (char > 0x2F && char < 0x3A) //9-0
+            (char > 0x60 && char < 0x7B) //a-z
+                || (char > 0x40 && char < 0x5B) //A-Z
+                || (char == 0x20 && lastChar != 0x20) //space
+                || (char > 0x2F && char < 0x3A) //9-0
         ) {
             lastChar = char;
         } else {

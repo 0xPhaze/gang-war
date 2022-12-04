@@ -29,7 +29,7 @@ struct GangMarketDS {
 
 function s() pure returns (GangMarketDS storage diamondStorage) {
     bytes32 slot = DIAMOND_STORAGE_GMC_MARKET;
-    assembly { diamondStorage.slot := slot } // prettier-ignore
+    assembly { diamondStorage.slot := slot } // forgefmt: disable-line
 }
 
 // ------------- error
@@ -199,17 +199,7 @@ abstract contract GMCMarket {
 
     /* ------------- hooks ------------- */
 
-    function _afterStartRent(
-        address owner,
-        address renter,
-        uint256 id,
-        uint256 renterShares
-    ) internal virtual {}
+    function _afterStartRent(address owner, address renter, uint256 id, uint256 renterShares) internal virtual {}
 
-    function _afterEndRent(
-        address owner,
-        address renter,
-        uint256 id,
-        uint256 renterShares
-    ) internal virtual {}
+    function _afterEndRent(address owner, address renter, uint256 id, uint256 renterShares) internal virtual {}
 }

@@ -15,7 +15,7 @@ struct StaticProxyDS {
 
 function s() pure returns (StaticProxyDS storage diamondStorage) {
     bytes32 slot = DIAMOND_STORAGE_STATIC_PROXY;
-    assembly { diamondStorage.slot := slot } // prettier-ignore
+    assembly { diamondStorage.slot := slot } // forgefmt: disable-line
 }
 
 // ------------- errors
@@ -71,9 +71,7 @@ contract StaticProxy is UUPSUpgrade, OwnableUDS {
 
                 returndatacopy(0, 0, returndatasize())
 
-                if success {
-                    return(0, returndatasize())
-                }
+                if success { return(0, returndatasize()) }
 
                 revert(0, returndatasize())
             }
@@ -90,9 +88,7 @@ contract StaticProxy is UUPSUpgrade, OwnableUDS {
 
                 returndatacopy(0, 0, returndatasize())
 
-                if success {
-                    return(0, returndatasize())
-                }
+                if success { return(0, returndatasize()) }
 
                 revert(0, returndatasize())
             }

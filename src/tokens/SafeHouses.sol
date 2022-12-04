@@ -35,7 +35,7 @@ bytes32 constant DIAMOND_STORAGE_SAFE_HOUSE = keccak256("diamond.storage.safe.ho
 
 function s() pure returns (SafeHouseDS storage diamondStorage) {
     bytes32 slot = DIAMOND_STORAGE_SAFE_HOUSE;
-    assembly { diamondStorage.slot := slot } // prettier-ignore
+    assembly { diamondStorage.slot := slot } // forgefmt: disable-line
 }
 
 // ------------- error
@@ -266,10 +266,9 @@ contract SafeHouses is UUPSUpgrade, OwnableUDS, ERC721EnumerableUDS, VRFConsumer
         uint256 level = s().safeHouseData[id].level;
         uint256 districtId = s().safeHouseData[id].districtId;
 
-        return
-            districtId == 0
-              ? s().unrevealedURI
-              : string.concat(s().baseURI, level.toString(), '/', districtId.toString(), s().postFixURI); // prettier-ignore
+        return districtId == 0
+            ? s().unrevealedURI
+            : string.concat(s().baseURI, level.toString(), '/', districtId.toString(), s().postFixURI);// forgefmt: disable-line
     }
 
     function fulfillRandomWords(uint256, uint256[] calldata randomWords) internal override {
@@ -318,11 +317,7 @@ contract SafeHouses is UUPSUpgrade, OwnableUDS, ERC721EnumerableUDS, VRFConsumer
         }
     }
 
-    function _processMessageFromRoot(
-        uint256,
-        address,
-        bytes calldata message
-    ) internal virtual override {
+    function _processMessageFromRoot(uint256, address, bytes calldata message) internal virtual override {
         bytes4 selector = bytes4(message);
 
         if (selector != CONSECUTIVE_MINT_ERC721_SELECTOR) revert InvalidSelector();

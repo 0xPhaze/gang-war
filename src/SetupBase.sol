@@ -156,7 +156,7 @@ contract SetupBase is UpgradeScripts {
         } else {
             if (fxChildTunnel != latestFxChildTunnel) {
                 console.log("\nLinking tunnel on chains %s -> %s", block.chainid, chainIdChild);
-                console.log("=> Updating fxChildTunnel: %s -> %s(%s)", fxChildTunnel, childKey, latestFxChildTunnel); // prettier-ignore
+                console.log("=> Updating fxChildTunnel: %s -> %s(%s)", fxChildTunnel, childKey, latestFxChildTunnel);// forgefmt: disable-line
 
                 FxBaseRootTunnel(root).setFxChildTunnel(latestFxChildTunnel);
             } else {
@@ -181,7 +181,7 @@ contract SetupBase is UpgradeScripts {
         } else {
             if (fxRootTunnel != latestFxRootTunnel) {
                 console.log("\nLinking tunnel on chains %s -> %s", block.chainid, chainIdRoot);
-                console.log("=> Updating fxRootTunnel: %s -> %s(%s)", fxRootTunnel, rootKey, latestFxRootTunnel); // prettier-ignore
+                console.log("=> Updating fxRootTunnel: %s -> %s(%s)", fxRootTunnel, rootKey, latestFxRootTunnel);// forgefmt: disable-line
 
                 FxBaseChildTunnel(child).setFxRootTunnel(latestFxRootTunnel);
             } else {
