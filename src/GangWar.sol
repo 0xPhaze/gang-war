@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+import {Offer} from "./GMCMarket.sol";
 import {GangVault} from "./GangVault.sol";
 import {GangToken} from "./tokens/GangToken.sol";
 import {LibPackedMap} from "./lib/LibPackedMap.sol";
 import {VRFConsumerV2} from "./lib/VRFConsumerV2.sol";
-import {GMCChild as GMC, Offer} from "./tokens/GMCChild.sol";
+import {GMCChild as GMC} from "./tokens/GMCChild.sol";
 
 import {ERC20UDS} from "UDS/tokens/ERC20UDS.sol";
 import {ERC721UDS} from "UDS/tokens/ERC721UDS.sol";

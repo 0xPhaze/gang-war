@@ -109,12 +109,11 @@ contract TestGMCRoot is Test, SetupRoot {
     }
 
     function test_mint_revert_ExceedsLimit2() public {
-        // 3 => 4 because of stupid bound results....
         // + 1 because of bonus
-        test_mint(3);
-        test_mint(3);
-        test_mint(3);
-        test_mint(3);
+        test_mint(4);
+        test_mint(4);
+        test_mint(4);
+        test_mint(4);
 
         assertEq(gmcRoot.numMinted(self), 20);
 
@@ -329,7 +328,7 @@ contract TestGMCRoot is Test, SetupRoot {
 
         gmcRoot.withdraw();
 
-        assertEq(self.balanceDiff(), 5 * int256(gmcRoot.publicPrice()));
+        assertEq(self.balanceDiff(), 4 * int256(gmcRoot.publicPrice()));
     }
 
     receive() external payable {}
