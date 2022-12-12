@@ -15,9 +15,7 @@ source .env && forge script detachRoot --rpc-url $RPC_ANVIL --private-key $PRIVA
 source .env && US_DRY_RUN=true forge script detachRoot --rpc-url $RPC_MUMBAI --private-key $PRIVATE_KEY -vvvv --ffi
 
 # 3: Deploy
-source .env && forge script detachRoot --rpc-url $RPC_MUMBAI --private-key $PRIVATE_KEY --verify --etherscan-api-key $POLYGONSCAN_KEY -vvvv --ffi --broadcast 
-
-*/
+source .env && forge script detachRoot --rpc-url $RPC_MUMBAI --private-key $PRIVATE_KEY --verify --etherscan-api-key $POLYGONSCAN_KEY -vvvv --ffi --broadcast */
 
 contract detachRoot is SetupRoot {
     function setUpUpgradeScripts() internal override {

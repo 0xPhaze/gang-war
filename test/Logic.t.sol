@@ -515,7 +515,7 @@ contract TestGangWarGameLogic is TestGangWar {
         bool upkeepNeeded;
         bytes memory data;
 
-        (upkeepNeeded, ) = game.checkUpkeep("");
+        (upkeepNeeded,) = game.checkUpkeep("");
         assertFalse(upkeepNeeded);
 
         skip(10 days);

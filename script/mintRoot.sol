@@ -18,9 +18,7 @@ source .env && forge script mintRoot --rpc-url $RPC_ANVIL --private-key $PRIVATE
 
 # Goerli
 source .env && US_DRY_RUN=true forge script mintRoot --rpc-url $RPC_GOERLI --private-key $PRIVATE_KEY -vvvv --ffi
-source .env && forge script mintRoot --rpc-url $RPC_GOERLI --private-key $PRIVATE_KEY --verify --etherscan-api-key $ETHERSCAN_KEY -vvvv --ffi --broadcast 
-
-*/
+source .env && forge script mintRoot --rpc-url $RPC_GOERLI --private-key $PRIVATE_KEY --verify --etherscan-api-key $ETHERSCAN_KEY -vvvv --ffi --broadcast */
 
 // import {ERC721UDS} from "UDS/tokens/ERC721UDS.sol";
 

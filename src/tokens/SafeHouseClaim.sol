@@ -27,12 +27,9 @@ contract SafeHouseClaim is OwnableUDS, FxBaseRootTunnel {
 
     mapping(uint256 => bool) public genesisClaimed;
 
-    constructor(
-        address genesis_,
-        address troupe_,
-        address checkpointManager,
-        address fxRoot
-    ) FxBaseRootTunnel(checkpointManager, fxRoot) {
+    constructor(address genesis_, address troupe_, address checkpointManager, address fxRoot)
+        FxBaseRootTunnel(checkpointManager, fxRoot)
+    {
         __Ownable_init();
 
         troupe = troupe_;

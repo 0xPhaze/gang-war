@@ -3,7 +3,6 @@ pragma solidity ^0.8.4;
 
 using LibCrumbMap for LibCrumbMap.CrumbMap;
 
-
 /// @notice Efficient crumb map library for mapping integers to crumbs.
 /// @author phaze (https://github.com/0xPhaze)
 /// @author adapted from Solady (https://github.com/vectorized/solady/blob/main/src/utils/LibBytemap.sol)
@@ -30,11 +29,7 @@ library LibCrumbMap {
         }
     }
 
-    function set32BytesChunk(
-        CrumbMap storage crumbMap,
-        uint256 bytesIndex,
-        uint256 value
-    ) internal {
+    function set32BytesChunk(CrumbMap storage crumbMap, uint256 bytesIndex, uint256 value) internal {
         assembly {
             mstore(0x20, crumbMap.slot)
             mstore(0x00, bytesIndex)
@@ -42,11 +37,7 @@ library LibCrumbMap {
         }
     }
 
-    function set(
-        CrumbMap storage crumbMap,
-        uint256 index,
-        uint256 value
-    ) internal {
+    function set(CrumbMap storage crumbMap, uint256 index, uint256 value) internal {
         require(value < 4);
 
         assembly {
@@ -72,7 +63,11 @@ library LibCrumbMap {
         }
     }
 
-    function get32BytesChunk(mapping(uint256 => uint256) storage crumbMap, uint256 bytesIndex) internal view returns (uint256 result) {
+    function get32BytesChunk(mapping(uint256 => uint256) storage crumbMap, uint256 bytesIndex)
+        internal
+        view
+        returns (uint256 result)
+    {
         assembly {
             mstore(0x20, crumbMap.slot)
             mstore(0x00, bytesIndex)
@@ -80,11 +75,9 @@ library LibCrumbMap {
         }
     }
 
-    function set32BytesChunk(
-        mapping(uint256 => uint256) storage crumbMap,
-        uint256 bytesIndex,
-        uint256 value
-    ) internal {
+    function set32BytesChunk(mapping(uint256 => uint256) storage crumbMap, uint256 bytesIndex, uint256 value)
+        internal
+    {
         assembly {
             mstore(0x20, crumbMap.slot)
             mstore(0x00, bytesIndex)
@@ -92,11 +85,7 @@ library LibCrumbMap {
         }
     }
 
-    function set(
-        mapping(uint256 => uint256) storage crumbMap,
-        uint256 index,
-        uint256 value
-    ) internal {
+    function set(mapping(uint256 => uint256) storage crumbMap, uint256 index, uint256 value) internal {
         require(value < 4);
 
         assembly {

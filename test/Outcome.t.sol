@@ -65,11 +65,7 @@ contract TestGangWarOutcome is Test {
     // }
 
     // TODO args=[150, 229, false]]
-    function test_gangWarWonProbProperties(
-        uint256 attackForce,
-        uint256 defenseForce,
-        bool baronDefense
-    ) public {
+    function test_gangWarWonProbProperties(uint256 attackForce, uint256 defenseForce, bool baronDefense) public {
         attackForce = bound(attackForce, 0, 10_000);
         defenseForce = bound(defenseForce, 0, 10_000);
 
@@ -102,11 +98,7 @@ contract TestGangWarOutcome is Test {
     //     console.log((p * 10000) >> 128);
     // }
 
-    function test_isInjuredProperties(
-        uint256 attackForce,
-        uint256 defenseForce,
-        bool baronDefense
-    ) public {
+    function test_isInjuredProperties(uint256 attackForce, uint256 defenseForce, bool baronDefense) public {
         attackForce = bound(attackForce, 0, 10_000);
         defenseForce = bound(attackForce, 0, 10_000);
 

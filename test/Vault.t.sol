@@ -80,9 +80,7 @@ contract TestGangVault is TestGangWar {
 
         for (uint256 token; token < 3; token++) {
             assertApproxEqAbs(
-                vault.getClaimableUserBalance(self)[token],
-                (10_000 * 1e12 * 1 ether * baseShares) / 100,
-                1e1
+                vault.getClaimableUserBalance(self)[token], (10_000 * 1e12 * 1 ether * baseShares) / 100, 1e1
             );
         }
 

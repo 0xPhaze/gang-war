@@ -67,13 +67,12 @@ contract TestBaronItems is TestGangWar {
     }
 
     function test_purchaseBaronItem(uint256 id) private {
-        uint256[] memory itemCosts = [
-            uint256(3_000_000e18), // ITEM_SEWER
-            3_000_000e18, // ITEM_BLITZ
-            2_250_000e18, // ITEM_BARRICADES
-            2_250_000e18, // ITEM_SMOKE
-            1_500_000e18 // ITEM_911
-        ].toMemory();
+        uint256[] memory itemCosts = [uint256(3_000_000e18), 3_000_000e18, 2_250_000e18, 2_250_000e18, 1_500_000e18] // ITEM_SEWER
+                // ITEM_BLITZ
+                // ITEM_BARRICADES
+                // ITEM_SMOKE
+                // ITEM_911
+            .toMemory();
 
         uint256[3] memory balancesBefore = vault.getGangVaultBalance(0);
 

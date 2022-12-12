@@ -15,7 +15,9 @@ struct StaticProxyDS {
 
 function s() pure returns (StaticProxyDS storage diamondStorage) {
     bytes32 slot = DIAMOND_STORAGE_STATIC_PROXY;
-    assembly { diamondStorage.slot := slot } // forgefmt: disable-line
+    assembly {
+        diamondStorage.slot := slot
+    }
 }
 
 // ------------- errors

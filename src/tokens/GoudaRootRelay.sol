@@ -10,11 +10,9 @@ import {FxERC20RelayRoot} from "fx-contracts/FxERC20RelayRoot.sol";
 /// @notice Flexible ERC20 Token Relay
 /// @author phaze (https://github.com/0xPhaze/fx-contracts)
 contract GoudaRootRelay is UUPSUpgrade, OwnableUDS, FxERC20RelayRoot {
-    constructor(
-        address gouda,
-        address checkpointManager,
-        address fxRoot
-    ) FxERC20RelayRoot(gouda, checkpointManager, fxRoot) {
+    constructor(address gouda, address checkpointManager, address fxRoot)
+        FxERC20RelayRoot(gouda, checkpointManager, fxRoot)
+    {
         __Ownable_init();
     }
 

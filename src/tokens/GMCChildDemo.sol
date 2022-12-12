@@ -26,7 +26,9 @@ struct GMCDS {
 
 function s() pure returns (GMCDS storage diamondStorage) {
     bytes32 slot = DIAMOND_STORAGE_GMC_CHILD;
-    assembly { diamondStorage.slot := slot } // forgefmt: disable-line
+    assembly {
+        diamondStorage.slot := slot
+    }
 }
 
 error InvalidName();

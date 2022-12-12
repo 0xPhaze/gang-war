@@ -69,13 +69,8 @@ abstract contract VRFConsumerV2 {
     /* ------------- internal ------------- */
 
     function requestVRF() internal virtual returns (uint256) {
-        return
-            IVRFCoordinatorV2(coordinator).requestRandomWords(
-                keyHash,
-                subscriptionId,
-                requestConfirmations,
-                callbackGasLimit,
-                1
-            );
+        return IVRFCoordinatorV2(coordinator).requestRandomWords(
+            keyHash, subscriptionId, requestConfirmations, callbackGasLimit, 1
+        );
     }
 }

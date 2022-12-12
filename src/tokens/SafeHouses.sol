@@ -35,7 +35,9 @@ bytes32 constant DIAMOND_STORAGE_SAFE_HOUSE = keccak256("diamond.storage.safe.ho
 
 function s() pure returns (SafeHouseDS storage diamondStorage) {
     bytes32 slot = DIAMOND_STORAGE_SAFE_HOUSE;
-    assembly { diamondStorage.slot := slot } // forgefmt: disable-line
+    assembly {
+        diamondStorage.slot := slot
+    }
 }
 
 // ------------- error

@@ -31,14 +31,14 @@ function s() pure returns (GangVaultDS storage diamondStorage) {
     bytes32 slot = DIAMOND_STORAGE_GANG_VAULT;
     assembly {
         diamondStorage.slot := slot
-    } // forgefmt: disable-line
+    }
 }
 
 function fx() pure returns (GangVaultFlexibleDS storage diamondStorage) {
     bytes32 slot = DIAMOND_STORAGE_GANG_VAULT_FX;
     assembly {
         diamondStorage.slot := slot
-    } // forgefmt: disable-line
+    }
 }
 
 /// @title Gangsta Mice City Gang Vault Rewards
@@ -105,14 +105,14 @@ contract GangVault is UUPSUpgrade, AccessControlUDS {
         uint80[3][3] memory yield = s().yield;
         assembly {
             out := yield
-        } // forgefmt: disable-line
+        }
     }
 
     function getUserShares(address account) external view returns (uint256[3] memory out) {
         uint40[3] memory shares = s().userShares[account];
         assembly {
             out := shares
-        } // forgefmt: disable-line
+        }
     }
 
     function getClaimableUserBalance(address account) public view returns (uint256[3] memory out) {
@@ -328,9 +328,9 @@ contract GangVault is UUPSUpgrade, AccessControlUDS {
         (uint256 yps_0, uint256 yps_1, uint256 yps_2) = _accruedYieldPerShare(gang);
 
         // userBalance <= max_yps < 1e24 < 2^80
-        uint80 addBalance_0 = uint80((numSharesTimes100 * (yps_0 - fx().lastUserYieldPerShare[account][gang][0])) / 100); // forgefmt: disable-line
-        uint80 addBalance_1 = uint80((numSharesTimes100 * (yps_1 - fx().lastUserYieldPerShare[account][gang][1])) / 100); // forgefmt: disable-line
-        uint80 addBalance_2 = uint80((numSharesTimes100 * (yps_2 - fx().lastUserYieldPerShare[account][gang][2])) / 100); // forgefmt: disable-line
+        uint80 addBalance_0 = uint80((numSharesTimes100 * (yps_0 - fx().lastUserYieldPerShare[account][gang][0])) / 100);// forgefmt: disable-line
+        uint80 addBalance_1 = uint80((numSharesTimes100 * (yps_1 - fx().lastUserYieldPerShare[account][gang][1])) / 100);// forgefmt: disable-line
+        uint80 addBalance_2 = uint80((numSharesTimes100 * (yps_2 - fx().lastUserYieldPerShare[account][gang][2])) / 100);// forgefmt: disable-line
 
         s().userBalance[account][0] += addBalance_0;
         s().userBalance[account][1] += addBalance_1;
@@ -368,9 +368,9 @@ contract GangVault is UUPSUpgrade, AccessControlUDS {
     {
         (uint256 yps_0, uint256 yps_1, uint256 yps_2) = _accruedYieldPerShare(gang);
 
-        balances[0] = numSharesTimes100 * (yps_0 - fx().lastUserYieldPerShare[account][gang][0]) * 1e10 / 100; // forgefmt: disable-line
-        balances[1] = numSharesTimes100 * (yps_1 - fx().lastUserYieldPerShare[account][gang][1]) * 1e10 / 100; // forgefmt: disable-line
-        balances[2] = numSharesTimes100 * (yps_2 - fx().lastUserYieldPerShare[account][gang][2]) * 1e10 / 100; // forgefmt: disable-line
+        balances[0] = numSharesTimes100 * (yps_0 - fx().lastUserYieldPerShare[account][gang][0]) * 1e10 / 100;// forgefmt: disable-line
+        balances[1] = numSharesTimes100 * (yps_1 - fx().lastUserYieldPerShare[account][gang][1]) * 1e10 / 100;// forgefmt: disable-line
+        balances[2] = numSharesTimes100 * (yps_2 - fx().lastUserYieldPerShare[account][gang][2]) * 1e10 / 100;// forgefmt: disable-line
     }
 
     function _getUnclaimedGangBalance(uint256 gang) private view returns (uint256[3] memory balances) {

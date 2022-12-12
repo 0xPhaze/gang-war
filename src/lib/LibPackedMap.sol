@@ -26,7 +26,8 @@ pragma solidity ^0.8.0;
  *   n = 21 uses: 21 * 21 - 1 - 21 * 22 / 2 = 209 bits
  *   n = 23 is the maximum to fit in a uint256:
  *       23 * 23 - 1 - 23 * 24 / 2 = 252 bits
- **/
+ *
+ */
 library LibPackedMap {
     function encode(bool[10][10] memory map) internal pure returns (uint256 out) {
         unchecked {
@@ -68,11 +69,7 @@ library LibPackedMap {
         }
     }
 
-    function isConnecting(
-        uint256 enc,
-        uint256 a,
-        uint256 b
-    ) internal pure returns (bool) {
+    function isConnecting(uint256 enc, uint256 a, uint256 b) internal pure returns (bool) {
         if (a > b) (a, b) = (b, a);
         return (a != b) && (enc >> (a * 21 + b - ((a + 1) * (a + 2)) / 2)) & 1 != 0;
     }

@@ -16,9 +16,7 @@ source .env && forge script detach --rpc-url $RPC_ANVIL --private-key $PRIVATE_K
 
 # Mumbai
 source .env && US_DRY_RUN=true forge script detach --rpc-url $RPC_MUMBAI --private-key $PRIVATE_KEY -vvvv --ffi
-source .env && forge script detach --rpc-url $RPC_MUMBAI --private-key $PRIVATE_KEY --verify --etherscan-api-key $POLYGONSCAN_KEY -vvvv --ffi --broadcast 
-
-*/
+source .env && forge script detach --rpc-url $RPC_MUMBAI --private-key $PRIVATE_KEY --verify --etherscan-api-key $POLYGONSCAN_KEY -vvvv --ffi --broadcast */
 
 contract detach is SetupChild {
     bool ATTACH_ONLY;

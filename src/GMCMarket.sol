@@ -29,7 +29,9 @@ struct GangMarketDS {
 
 function s() pure returns (GangMarketDS storage diamondStorage) {
     bytes32 slot = DIAMOND_STORAGE_GMC_MARKET;
-    assembly { diamondStorage.slot := slot } // forgefmt: disable-line
+    assembly {
+        diamondStorage.slot := slot
+    }
 }
 
 // ------------- error

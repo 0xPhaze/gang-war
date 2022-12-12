@@ -30,11 +30,7 @@ contract TestLibCrumbMap is Test {
         }
     }
 
-    function test_set(
-        uint256 index,
-        uint8 crumbData,
-        uint256 chunkData
-    ) public {
+    function test_set(uint256 index, uint8 crumbData, uint256 chunkData) public {
         uint256 data = bound(crumbData, 0, 3);
 
         crumbMap.set32BytesChunk(index >> 7, chunkData);
