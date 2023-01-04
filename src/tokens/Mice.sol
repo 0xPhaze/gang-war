@@ -64,12 +64,4 @@ contract Mice is GangToken {
 
         _mint(msg.sender, amount * 25);
     }
-
-    function airdrop(address[] calldata users, uint256 amount) external onlyOwner {
-        unchecked {
-            for (uint256 i; i < users.length; ++i) {
-                _mint(users[i], amount);
-            }
-        }
-    }
 }

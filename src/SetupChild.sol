@@ -39,10 +39,10 @@ contract SetupChild is SetupRoot {
 
     function assertStorageSeasonSet() internal pure {
         // these can be completely/partially reset
-        require(
-            DIAMOND_STORAGE_GANG_WAR == keccak256(bytes(string.concat("diamond.storage.gang.war.", SEASON))),
-            "Storage season does not match."
-        );// forgefmt: disable-line
+        // require(
+        //     DIAMOND_STORAGE_GANG_WAR == keccak256(bytes(string.concat("diamond.storage.gang.war.", SEASON))),
+        //     "Storage season does not match."
+        // );// forgefmt: disable-line
         // require(DIAMOND_STORAGE_GANG_VAULT_FX == keccak256(bytes(string.concat("diamond.storage.gang.vault.", SEASON))), 'Storage season does not match.'); // forgefmt: disable-line
 
         require(
@@ -84,19 +84,16 @@ contract SetupChild is SetupRoot {
         address gangTokenImpl = setUpContract("GangToken");
 
         badges = GangToken(setUpProxy(gangTokenImpl, badgesInitCall, "Badges", true));
-        tokens[0] = GangToken(setUpProxy(gangTokenImpl, yakuzaInitCall, "YakuzaToken", true));
-        tokens[1] = GangToken(setUpProxy(gangTokenImpl, cartelInitCall, "CartelToken", true));
-        tokens[2] = GangToken(setUpProxy(gangTokenImpl, cyberpInitCall, "CyberpunkToken", true));
+        tokens[0] = GangToken(setUpProxy(gangTokenImpl, yakuzaInitCall, "YakuzaToken", false));
+        tokens[1] = GangToken(setUpProxy(gangTokenImpl, cartelInitCall, "CartelToken", false));
+        tokens[2] = GangToken(setUpProxy(gangTokenImpl, cyberpInitCall, "CyberpunkToken", false));
 
         bytes memory vaultArgs = abi.encode(tokens[0], tokens[1], tokens[2], GANG_VAULT_FEE);// forgefmt: disable-line
         address vaultImpl = setUpContract("GangVault", vaultArgs, "GangVaultImplementation", false);
         vault = GangVault(setUpProxy(vaultImpl, abi.encode(GangVault.init.selector), "Vault"));
 
-        bool DEMO = false;
-        string memory GMCContractName = DEMO ? "GMCChildDemo" : "GMCChild";
-        bytes memory gmcArgs =
-            DEMO ? abi.encode(fxChild, address(vault), address(gouda)) : abi.encode(fxChild, address(vault));
-        address gmcImpl = setUpContract(GMCContractName, gmcArgs, "GMCChildImplementation");
+        bytes memory gmcArgs = abi.encode(fxChild, address(vault));
+        address gmcImpl = setUpContract("GMCChild", gmcArgs, "GMCChildImplementation");
         gmc = GMCChild(setUpProxy(gmcImpl, abi.encodeWithSelector(GMCChild.init.selector), "GMCChild"));
 
         setUpContract("GangProxy", abi.encode(gmc, 0), "YakuzaGangProxy", true);

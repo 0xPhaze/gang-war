@@ -1,6 +1,3 @@
-[submodule "lib/forge-std"]
-	path = lib/forge-std
-	url = https://github.com/brockelmore/forge-std
 [submodule "lib/contracts"]
 	path = lib/fx-portal
 	url = https://github.com/fx-portal/contracts
@@ -26,3 +23,7 @@
 [submodule "lib/ERC721M"]
 	path = lib/ERC721M
 	url = https://github.com/0xPhaze/ERC721M
+[submodule "lib/forge-std"]
+	path = lib/forge-std
+	url = https://github.com/foundry-rs/forge-std
+	branch = v1.2.0

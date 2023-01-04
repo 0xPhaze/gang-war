@@ -19,7 +19,9 @@ source .env && forge script mint --rpc-url $RPC_ANVIL --private-key $PRIVATE_KEY
 
 # Mumbai
 source .env && US_DRY_RUN=true forge script mint --rpc-url $RPC_MUMBAI --private-key $PRIVATE_KEY -vvvv --ffi
-source .env && forge script mint --rpc-url $RPC_MUMBAI --private-key $PRIVATE_KEY --verify --etherscan-api-key $POLYGONSCAN_KEY -vvvv --ffi --broadcast */
+source .env && forge script mint --rpc-url $RPC_MUMBAI --private-key $PRIVATE_KEY --verify --etherscan-api-key $POLYGONSCAN_KEY -vvvv --ffi --broadcast 
+
+#*/
 
 import "futils/futils.sol";
 

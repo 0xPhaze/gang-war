@@ -35,4 +35,20 @@ contract GangToken is UUPSUpgrade, OwnableUDS, ERC20BurnableUDS, AccessControlUD
     /* ------------- owner ------------- */
 
     function _authorizeUpgrade(address) internal override onlyOwner {}
+
+    function airdrop(address[] calldata tos, uint256 amount) external onlyOwner {
+        unchecked {
+            for (uint256 i; i < tos.length; ++i) {
+                _mint(tos[i], amount);
+            }
+        }
+    }
+
+    function airdrop(address[] calldata tos, uint256[] memory amounts) external onlyOwner {
+        unchecked {
+            for (uint256 i; i < tos.length; ++i) {
+                _mint(tos[i], amounts[i]);
+            }
+        }
+    }
 }

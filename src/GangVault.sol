@@ -167,6 +167,16 @@ contract GangVault is UUPSUpgrade, AccessControlUDS {
         }
     }
 
+    function softResetGangVaultBalances() external onlyRole(DEFAULT_ADMIN_ROLE) {
+        for (uint256 gang; gang < 3; gang++) {
+            address gangAccount = _getGangAccount(gang);
+
+            _updateUserBalance(gang, gangAccount);
+
+            s().userBalance[gangAccount] = [0, 0, 0];
+        }
+    }
+
     function setYield(uint256 gang, uint256[3] calldata yield) external onlyRole(CONTROLLER) {
         _updateYieldPerShare(gang);
 

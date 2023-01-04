@@ -44,7 +44,7 @@ cp ~/git/eth/gang-war/deployments/137/deploy-latest.json ~/git/eth/gmc-website/d
 cp ~/git/eth/gang-war/deployments/5/deploy-latest.json ~/git/eth/gmc-website/data/deployments_5.json
 cp ~/git/eth/gang-war/deployments/1/deploy-latest.json ~/git/eth/gmc-website/data/deployments_1.json
 
-__*/
+#*/
 
 contract deploy is SetupChild {
     using futils for *;
@@ -52,7 +52,7 @@ contract deploy is SetupChild {
     constructor() {
         // MOCK_TUNNEL_TESTING = block.chainid == CHAINID_MUMBAI;
 
-        mainnetConfirmation = 1668635623;
+        mainnetConfirmation = 1671295946;
         // mainnetConfirmation = block.timestamp;
     }
 
@@ -61,46 +61,44 @@ contract deploy is SetupChild {
 
         setUpContracts();
 
-        vault.resetGangVaultBalances();
-
-        // vault.resetGangVaultBalances();
-
-        // gangVaultRewards.addReward(1, 4_000e18);
+        // vault.softResetGangVaultBalances();
 
         // game.reset(occupants, yields);
 
-        // // new Date('November 23, 2022 4:00 PM').getTime() / 1000
-        // // new Date('December 23, 2022 4:00 PM').getTime() / 1000
+        // // new Date('December 13, 2022 4:00 PM').getTime() / 1000
+        // // new Date('Jan 1, 2023 4:00 PM').getTime() / 1000
 
-        // game.setSeason(1669215600, 1671807600);
+        // game.setSeason(1670943600, 1672585200);
+        // vault.grantRole(GANG_VAULT_CONTROLLER, tx.origin);
+        // vault.setSeason(1669215600, 1672585200); // vault stays with old season start, but extends to new end
 
-        gmc.resyncBarons(
-            abi.encode(
-                [
-                    0xe2c32116AB0D54C80092D5150c97555AD37E0d63,
-                    0x805a3B79917055A18aBc171E14e4c7e36119D9B6,
-                    0x4b8ee1eEf0bD930c2277a60c839834B142B373d2,
-                    0xcea2c2b93CB242f64C8C3CF36e659cb0EC7d937e,
-                    0x409e5f34Ae011e9Df40E360eE37387fA8b0980CB,
-                    0x7Ce5039A2383ba2CDf57DF1a8Bd353E021c37492,
-                    0x49f2b78458B553229c51a389C811C4A73ae84C73,
-                    0x78f8C78a212d64CE1148355DEE3F26a6e029EbBa,
-                    0x983c09D36d78A8FB433a88499A95c73524954Af6,
-                    0x158e61A181959844D6Ac426a2A50eec065B3a943,
-                    0xd2bEC77b8BEcdDA350DDaA4Be3b0D91C119b6851,
-                    0x2d254aB8625f9738200E3D1e359e6b1Bf6e0E912,
-                    0x6C7AC914D586F7089e5a68375E0df549317c3eE8,
-                    0xB7fc617Da6546febfC31dfc8283B8588E192B3ec,
-                    0x6d711bE0693B5ff41678bA3f4507c0BF1Ae1ff17,
-                    0xD29588f9867CB0bD9D61A2c099A79B4926940351,
-                    0x5143B2F5e573Be79aA5D96Ae1367bFC6F095C4d9,
-                    0xDe23301fEd4034651bCF6612A5f89D9ADC5b8a2b,
-                    0x205C4d9d198a2e9D74eee70151d1Ba02f3C70Daa,
-                    0x02C1422931439B3e945e2F2F721c80F6c0feaF56,
-                    0x205FfDa46164C3e6ae60AF559c82F26f9470072E
-                ]
-            )._toAddressArray()
-        );
+        // gmc.resyncBarons(
+        //     abi.encode(
+        //         [
+        //             0xe2c32116AB0D54C80092D5150c97555AD37E0d63,
+        //             0x805a3B79917055A18aBc171E14e4c7e36119D9B6,
+        //             0x4b8ee1eEf0bD930c2277a60c839834B142B373d2,
+        //             0xcea2c2b93CB242f64C8C3CF36e659cb0EC7d937e,
+        //             0x409e5f34Ae011e9Df40E360eE37387fA8b0980CB,
+        //             0x7Ce5039A2383ba2CDf57DF1a8Bd353E021c37492,
+        //             0x49f2b78458B553229c51a389C811C4A73ae84C73,
+        //             0x78f8C78a212d64CE1148355DEE3F26a6e029EbBa,
+        //             0x983c09D36d78A8FB433a88499A95c73524954Af6,
+        //             0x158e61A181959844D6Ac426a2A50eec065B3a943,
+        //             0xd2bEC77b8BEcdDA350DDaA4Be3b0D91C119b6851,
+        //             0x2d254aB8625f9738200E3D1e359e6b1Bf6e0E912,
+        //             0x6C7AC914D586F7089e5a68375E0df549317c3eE8,
+        //             0xB7fc617Da6546febfC31dfc8283B8588E192B3ec,
+        //             0x6d711bE0693B5ff41678bA3f4507c0BF1Ae1ff17,
+        //             0xD29588f9867CB0bD9D61A2c099A79B4926940351,
+        //             0x5143B2F5e573Be79aA5D96Ae1367bFC6F095C4d9,
+        //             0xDe23301fEd4034651bCF6612A5f89D9ADC5b8a2b,
+        //             0x205C4d9d198a2e9D74eee70151d1Ba02f3C70Daa,
+        //             0x02C1422931439B3e945e2F2F721c80F6c0feaF56,
+        //             0x205FfDa46164C3e6ae60AF559c82F26f9470072E
+        //         ]
+        //     )._toAddressArray()
+        // );
 
         // safeHouses.setBaseURI("ipfs://QmRJUciN3rdfUK9TjnsNNB5nbSCy3oRmmh2yaJC9k4QP76/");
         // safeHouses.setPostFixURI(".json");
@@ -112,30 +110,32 @@ contract deploy is SetupChild {
         // mice.grantRole(AUTHORITY, 0x2181838c46bEf020b8Beb756340ad385f5BD82a8);
         // mice.mint(0x2181838c46bEf020b8Beb756340ad385f5BD82a8, 50000000e18);
 
+        // goudaRoot.mint(msg.sender, 100e18);
+        // goudaRoot.approve(address(goudaTunnel), type(uint256).max);
+        // goudaTunnel.lock(msg.sender, 50e18);
+
         if (isTestnet()) {
-            // gmc.resyncBarons(
-            //     [
-            //         0x0000000000000000000000000000000000000000,
-            //         0x0000000000000000000000000000000000000000,
-            //         0x0000000000000000000000000000000000000000,
-            //         0x0000000000000000000000000000000000000000,
-            //         0x0000000000000000000000000000000000000000,
-            //         0x0000000000000000000000000000000000000000
-            //     ].toMemory()
-            // );
-            gmc.resyncBarons(
-                [
-                    msg.sender,
-                    msg.sender,
-                    msg.sender,
-                    0x2181838c46bEf020b8Beb756340ad385f5BD82a8,
-                    0x2181838c46bEf020b8Beb756340ad385f5BD82a8,
-                    0x2181838c46bEf020b8Beb756340ad385f5BD82a8
-                ].toMemory()
-            );
+            runTestnet();
         }
 
-        if (isTestnet() && isFirstTimeDeployed(address(game))) {
+        // vm.stopBroadcast();
+
+        storeDeployments();
+    }
+
+    function runTestnet() internal {
+        gmc.resyncBarons(
+            [
+                msg.sender,
+                msg.sender,
+                msg.sender,
+                0x2181838c46bEf020b8Beb756340ad385f5BD82a8,
+                0x2181838c46bEf020b8Beb756340ad385f5BD82a8,
+                0x2181838c46bEf020b8Beb756340ad385f5BD82a8
+            ].toMemory()
+        );
+
+        if (isFirstTimeDeployed(address(game))) {
             // troupe.airdrop([msg.sender, 0x2181838c46bEf020b8Beb756340ad385f5BD82a8].toMemory(), 10);
             // genesis.airdrop([msg.sender, 0x2181838c46bEf020b8Beb756340ad385f5BD82a8].toMemory(), 10);
 
@@ -160,13 +160,5 @@ contract deploy is SetupChild {
             vault.setYield(1, [uint256(7_700_000), 7_700_000, 7_700_000]);
             vault.setYield(2, [uint256(7_700_000), 7_700_000, 7_700_000]);
         }
-
-        // goudaRoot.mint(msg.sender, 100e18);
-        // goudaRoot.approve(address(goudaTunnel), type(uint256).max);
-        // goudaTunnel.lock(msg.sender, 50e18);
-
-        // vm.stopBroadcast();
-
-        storeDeployments();
     }
 }
