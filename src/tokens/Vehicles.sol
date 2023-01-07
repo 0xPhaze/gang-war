@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+import {GangWar} from "../GangWar.sol";
 import {SafeHouses} from "./SafeHouses.sol";
 import {OwnableUDS} from "UDS/auth/OwnableUDS.sol";
 import {UUPSUpgrade} from "UDS/proxy/UUPSUpgrade.sol";
@@ -14,7 +15,7 @@ import "solady/utils/LibString.sol";
 
 struct VehicleData {
     uint8 level;
-    uint8 districtId; // NOTE: either this is tied to mouse
+    uint8 districtId;
 }
 
 struct VehiclesDS {
@@ -64,12 +65,14 @@ contract Vehicles is UUPSUpgrade, OwnableUDS, ERC721EnumerableUDS, VRFConsumerV2
     uint256 public constant MAX_SUPPLY_HELICOPTERS = 667;
 
     address public immutable gmc;
+    address public immutable gangWar;
     address public immutable safeHouses;
 
     uint256 constant gangEncoding = 0x16a015aa05;
 
     constructor(
         address gmc_,
+        address gangWar_,
         address safeHouses_,
         address coordinator, // NOTE removed fxBaseChild
         bytes32 keyHash,
@@ -78,6 +81,7 @@ contract Vehicles is UUPSUpgrade, OwnableUDS, ERC721EnumerableUDS, VRFConsumerV2
         uint32 callbackGasLimit
     ) VRFConsumerV2(coordinator, keyHash, subscriptionId, requestConfirmations, callbackGasLimit) {
         gmc = gmc_;
+        gangWar = gangWar_;
         safeHouses = safeHouses_;
     }
 
@@ -129,16 +133,20 @@ contract Vehicles is UUPSUpgrade, OwnableUDS, ERC721EnumerableUDS, VRFConsumerV2
         return districtToGang(districtId);
     }
 
-    function numVehiclessByDistrictId() public view returns (uint256[21] memory count) {
+    function numVehiclessByDistrictId() public view returns (uint256[21][3] memory count) {
         uint256 supply = totalSupply();
 
         for (uint256 i = 1; i <= supply; ++i) {
-            // TODO fix this
-            uint256 districtId = s().vehicleData[i].districtId;
+            uint256 gangsterId = s().vehicleToGangstaId[i];
+            if (gangsterId == 0) continue;
 
-            if (districtId != 0) {
-                ++count[districtId - 1];
-            }
+            uint256 districtId = GangWar(gangWar).getGangsterLocation(gangsterId);
+            if (districtId == 0) continue;
+
+            uint256 vehicleLvl = s().vehicleData[i].level;
+            if (vehicleLvl == 0) continue;
+
+            ++count[vehicleLvl - 1][districtId - 1];
         }
     }
 
@@ -168,15 +176,19 @@ contract Vehicles is UUPSUpgrade, OwnableUDS, ERC721EnumerableUDS, VRFConsumerV2
             uint256 vehicleId = vehicleIds[i];
             uint256 gangstaId = gangstaIds[i];
 
-            // make sure vehicle has been assigned a district
-            uint256 districtId = s().vehicleData[vehicleId].districtId;
-            uint256 vehicleGang = districtToGang(districtId);
-            uint256 gangstaGang = uint8(GMC(gmc).gangOf(gangstaId));
+            uint256 vehicleDistrictId = s().vehicleData[vehicleId].districtId;
 
-            if (districtId == 0) revert InvalidGang();
-            if (gangstaGang != vehicleGang) revert InvalidGang();
+            // make sure vehicle has been assigned a district
+            if (vehicleDistrictId == 0) revert InvalidGang();
             if (msg.sender != ownerOf(vehicleId)) revert NotAuthorized();
-            if (msg.sender != GMC(gmc).ownerOf(gangstaId)) revert NotAuthorized();
+
+            if (gangstaId != 0) {
+                uint256 vehicleGang = districtToGang(vehicleDistrictId);
+                uint256 gangstaGang = uint8(GMC(gmc).gangOf(gangstaId));
+
+                if (gangstaGang != vehicleGang) revert InvalidGang();
+                if (msg.sender != GMC(gmc).ownerOf(gangstaId)) revert NotAuthorized();
+            }
 
             // cleanup prev link from vehicle to gangsta
             uint256 prevGangstaId = s().vehicleToGangstaId[vehicleId];
@@ -184,9 +196,7 @@ contract Vehicles is UUPSUpgrade, OwnableUDS, ERC721EnumerableUDS, VRFConsumerV2
 
             // sever old connection of gangsta
             uint256 prevVehicleId = s().gangstaToVehicleId[gangstaId];
-
             delete s().vehicleToGangstaId[prevVehicleId];
-            delete s().gangstaToVehicleId[gangstaId];
 
             // link vehicle and gangsta
             s().gangstaToVehicleId[gangstaId] = vehicleId;

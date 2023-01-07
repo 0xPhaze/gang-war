@@ -304,6 +304,15 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
         (gangster.state, gangster.stateCountdown) = _gangsterStateAndCountdown(tokenId);
     }
 
+    function getGangsterLocation(uint256 tokenId) external view returns (uint256) {
+        uint256 location = s().gangsters[tokenId].location;
+        uint256 gangsterRoundId = s().gangsters[tokenId].roundId;
+
+        if (s().districts[location].roundId != gangsterRoundId) location = 0;
+
+        return location;
+    }
+
     function getDistrict(uint256 districtId) external view returns (District memory district) {
         District storage sDistrict = s().districts[districtId];
 
