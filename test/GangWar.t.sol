@@ -789,6 +789,7 @@ contract TestGangWarGameLogic is TestGangWar {
         assertEq(district.state, DISTRICT_STATE.LOCKUP);
         assertEq(district.lastOutcomeTime, block.timestamp);
 
+        // console.log(uint8(district.token));
         assertEq(balancesAfter[0], 0);
         assertTrue(balancesBefore[1] - balancesAfter[1] > 0);
         assertEq(balancesAfter[2], 0);

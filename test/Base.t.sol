@@ -36,7 +36,8 @@ contract TestGangWar is Test, SetupChild {
 
         vm.label(self, "self");
 
-        game.setSeason(uint40(block.timestamp), uint40(block.timestamp + 4 weeks));
+        uint40 seasonStart = uint40(block.timestamp);
+        uint40 seasonEnd = uint40(block.timestamp + 4 weeks);
 
         badges.grantRole(AUTHORITY, self);
         tokens[0].grantRole(AUTHORITY, self);
@@ -44,6 +45,9 @@ contract TestGangWar is Test, SetupChild {
         tokens[2].grantRole(AUTHORITY, self);
 
         vault.grantRole(GANG_VAULT_CONTROLLER, address(this));
+
+        game.setSeason(seasonStart, seasonEnd);
+        vault.setSeason(seasonStart, seasonEnd);
 
         gmc.resyncId(alice, GANGSTER_YAKUZA_1);
         gmc.resyncId(alice, GANGSTER_CARTEL_1);

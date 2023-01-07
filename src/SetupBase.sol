@@ -71,6 +71,7 @@ contract SetupBase is UpgradeScripts {
     Mice mice;
     GangWar game;
     GMCChild gmc;
+    Vehicles vehicles;
     GangVault vault;
     GangToken badges;
     GoudaChild gouda;

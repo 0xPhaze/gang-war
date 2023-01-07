@@ -33,6 +33,7 @@ cp ~/git/eth/gang-war/out/GangVault.sol/GangVault.json ~/git/eth/gmc-website/dat
 cp ~/git/eth/gang-war/out/GangVaultRewards.sol/GangVaultRewards.json ~/git/eth/gmc-website/data/abi
 cp ~/git/eth/gang-war/out/Mice.sol/Mice.json ~/git/eth/gmc-website/data/abi
 cp ~/git/eth/gang-war/out/SafeHouses.sol/SafeHouses.json ~/git/eth/gmc-website/data/abi
+cp ~/git/eth/gang-war/out/Vehicles.sol/Vehicles.json ~/git/eth/gmc-website/data/abi
 
 cp ~/git/eth/gang-war/out/GMCRoot.sol/GMC.json ~/git/eth/gmc-website/data/abi/GMCRoot.json
 cp ~/git/eth/gang-war/out/MockERC20.sol/MockERC20.json ~/git/eth/gmc-website/data/abi

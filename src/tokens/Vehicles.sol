@@ -26,8 +26,8 @@ struct VehiclesDS {
     uint256[] requestQueue;
     mapping(uint256 => VehicleData) vehicleData;
     mapping(uint256 => bool) claimed;
-    mapping(uint256 => uint256) vehicleToGangstaId;
-    mapping(uint256 => uint256) gangstaToVehicleId;
+    mapping(uint256 => uint256) vehicleToGangsterId;
+    mapping(uint256 => uint256) gangsterToVehicleId;
     string baseURI;
     string postFixURI;
     string unrevealedURI;
@@ -44,17 +44,20 @@ function s() pure returns (VehiclesDS storage diamondStorage) {
 
 // ------------- error
 
+error InvalidGang();
 error ExceedsLimit();
 error InvalidLevel();
 error NotAuthorized();
 error AlreadyClaimed();
 error InvalidQuantity();
-error InvalidGang();
 error InvalidDistrictId();
+error NotAuthorizedDuringGangWar();
 
 /// @title Vehicles
 /// @author phaze (https://github.com/0xPhaze)
 contract Vehicles is UUPSUpgrade, OwnableUDS, ERC721EnumerableUDS, VRFConsumerV2 {
+    VehiclesDS private __storageLayout;
+
     using LibString for uint256;
 
     string public constant override name = "Vehicles";
@@ -64,17 +67,17 @@ contract Vehicles is UUPSUpgrade, OwnableUDS, ERC721EnumerableUDS, VRFConsumerV2
     uint256 public constant MAX_SUPPLY_VANS = 1666;
     uint256 public constant MAX_SUPPLY_HELICOPTERS = 667;
 
-    address public immutable gmc;
-    address public immutable gangWar;
-    address public immutable safeHouses;
+    GMC public immutable gmc;
+    GangWar public immutable gangWar;
+    SafeHouses public immutable safeHouses;
 
     uint256 constant gangEncoding = 0x16a015aa05;
 
     constructor(
-        address gmc_,
-        address gangWar_,
-        address safeHouses_,
-        address coordinator, // NOTE removed fxBaseChild
+        GMC gmc_,
+        GangWar gangWar_,
+        SafeHouses safeHouses_,
+        address coordinator,
         bytes32 keyHash,
         uint64 subscriptionId,
         uint16 requestConfirmations,
@@ -114,7 +117,15 @@ contract Vehicles is UUPSUpgrade, OwnableUDS, ERC721EnumerableUDS, VRFConsumerV2
     function getMultiplier(uint256 id) public view returns (uint256) {
         uint256 level = getLevel(id);
 
-        return level * 7 / 2;
+        return ((3 * level - 1) * level + 4) >> 1;
+    }
+
+    function getGangsterMultiplier(uint256 gangsterId) public view returns (uint256) {
+        uint256 vehicleId = s().gangsterToVehicleId[gangsterId];
+
+        if (vehicleId == 0) return 1;
+
+        return getMultiplier(vehicleId);
     }
 
     function getDistrictId(uint256 id) public view returns (uint256) {
@@ -137,10 +148,10 @@ contract Vehicles is UUPSUpgrade, OwnableUDS, ERC721EnumerableUDS, VRFConsumerV2
         uint256 supply = totalSupply();
 
         for (uint256 i = 1; i <= supply; ++i) {
-            uint256 gangsterId = s().vehicleToGangstaId[i];
+            uint256 gangsterId = s().vehicleToGangsterId[i];
             if (gangsterId == 0) continue;
 
-            uint256 districtId = GangWar(gangWar).getGangsterLocation(gangsterId);
+            uint256 districtId = gangWar.getGangsterLocation(gangsterId);
             if (districtId == 0) continue;
 
             uint256 vehicleLvl = s().vehicleData[i].level;
@@ -150,6 +161,14 @@ contract Vehicles is UUPSUpgrade, OwnableUDS, ERC721EnumerableUDS, VRFConsumerV2
         }
     }
 
+    function gangsterToVehicleId(uint256 gangsterId) public view returns (uint256) {
+        return s().gangsterToVehicleId[gangsterId];
+    }
+
+    function vehicleToGangsterId(uint256 vehicleId) public view returns (uint256) {
+        return s().vehicleToGangsterId[vehicleId];
+    }
+
     /* ------------- external ------------- */
 
     function mint(uint256[] calldata safeHouseIds) external {
@@ -157,6 +176,7 @@ contract Vehicles is UUPSUpgrade, OwnableUDS, ERC721EnumerableUDS, VRFConsumerV2
 
         for (uint256 i; i < safeHouseIds.length; ++i) {
             if (s().claimed[safeHouseIds[i]]) revert AlreadyClaimed();
+            if (safeHouses.ownerOf(safeHouseIds[i]) != msg.sender) revert NotAuthorized();
 
             s().claimed[safeHouseIds[i]] = true;
         }
@@ -165,42 +185,46 @@ contract Vehicles is UUPSUpgrade, OwnableUDS, ERC721EnumerableUDS, VRFConsumerV2
 
         for (uint256 i; i < safeHouseIds.length; ++i) {
             uint256 id = 1 + supply + i;
-            uint256 level = SafeHouses(safeHouses).getLevel(safeHouseIds[i]);
+            uint256 level = safeHouses.getLevel(safeHouseIds[i]);
 
             _mintInternal(msg.sender, id, level);
         }
     }
 
-    function equipGangsta(uint256[] calldata vehicleIds, uint256[] calldata gangstaIds) external {
+    function equipGangster(uint256[] calldata vehicleIds, uint256[] calldata gangsterIds) external {
         for (uint256 i; i < vehicleIds.length; ++i) {
             uint256 vehicleId = vehicleIds[i];
-            uint256 gangstaId = gangstaIds[i];
-
+            uint256 gangsterId = gangsterIds[i];
             uint256 vehicleDistrictId = s().vehicleData[vehicleId].districtId;
 
             // make sure vehicle has been assigned a district
             if (vehicleDistrictId == 0) revert InvalidGang();
             if (msg.sender != ownerOf(vehicleId)) revert NotAuthorized();
 
-            if (gangstaId != 0) {
+            if (gangsterId != 0) {
                 uint256 vehicleGang = districtToGang(vehicleDistrictId);
-                uint256 gangstaGang = uint8(GMC(gmc).gangOf(gangstaId));
+                uint256 gangsterGang = uint8(gmc.gangOf(gangsterId));
+                uint256 districtId = gangWar.getGangsterLocation(gangsterId);
 
-                if (gangstaGang != vehicleGang) revert InvalidGang();
-                if (msg.sender != GMC(gmc).ownerOf(gangstaId)) revert NotAuthorized();
+                if (districtId != 0) revert NotAuthorizedDuringGangWar();
+                if (gangsterGang != vehicleGang) revert InvalidGang();
+                if (msg.sender != gmc.ownerOf(gangsterId)) revert NotAuthorized();
             }
 
-            // cleanup prev link from vehicle to gangsta
-            uint256 prevGangstaId = s().vehicleToGangstaId[vehicleId];
-            delete s().gangstaToVehicleId[prevGangstaId];
+            // cleanup prev link from vehicle to gangster
+            uint256 prevGangsterId = s().vehicleToGangsterId[vehicleId];
+            delete s().gangsterToVehicleId[prevGangsterId];
 
-            // sever old connection of gangsta
-            uint256 prevVehicleId = s().gangstaToVehicleId[gangstaId];
-            delete s().vehicleToGangstaId[prevVehicleId];
+            uint256 prevGangsterDistrictId = gangWar.getGangsterLocation(prevGangsterId);
+            if (prevGangsterDistrictId != 0) revert NotAuthorizedDuringGangWar();
 
-            // link vehicle and gangsta
-            s().gangstaToVehicleId[gangstaId] = vehicleId;
-            s().vehicleToGangstaId[vehicleId] = gangstaId;
+            // sever old connection of gangster
+            uint256 prevVehicleId = s().gangsterToVehicleId[gangsterId];
+            delete s().vehicleToGangsterId[prevVehicleId];
+
+            // link vehicle and gangster
+            s().gangsterToVehicleId[gangsterId] = vehicleId;
+            s().vehicleToGangsterId[vehicleId] = gangsterId;
         }
     }
 

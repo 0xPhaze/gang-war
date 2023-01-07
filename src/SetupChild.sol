@@ -104,33 +104,28 @@ contract SetupChild is SetupRoot {
         address miceImpl = setUpContract("Mice", miceArgs, "MiceImplementation", true);
         mice = Mice(setUpProxy(miceImpl, abi.encode(Mice.init.selector), "Mice"));
 
-        bytes memory gangWarArgs =
-            abi.encode(gmc, vault, badges, connectionsPacked, coordinator, linkKeyHash, linkSubId, 3, 1_500_000);
+        // deploying stub (keepExisting=true); vehicles isn't defined here yet
+        // tests will deploy a "dummy" `gangWarImpl` that is
+        // redeployed after vehicles address is known
+        game = GangWar(setUpProxy(address(staticProxy), abi.encodeWithSelector(GangWar.init.selector), "GangWar", true));// forgefmt: disable-line
+        registeredContractAddress[block.chainid]["GangWar"] = address(0); // hack
 
-        bool keepExistingGangWar = false;
-        address gangWarImpl = setUpContract("GangWar", gangWarArgs, "GangWarImplementation", keepExistingGangWar);
-        game = GangWar(setUpProxy(gangWarImpl, abi.encodeWithSelector(GangWar.init.selector), "GangWar", keepExistingGangWar));// forgefmt: disable-line
-
-        address gangVaultRewardsImpl =
-            setUpContract("GangVaultRewards", abi.encode(gmc, mice), "GangVaultRewardsImplementation");
+        address gangVaultRewardsImpl = setUpContract("GangVaultRewards", abi.encode(gmc, mice), "GangVaultRewardsImplementation");// forgefmt: disable-line
         gangVaultRewards = GangVaultRewards(setUpProxy(gangVaultRewardsImpl, abi.encodeWithSelector(GangVaultRewards.init.selector), "GangVaultRewards"));// forgefmt: disable-line
 
-        bytes memory safeHousesArgs = abi.encode(
-            mice,
-            badges,
-            gouda,
-            tokens[0],
-            tokens[1],
-            tokens[2],
-            fxChild,
-            coordinator,
-            linkKeyHash,
-            linkSubId,
-            3,
-            2_500_000
-        );
+        bytes memory safeHousesArgs = abi.encode(mice, badges, gouda, tokens[0], tokens[1], tokens[2], fxChild, coordinator, linkKeyHash, linkSubId, 3, 2_500_000);// forgefmt: disable-line
         address safeHousesImplementation = setUpContract("SafeHouses", safeHousesArgs, "SafeHousesImplementation", true);
         safeHouses = SafeHouses(setUpProxy(safeHousesImplementation, abi.encodeWithSelector(SafeHouses.init.selector), "SafeHouses"));// forgefmt: disable-line
+
+        bytes memory vehiclesArgs = abi.encode(gmc, game, safeHouses, coordinator, linkKeyHash, linkSubId, 3, 2_500_000);
+        address vehiclesImplementation = setUpContract("Vehicles", vehiclesArgs, "VehiclesImplementation", true);
+        vehicles = Vehicles(setUpProxy(vehiclesImplementation, abi.encodeWithSelector(Vehicles.init.selector), "Vehicles"));// forgefmt: disable-line
+
+        bool keepExistingGangWar = false;
+
+        bytes memory gangWarArgs = abi.encode(gmc, vault, badges, vehicles, connectionsPacked, coordinator, linkKeyHash, linkSubId, 3, 1_500_000);// forgefmt: disable-line
+        address gangWarImpl = setUpContract("GangWar", gangWarArgs, "GangWarImplementation", keepExistingGangWar);
+        game = GangWar(setUpProxy(gangWarImpl, abi.encodeWithSelector(GangWar.init.selector), "GangWar", keepExistingGangWar));// forgefmt: disable-line
 
         if (MOCK_TUNNEL_TESTING) {
             // should normally be deployed on root-chain

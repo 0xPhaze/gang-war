@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import {Offer} from "./GMCMarket.sol";
+import {Vehicles} from "./tokens/Vehicles.sol";
 import {GangVault} from "./GangVault.sol";
 import {GangToken} from "./tokens/GangToken.sol";
 import {LibPackedMap} from "./lib/LibPackedMap.sol";
@@ -208,6 +209,7 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
     event BaronDefenseDeclared(uint256 indexed districtId, Gang indexed gang, uint256 tokenId);
 
     GMC public immutable gmc;
+    Vehicles public immutable vehicles;
     GangToken public immutable badges;
     GangVault public immutable vault;
 
@@ -217,6 +219,7 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
         GMC gmc_,
         GangVault vault_,
         GangToken badges_,
+        Vehicles vehicles_,
         uint256 connections,
         address coordinator,
         bytes32 keyHash,
@@ -225,6 +228,7 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
         uint32 callbackGasLimit
     ) VRFConsumerV2(coordinator, keyHash, subscriptionId, requestConfirmations, callbackGasLimit) {
         gmc = gmc_;
+        vehicles = vehicles_;
         vault = vault_;
         badges = badges_;
         packedDistrictConnections = connections;
@@ -612,6 +616,7 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
         }
 
         uint256 districtRoundId = district.roundId;
+        uint256 totalMultiplier;
 
         for (uint256 i; i < tokenIds.length; ++i) {
             uint256 tokenId = tokenIds[i];
@@ -629,6 +634,9 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
                 revert GangsterInactionable();
             }
 
+            uint256 multiplier = vehicles.getGangsterMultiplier(tokenId);
+            totalMultiplier += multiplier;
+
             // already attacking/defending in another district
             if (state == PLAYER_STATE.ATTACK || state == PLAYER_STATE.DEFEND) {
                 uint256 gangsterLocation = gangster.location;
@@ -638,8 +646,8 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
                 uint256 oldDistrictRoundId = s().districts[gangsterLocation].roundId;
 
                 // remove from old district
-                if (attack) s().districtAttackForces[gangsterLocation][oldDistrictRoundId]--;
-                else s().districtDefenseForces[gangsterLocation][oldDistrictRoundId]--;
+                if (attack) s().districtAttackForces[gangsterLocation][oldDistrictRoundId] -= multiplier;
+                else s().districtDefenseForces[gangsterLocation][oldDistrictRoundId] -= multiplier;
 
                 emit ExitGangWar(gangsterLocation, gang, tokenId);
             }
@@ -655,8 +663,8 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
             emit EnterGangWar(districtId, gang, tokenId);
         }
 
-        if (attack) s().districtAttackForces[districtId][districtRoundId] += tokenIds.length;
-        else s().districtDefenseForces[districtId][districtRoundId] += tokenIds.length;
+        if (attack) s().districtAttackForces[districtId][districtRoundId] += totalMultiplier;
+        else s().districtDefenseForces[districtId][districtRoundId] += totalMultiplier;
     }
 
     /* ------------- state ------------- */

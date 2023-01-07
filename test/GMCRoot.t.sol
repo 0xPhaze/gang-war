@@ -296,7 +296,7 @@ contract TestGMCRoot is Test, SetupRoot {
 
         gmcRoot.setBaseURI(uri);
 
-        assertEq(gmcRoot.tokenURI(1), string.concat(uri, 1.toString(), ".json"));
+        assertEq(gmcRoot.tokenURI(1), string.concat(uri, uint256(1).toString(), ".json"));
     }
 
     function test_setMintStart() public {
