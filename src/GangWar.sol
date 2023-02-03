@@ -381,9 +381,7 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
                     // require attacking/defending
                     (district.attackers != gang && district.occupants != gang)
                         || districtState != DISTRICT_STATE.REINFORCEMENT
-                ) {
-                    revert InvalidItemUsage();
-                }
+                ) revert InvalidItemUsage();
 
                 s().districts[districtId].blitzTimeReduction =
                     (uint256(stateCountdown) * ITEM_BLITZ_TIME_REDUCTION) / 100;
@@ -393,18 +391,14 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
                         // require defending
                         .occupants != gang
                         || (districtState != DISTRICT_STATE.REINFORCEMENT && districtState != DISTRICT_STATE.GANG_WAR)
-                ) {
-                    revert InvalidItemUsage();
-                }
+                ) revert InvalidItemUsage();
             } else if (itemId == ITEM_SMOKE) {
                 if (
                     district
                         // require attacking
                         .attackers != gang
                         || (districtState != DISTRICT_STATE.REINFORCEMENT && districtState != DISTRICT_STATE.GANG_WAR)
-                ) {
-                    revert InvalidItemUsage();
-                }
+                ) revert InvalidItemUsage();
             }
 
             // apply for all items except 911
@@ -586,9 +580,10 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
 
             uint256 roundId = gangster.roundId;
             uint256 districtId = gangster.location;
+            uint256 multiplier = vehicles.getGangsterMultiplier(tokenId);
 
-            if (attacking) s().districtAttackForces[districtId][roundId]--;
-            else s().districtDefenseForces[districtId][roundId]--;
+            if (attacking) s().districtAttackForces[districtId][roundId] -= multiplier;
+            else s().districtDefenseForces[districtId][roundId] -= multiplier;
 
             emit ExitGangWar(districtId, gangOf(tokenId), tokenId);
 
@@ -947,9 +942,7 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
 
                 (DISTRICT_STATE districtState,) = _districtStateAndCountdown(district);
 
-                if (districtState == DISTRICT_STATE.POST_GANG_WAR) {
-                    upkeepIds |= 1 << id;
-                }
+                if (districtState == DISTRICT_STATE.POST_GANG_WAR) upkeepIds |= 1 << id;
             }
         }
 
@@ -973,9 +966,7 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
 
                 (DISTRICT_STATE districtState,) = _districtStateAndCountdown(district);
 
-                if (districtState == DISTRICT_STATE.POST_GANG_WAR) {
-                    newRequestedIds |= 1 << id;
-                }
+                if (districtState == DISTRICT_STATE.POST_GANG_WAR) newRequestedIds |= 1 << id;
             }
         }
 

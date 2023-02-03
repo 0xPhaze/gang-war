@@ -66,6 +66,8 @@ contract deploy is SetupChild {
 
         // game.reset(occupants, yields);
 
+        // game.setSeason(1665421200, 1868099600);
+
         // // new Date('December 13, 2022 4:00 PM').getTime() / 1000
         // // new Date('Jan 1, 2023 4:00 PM').getTime() / 1000
 
@@ -115,9 +117,24 @@ contract deploy is SetupChild {
         // goudaRoot.approve(address(goudaTunnel), type(uint256).max);
         // goudaTunnel.lock(msg.sender, 50e18);
 
-        if (isTestnet()) {
-            runTestnet();
-        }
+        // try gmc.setGangsInChunks(0, 0) {
+        //     uint256 chunkData;
+        //     uint256 id;
+        //     for (uint256 c; c < 70; ++c) {
+        //         for (uint256 i; i < 128; ++i) {
+        //             id = (c << 7) + i + 1;
+        //             uint256 gang = 1 + ((id + 2) % 3);
+        //             chunkData |= gang << (i << 1);
+        //         }
+
+        //         gmc.setGangsInChunks(c, chunkData);
+
+        //         if (c > 5) return;
+        //         if (id > 6666) break;
+        //     }
+        // } catch {}
+
+        // if (isTestnet()) runTestnet();
 
         // vm.stopBroadcast();
 
@@ -125,16 +142,26 @@ contract deploy is SetupChild {
     }
 
     function runTestnet() internal {
-        gmc.resyncBarons(
-            [
-                msg.sender,
-                msg.sender,
-                msg.sender,
-                0x2181838c46bEf020b8Beb756340ad385f5BD82a8,
-                0x2181838c46bEf020b8Beb756340ad385f5BD82a8,
-                0x2181838c46bEf020b8Beb756340ad385f5BD82a8
-            ].toMemory()
-        );
+        tokens[0].airdrop([msg.sender, 0x2181838c46bEf020b8Beb756340ad385f5BD82a8].toMemory(), 100_000_000e18);
+        tokens[1].airdrop([msg.sender, 0x2181838c46bEf020b8Beb756340ad385f5BD82a8].toMemory(), 100_000_000e18);
+        tokens[2].airdrop([msg.sender, 0x2181838c46bEf020b8Beb756340ad385f5BD82a8].toMemory(), 100_000_000e18);
+        mice.airdrop([msg.sender, 0x2181838c46bEf020b8Beb756340ad385f5BD82a8].toMemory(), 100_000_000e18);
+
+        safeHouses.airdrop([msg.sender, 0x2181838c46bEf020b8Beb756340ad385f5BD82a8].toMemory(), 20);
+
+        for (uint256 lvl; lvl < 3; lvl++) {
+            vehicles.airdrop(
+                [
+                    msg.sender,
+                    msg.sender,
+                    msg.sender,
+                    0x2181838c46bEf020b8Beb756340ad385f5BD82a8,
+                    0x2181838c46bEf020b8Beb756340ad385f5BD82a8,
+                    0x2181838c46bEf020b8Beb756340ad385f5BD82a8
+                ].toMemory(),
+                lvl + 1
+            );
+        }
 
         if (isFirstTimeDeployed(address(game))) {
             // troupe.airdrop([msg.sender, 0x2181838c46bEf020b8Beb756340ad385f5BD82a8].toMemory(), 10);
@@ -142,7 +169,7 @@ contract deploy is SetupChild {
 
             game.reset(occupants, yields);
             game.setBaronItemBalances(0.range(NUM_BARON_ITEMS), 3.repeat(NUM_BARON_ITEMS));
-            game.setSeason(1665421200, 1668099600);
+            game.setSeason(1665421200, 1868099600);
             gmc.resyncIds(msg.sender, 1.range(21));
             gmc.resyncIds(0x2181838c46bEf020b8Beb756340ad385f5BD82a8, 21.range(41));
             gmc.resyncBarons(

@@ -19,6 +19,7 @@ struct VehicleData {
 }
 
 struct VehiclesDS {
+    GangWar gangWar;
     uint16 totalSupply;
     uint16 totalSupplyBikes;
     uint16 totalSupplyVans;
@@ -68,14 +69,12 @@ contract Vehicles is UUPSUpgrade, OwnableUDS, ERC721EnumerableUDS, VRFConsumerV2
     uint256 public constant MAX_SUPPLY_HELICOPTERS = 667;
 
     GMC public immutable gmc;
-    GangWar public immutable gangWar;
     SafeHouses public immutable safeHouses;
 
     uint256 constant gangEncoding = 0x16a015aa05;
 
     constructor(
         GMC gmc_,
-        GangWar gangWar_,
         SafeHouses safeHouses_,
         address coordinator,
         bytes32 keyHash,
@@ -84,7 +83,6 @@ contract Vehicles is UUPSUpgrade, OwnableUDS, ERC721EnumerableUDS, VRFConsumerV2
         uint32 callbackGasLimit
     ) VRFConsumerV2(coordinator, keyHash, subscriptionId, requestConfirmations, callbackGasLimit) {
         gmc = gmc_;
-        gangWar = gangWar_;
         safeHouses = safeHouses_;
     }
 
@@ -93,6 +91,10 @@ contract Vehicles is UUPSUpgrade, OwnableUDS, ERC721EnumerableUDS, VRFConsumerV2
     }
 
     /* ------------- view ------------- */
+
+    function gangWar() external view returns (GangWar) {
+        return s().gangWar;
+    }
 
     function claimed(uint256 id) public view returns (bool) {
         return s().claimed[id];
@@ -117,7 +119,11 @@ contract Vehicles is UUPSUpgrade, OwnableUDS, ERC721EnumerableUDS, VRFConsumerV2
     function getMultiplier(uint256 id) public view returns (uint256) {
         uint256 level = getLevel(id);
 
-        return ((3 * level - 1) * level + 4) >> 1;
+        if (level == 1) return 3;
+        if (level == 2) return 7;
+        if (level == 3) return 14;
+
+        return 1;
     }
 
     function getGangsterMultiplier(uint256 gangsterId) public view returns (uint256) {
@@ -133,7 +139,7 @@ contract Vehicles is UUPSUpgrade, OwnableUDS, ERC721EnumerableUDS, VRFConsumerV2
     }
 
     function districtToGang(uint256 id) public pure returns (uint256) {
-        if (id == 0) revert InvalidDistrictId();
+        if (id == 0) return 4;
 
         return 3 & (gangEncoding >> ((id - 1) << 1));
     }
@@ -144,20 +150,25 @@ contract Vehicles is UUPSUpgrade, OwnableUDS, ERC721EnumerableUDS, VRFConsumerV2
         return districtToGang(districtId);
     }
 
-    function numVehiclessByDistrictId() public view returns (uint256[21][3] memory count) {
-        uint256 supply = totalSupply();
+    function numVehiclesByDistrictId() public view returns (uint256[3][3] memory count) {
+        unchecked {
+            uint256 supply = totalSupply();
 
-        for (uint256 i = 1; i <= supply; ++i) {
-            uint256 gangsterId = s().vehicleToGangsterId[i];
-            if (gangsterId == 0) continue;
+            for (uint256 id = 1; id <= supply; ++id) {
+                uint256 gangsterId = s().vehicleToGangsterId[id];
+                if (gangsterId == 0) continue;
 
-            uint256 districtId = gangWar.getGangsterLocation(gangsterId);
-            if (districtId == 0) continue;
+                uint256 districtId = s().gangWar.getGangsterLocation(gangsterId);
+                if (districtId == 0) continue;
 
-            uint256 vehicleLvl = s().vehicleData[i].level;
-            if (vehicleLvl == 0) continue;
+                uint256 vehicleLvl = s().vehicleData[id].level;
+                if (vehicleLvl == 0) continue;
 
-            ++count[vehicleLvl - 1][districtId - 1];
+                uint256 gangId = gangOf(id);
+
+                // maxCount = 4096;
+                count[vehicleLvl - 1][gangId] += 1 << (12 * (districtId - 1));
+            }
         }
     }
 
@@ -204,7 +215,7 @@ contract Vehicles is UUPSUpgrade, OwnableUDS, ERC721EnumerableUDS, VRFConsumerV2
             if (gangsterId != 0) {
                 uint256 vehicleGang = districtToGang(vehicleDistrictId);
                 uint256 gangsterGang = uint8(gmc.gangOf(gangsterId));
-                uint256 districtId = gangWar.getGangsterLocation(gangsterId);
+                uint256 districtId = s().gangWar.getGangsterLocation(gangsterId);
 
                 if (districtId != 0) revert NotAuthorizedDuringGangWar();
                 if (gangsterGang != vehicleGang) revert InvalidGang();
@@ -215,7 +226,7 @@ contract Vehicles is UUPSUpgrade, OwnableUDS, ERC721EnumerableUDS, VRFConsumerV2
             uint256 prevGangsterId = s().vehicleToGangsterId[vehicleId];
             delete s().gangsterToVehicleId[prevGangsterId];
 
-            uint256 prevGangsterDistrictId = gangWar.getGangsterLocation(prevGangsterId);
+            uint256 prevGangsterDistrictId = s().gangWar.getGangsterLocation(prevGangsterId);
             if (prevGangsterDistrictId != 0) revert NotAuthorizedDuringGangWar();
 
             // sever old connection of gangster
@@ -233,10 +244,13 @@ contract Vehicles is UUPSUpgrade, OwnableUDS, ERC721EnumerableUDS, VRFConsumerV2
     function tokenURI(uint256 id) public view override returns (string memory) {
         uint256 level = s().vehicleData[id].level;
         uint256 districtId = s().vehicleData[id].districtId;
+        uint256 gang = districtToGang(districtId);
+
+        if (gang == 4) revert InvalidGang();
 
         return districtId == 0
             ? s().unrevealedURI
-            : string.concat(s().baseURI, level.toString(), '/', districtToGang(districtId).toString(), s().postFixURI);// forgefmt: disable-line
+            : string.concat(s().baseURI, level.toString(), '/', gang.toString(), s().postFixURI);// forgefmt: disable-line
     }
 
     function fulfillRandomWords(uint256, uint256[] calldata randomWords) internal override {
@@ -266,9 +280,7 @@ contract Vehicles is UUPSUpgrade, OwnableUDS, ERC721EnumerableUDS, VRFConsumerV2
         s().vehicleData[id].level = uint8(level);
         s().requestQueue.push(id);
 
-        if (s().requestQueue.length == 1) {
-            requestVRF();
-        }
+        if (s().requestQueue.length == 1) requestVRF();
     }
 
     /* ------------- owner ------------- */
@@ -299,6 +311,10 @@ contract Vehicles is UUPSUpgrade, OwnableUDS, ERC721EnumerableUDS, VRFConsumerV2
 
     function setPostFixURI(string calldata postFix) external onlyOwner {
         s().postFixURI = postFix;
+    }
+
+    function setGangWar(GangWar gangWar_) external onlyOwner {
+        s().gangWar = gangWar_;
     }
 
     /* ------------- override ------------- */

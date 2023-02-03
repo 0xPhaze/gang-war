@@ -55,4 +55,8 @@ contract MockVRFCoordinator is IVRFCoordinatorV2 {
         }
         delete pendingRequests;
     }
+
+    function addConsumer(uint64, address) external pure {
+        revert("Adding consumer to mock");
+    }
 }

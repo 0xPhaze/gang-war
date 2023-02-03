@@ -104,11 +104,11 @@ contract SetupChild is SetupRoot {
         address miceImpl = setUpContract("Mice", miceArgs, "MiceImplementation", true);
         mice = Mice(setUpProxy(miceImpl, abi.encode(Mice.init.selector), "Mice"));
 
-        // deploying stub (keepExisting=true); vehicles isn't defined here yet
-        // tests will deploy a "dummy" `gangWarImpl` that is
-        // redeployed after vehicles address is known
-        game = GangWar(setUpProxy(address(staticProxy), abi.encodeWithSelector(GangWar.init.selector), "GangWar", true));// forgefmt: disable-line
-        registeredContractAddress[block.chainid]["GangWar"] = address(0); // hack
+        // // deploying stub (keepExisting=true); vehicles isn't defined here yet
+        // // tests will deploy a "dummy" `gangWarImpl` that is
+        // // redeployed after vehicles address is known
+        // game = GangWar(setUpProxy(address(staticProxy), abi.encodeWithSelector(GangWar.init.selector), "GangWar", true));// forgefmt: disable-line
+        // registeredContractAddress[block.chainid]["GangWar"] = address(0); // hack
 
         address gangVaultRewardsImpl = setUpContract("GangVaultRewards", abi.encode(gmc, mice), "GangVaultRewardsImplementation");// forgefmt: disable-line
         gangVaultRewards = GangVaultRewards(setUpProxy(gangVaultRewardsImpl, abi.encodeWithSelector(GangVaultRewards.init.selector), "GangVaultRewards"));// forgefmt: disable-line
@@ -117,7 +117,7 @@ contract SetupChild is SetupRoot {
         address safeHousesImplementation = setUpContract("SafeHouses", safeHousesArgs, "SafeHousesImplementation", true);
         safeHouses = SafeHouses(setUpProxy(safeHousesImplementation, abi.encodeWithSelector(SafeHouses.init.selector), "SafeHouses"));// forgefmt: disable-line
 
-        bytes memory vehiclesArgs = abi.encode(gmc, game, safeHouses, coordinator, linkKeyHash, linkSubId, 3, 2_500_000);
+        bytes memory vehiclesArgs = abi.encode(gmc, safeHouses, coordinator, linkKeyHash, linkSubId, 3, 2_500_000);
         address vehiclesImplementation = setUpContract("Vehicles", vehiclesArgs, "VehiclesImplementation", true);
         vehicles = Vehicles(setUpProxy(vehiclesImplementation, abi.encodeWithSelector(Vehicles.init.selector), "Vehicles"));// forgefmt: disable-line
 
@@ -135,6 +135,7 @@ contract SetupChild is SetupRoot {
 
         initContractsChild();
         linkContractsWithRoot();
+        setUpChainlinkConsumer();
     }
 
     function linkContractsWithRoot() internal virtual {
@@ -147,6 +148,15 @@ contract SetupChild is SetupRoot {
             linkWithRoot(address(gouda), "GoudaRootRelay");
             linkWithRoot(address(safeHouses), "SafeHouseClaim");
         }
+    }
+
+    function setUpChainlinkConsumer() internal virtual {
+        if (MOCK_TUNNEL_TESTING) return;
+
+        IVRFCoordinatorV2(coordinator).addConsumer(linkSubId, address(game));
+        // IVRFCoordinatorV2(coordinator).addConsumer(linkSubId, address(gmc));
+        // IVRFCoordinatorV2(coordinator).addConsumer(linkSubId, address(vehicles));
+        // IVRFCoordinatorV2(coordinator).addConsumer(linkSubId, address(safeHouses));
     }
 
     bytes32 constant AUTHORITY = keccak256("AUTHORITY");
@@ -196,6 +206,10 @@ contract SetupChild is SetupRoot {
 
             safeHouses.setBaseURI("ipfs://QmRJUciN3rdfUK9TjnsNNB5nbSCy3oRmmh2yaJC9k4QP76/");
             safeHouses.setPostFixURI(".json");
+
+            vehicles.setBaseURI("ipfs://QmaKbSCsy7emJnVN3N4NJ7sjybQUDC6xUjEdmtusY38emm/");
+            vehicles.setPostFixURI(".json");
+            vehicles.setGangWar(game);
         }
 
         // CI: make sure permissions are good
@@ -244,6 +258,8 @@ contract SetupChild is SetupRoot {
 
             // game.reset(occupants, yields);
         }
+
+        // addConsumer(uint64 subId,address consumer)
     }
 
     // ---------------- vars

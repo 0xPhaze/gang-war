@@ -25,6 +25,8 @@ interface IVRFCoordinatorV2 {
         uint32 callbackGasLimit,
         uint32 numWords
     ) external returns (uint256 requestId);
+
+    function addConsumer(uint64 subId, address consumer) external;
 }
 
 // ---------- errors
