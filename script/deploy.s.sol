@@ -66,8 +66,6 @@ contract deploy is SetupChild {
 
         // game.reset(occupants, yields);
 
-        // game.setSeason(1665421200, 1868099600);
-
         // // new Date('December 13, 2022 4:00 PM').getTime() / 1000
         // // new Date('Jan 1, 2023 4:00 PM').getTime() / 1000
 
@@ -117,24 +115,7 @@ contract deploy is SetupChild {
         // goudaRoot.approve(address(goudaTunnel), type(uint256).max);
         // goudaTunnel.lock(msg.sender, 50e18);
 
-        // try gmc.setGangsInChunks(0, 0) {
-        //     uint256 chunkData;
-        //     uint256 id;
-        //     for (uint256 c; c < 70; ++c) {
-        //         for (uint256 i; i < 128; ++i) {
-        //             id = (c << 7) + i + 1;
-        //             uint256 gang = 1 + ((id + 2) % 3);
-        //             chunkData |= gang << (i << 1);
-        //         }
-
-        //         gmc.setGangsInChunks(c, chunkData);
-
-        //         if (c > 5) return;
-        //         if (id > 6666) break;
-        //     }
-        // } catch {}
-
-        // if (isTestnet()) runTestnet();
+        if (isTestnet()) runTestnet();
 
         // vm.stopBroadcast();
 
@@ -187,6 +168,23 @@ contract deploy is SetupChild {
             vault.setYield(0, [uint256(7_700_000), 7_700_000, 7_700_000]);
             vault.setYield(1, [uint256(7_700_000), 7_700_000, 7_700_000]);
             vault.setYield(2, [uint256(7_700_000), 7_700_000, 7_700_000]);
+
+            try gmc.setGangsInChunks(0, 0) {
+                uint256 chunkData;
+                uint256 id;
+                for (uint256 c; c < 70; ++c) {
+                    for (uint256 i; i < 128; ++i) {
+                        id = (c << 7) + i + 1;
+                        uint256 gang = 1 + ((id + 2) % 3);
+                        chunkData |= gang << (i << 1);
+                    }
+
+                    gmc.setGangsInChunks(c, chunkData);
+
+                    if (c > 5) return;
+                    if (id > 6666) break;
+                }
+            } catch {}
         }
     }
 }
