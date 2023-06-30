@@ -46,8 +46,7 @@ contract TestGangWar is Test, SetupChild {
 
         vault.grantRole(GANG_VAULT_CONTROLLER, address(this));
 
-        game.setSeason(seasonStart, seasonEnd);
-        vault.setSeason(seasonStart, seasonEnd);
+        game.setSeason(seasonStart, seasonEnd, true);
 
         gmc.resyncId(alice, GANGSTER_YAKUZA_1);
         gmc.resyncId(alice, GANGSTER_CARTEL_1);
@@ -87,9 +86,7 @@ contract TestGangWar is Test, SetupChild {
 
                 gmc.setGangsInChunks(c, chunkData);
 
-                if (id > 6666) {
-                    break;
-                }
+                if (id > 6666) break;
             }
         } catch {}
     }

@@ -2,11 +2,24 @@
 pragma solidity ^0.8.0;
 
 import "/lib/VRFConsumerV2.sol";
+import "forge-std/console.sol";
 
 contract MockVRFCoordinator is IVRFCoordinatorV2 {
     uint256 public requestIdCounter;
     address public game;
-    uint256[] public pendingRequests;
+
+    struct Request {
+        address sender;
+        uint256 requestId;
+    }
+
+    Request[] public pendingRequests;
+
+    bytes32 seed;
+
+    constructor() {
+        seed = blockhash(block.number - 1);
+    }
 
     function numPendingRequests() public view returns (uint256) {
         return pendingRequests.length;
@@ -17,43 +30,40 @@ contract MockVRFCoordinator is IVRFCoordinatorV2 {
         override
         returns (uint256 requestId)
     {
-        game = msg.sender;
-        pendingRequests.push(requestId = ++requestIdCounter);
+        pendingRequests.push(Request({sender: msg.sender, requestId: requestId = ++requestIdCounter}));
     }
 
     function fulfillLatestRequest() public {
-        fulfillLatestRequest(uint256(blockhash(block.number - 1)));
+        fulfillLatestRequest(uint256(seed = keccak256(abi.encode(seed))));
     }
 
     function fulfillLatestRequest(uint256 rand) public {
-        uint256 requestId = pendingRequests[pendingRequests.length - 1];
-        pendingRequests.pop();
+        Request storage request = pendingRequests[pendingRequests.length - 1];
+        // console.log("Fulfilling request sender %s id %s rand %s", request.sender, request.requestId, rand);
 
         uint256[] memory randomWords = new uint256[](1);
         randomWords[0] = rand;
 
-        (bool success,) = game.call(
+        (bool success, bytes memory returndata) = request.sender.call(
             abi.encodeWithSelector(
-                bytes4(keccak256("rawFulfillRandomWords(uint256,uint256[])")), requestId, randomWords
+                bytes4(keccak256("rawFulfillRandomWords(uint256,uint256[])")), request.requestId, randomWords
             )
         );
-        require(success);
+
+        if (!success) {
+            assembly {
+                revert(add(returndata, 32), mload(returndata))
+            }
+        }
+
+        pendingRequests.pop();
     }
 
     function fulfillLatestRequests() public {
         uint256 pendingRequestsLength = pendingRequests.length;
-        uint256[] memory randomWords = new uint256[](1);
         for (uint256 i; i < pendingRequestsLength; ++i) {
-            randomWords[0] = uint256(keccak256(abi.encode(blockhash(block.number - 1), i)));
-            (bool success,) = game.call(
-                abi.encodeWithSelector(
-                    bytes4(keccak256("rawFulfillRandomWords(uint256,uint256[])")), pendingRequests[i], randomWords
-                )
-            );
-
-            require(success);
+            fulfillLatestRequest();
         }
-        delete pendingRequests;
     }
 
     function addConsumer(uint64, address) external pure {

@@ -3,7 +3,7 @@
 	"tasks": [
 		{
             "type": "shell",
-			"command": "forge test -vvv --mc TestVehicles",
+			"command": "forge test -vvv --mc TestGangVault",
 			"group": {
 				"kind": "test",
 				"isDefault": true

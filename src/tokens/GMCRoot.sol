@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 import {OwnableUDS} from "UDS/auth/OwnableUDS.sol";
 import {LibCrumbMap} from "../lib/LibCrumbMap.sol";
 import {FxERC721MRoot} from "ERC721M/extensions/FxERC721MRoot.sol";
+import {EIP712PermitUDS} from "UDS/auth/EIP712PermitUDS.sol";
 import {ERC20UDS as ERC20} from "UDS/tokens/ERC20UDS.sol";
 
 import "solady/utils/ECDSA.sol";
@@ -54,6 +55,7 @@ contract GMC is OwnableUDS, FxERC721MRoot {
 
     constructor(address checkpointManager, address fxRoot)
         FxERC721MRoot("Gangsta Mice City", "GMC", checkpointManager, fxRoot)
+        EIP712PermitUDS("Gangsta Mice City", "1")
     {
         __Ownable_init();
 
@@ -123,9 +125,7 @@ contract GMC is OwnableUDS, FxERC721MRoot {
             if (
                 tokenIds.length != 0 && block.timestamp < DEPLOY_TIMESTAMP + 1 weeks
                     && block.timestamp < mintStart + 2 hours
-            ) {
-                emit SecondLegendaryRaffleEntered(from);
-            }
+            ) emit SecondLegendaryRaffleEntered(from);
 
             _lockAndTransmit(from, tokenIds);
         }

@@ -114,11 +114,11 @@ contract SetupChild is SetupRoot {
         gangVaultRewards = GangVaultRewards(setUpProxy(gangVaultRewardsImpl, abi.encodeWithSelector(GangVaultRewards.init.selector), "GangVaultRewards"));// forgefmt: disable-line
 
         bytes memory safeHousesArgs = abi.encode(mice, badges, gouda, tokens[0], tokens[1], tokens[2], fxChild, coordinator, linkKeyHash, linkSubId, 3, 2_500_000);// forgefmt: disable-line
-        address safeHousesImplementation = setUpContract("SafeHouses", safeHousesArgs, "SafeHousesImplementation", true);
+        address safeHousesImplementation = setUpContract("SafeHouses", safeHousesArgs, "SafeHousesImplementation");
         safeHouses = SafeHouses(setUpProxy(safeHousesImplementation, abi.encodeWithSelector(SafeHouses.init.selector), "SafeHouses"));// forgefmt: disable-line
 
         bytes memory vehiclesArgs = abi.encode(gmc, safeHouses, coordinator, linkKeyHash, linkSubId, 3, 2_500_000);
-        address vehiclesImplementation = setUpContract("Vehicles", vehiclesArgs, "VehiclesImplementation", true);
+        address vehiclesImplementation = setUpContract("Vehicles", vehiclesArgs, "VehiclesImplementation");
         vehicles = Vehicles(setUpProxy(vehiclesImplementation, abi.encodeWithSelector(Vehicles.init.selector), "Vehicles"));// forgefmt: disable-line
 
         bool keepExistingGangWar = false;
@@ -133,6 +133,7 @@ contract SetupChild is SetupRoot {
             SetupRoot.setUpContractsRoot();
         }
 
+        // XXX TODO FIX
         initContractsChild();
         linkContractsWithRoot();
         setUpChainlinkConsumer();
@@ -153,7 +154,7 @@ contract SetupChild is SetupRoot {
     function setUpChainlinkConsumer() internal virtual {
         if (MOCK_TUNNEL_TESTING) return;
 
-        IVRFCoordinatorV2(coordinator).addConsumer(linkSubId, address(game));
+        // IVRFCoordinatorV2(coordinator).addConsumer(linkSubId, address(game));
         // IVRFCoordinatorV2(coordinator).addConsumer(linkSubId, address(gmc));
         // IVRFCoordinatorV2(coordinator).addConsumer(linkSubId, address(vehicles));
         // IVRFCoordinatorV2(coordinator).addConsumer(linkSubId, address(safeHouses));

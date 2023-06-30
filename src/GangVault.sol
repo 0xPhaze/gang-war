@@ -5,6 +5,8 @@ import {GangToken} from "./tokens/GangToken.sol";
 import {UUPSUpgrade} from "UDS/proxy/UUPSUpgrade.sol";
 import {AccessControlUDS} from "UDS/auth/AccessControlUDS.sol";
 
+import "forge-std/console.sol";
+
 // ------------- storage
 
 bytes32 constant DIAMOND_STORAGE_GANG_VAULT = keccak256("diamond.storage.gang.vault");
@@ -151,29 +153,28 @@ contract GangVault is UUPSUpgrade, AccessControlUDS {
 
     /* ------------- controller ------------- */
 
-    function setSeason(uint40 start, uint40 end) external onlyRole(CONTROLLER) {
+    function setSeason(uint40 start, uint40 end, bool resetBalances) external onlyRole(CONTROLLER) {
         require(start <= end);
+
+        _updateYieldPerShare(0);
+        _updateYieldPerShare(1);
+        _updateYieldPerShare(2);
 
         s().seasonStart = start;
         s().seasonEnd = end;
-    }
 
-    function resetGangVaultBalances() external onlyRole(DEFAULT_ADMIN_ROLE) {
-        for (uint256 gang; gang < 3; gang++) {
-            address gangAccount = _getGangAccount(gang);
+        if (resetBalances) {
+            for (uint256 gang; gang < 3; gang++) {
+                address gangAccount = _getGangAccount(gang);
+                uint256 totalShares = s().totalShares[gang];
+                uint256 numSharesTimes100 = max(totalShares, 1) * gangVaultFeePercent;
 
-            s().userBalance[gangAccount] = [0, 0, 0];
-            s().accruedBalances[gangAccount] = [0, 0, 0];
-        }
-    }
+                // Update Gang balance to update the accrued yield.
+                _updateUserBalance(gang, gangAccount, numSharesTimes100);
 
-    function softResetGangVaultBalances() external onlyRole(DEFAULT_ADMIN_ROLE) {
-        for (uint256 gang; gang < 3; gang++) {
-            address gangAccount = _getGangAccount(gang);
-
-            _updateUserBalance(gang, gangAccount);
-
-            s().userBalance[gangAccount] = [0, 0, 0];
+                s().userBalance[gangAccount] = [0, 0, 0];
+                s().accruedBalances[gangAccount] = [0, 0, 0];
+            }
         }
     }
 
@@ -185,9 +186,7 @@ contract GangVault is UUPSUpgrade, AccessControlUDS {
         require(yield[1] <= 1e12);
         require(yield[2] <= 1e12);
 
-        s().yield[gang][0] = uint80(yield[0]);
-        s().yield[gang][1] = uint80(yield[1]);
-        s().yield[gang][2] = uint80(yield[2]);
+        s().yield[gang] = [uint80(yield[0]), uint80(yield[1]), uint80(yield[2])];
     }
 
     function addShares(address account, uint256 gang, uint40 amount) external onlyRole(CONTROLLER) {
@@ -264,9 +263,11 @@ contract GangVault is UUPSUpgrade, AccessControlUDS {
             amount_2 = balance_2 > amount_2 ? amount_2 : balance_2;
         }
 
-        s().userBalance[gangAccount][0] = uint80((balance_0 - amount_0) / 1e10);
-        s().userBalance[gangAccount][1] = uint80((balance_1 - amount_1) / 1e10);
-        s().userBalance[gangAccount][2] = uint80((balance_2 - amount_2) / 1e10);
+        s().userBalance[gangAccount] = [
+            uint80((balance_0 - amount_0) / 1e10),
+            uint80((balance_1 - amount_1) / 1e10),
+            uint80((balance_2 - amount_2) / 1e10)
+        ];
 
         if (amount_0 > 0) emit Burn(gang, 0, amount_0);
         if (amount_1 > 0) emit Burn(gang, 1, amount_1);
@@ -283,9 +284,7 @@ contract GangVault is UUPSUpgrade, AccessControlUDS {
     function _updateYieldPerShare(uint256 gang) private {
         (uint256 yps_0, uint256 yps_1, uint256 yps_2) = _accruedYieldPerShare(gang);
 
-        fx().accruedYieldPerShare[gang][0] = uint80(yps_0);
-        fx().accruedYieldPerShare[gang][1] = uint80(yps_1);
-        fx().accruedYieldPerShare[gang][2] = uint80(yps_2);
+        fx().accruedYieldPerShare[gang] = [uint80(yps_0), uint80(yps_1), uint80(yps_2)];
 
         s().lastUpdateTime[gang] = uint40(block.timestamp);
     }
@@ -377,6 +376,10 @@ contract GangVault is UUPSUpgrade, AccessControlUDS {
         returns (uint256[3] memory balances)
     {
         (uint256 yps_0, uint256 yps_1, uint256 yps_2) = _accruedYieldPerShare(gang);
+
+        // console.log("yps_0", yps_0);
+        // console.log("yps_1", yps_1);
+        // console.log("yps_2", yps_2);
 
         balances[0] = numSharesTimes100 * (yps_0 - fx().lastUserYieldPerShare[account][gang][0]) * 1e10 / 100;// forgefmt: disable-line
         balances[1] = numSharesTimes100 * (yps_1 - fx().lastUserYieldPerShare[account][gang][1]) * 1e10 / 100;// forgefmt: disable-line

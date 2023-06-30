@@ -3,13 +3,13 @@ pragma solidity ^0.8.0;
 
 import {GangWar} from "../GangWar.sol";
 import {SafeHouses} from "./SafeHouses.sol";
-import {OwnableUDS} from "UDS/auth/OwnableUDS.sol";
-import {UUPSUpgrade} from "UDS/proxy/UUPSUpgrade.sol";
-import {VRFConsumerV2} from "../lib/VRFConsumerV2.sol";
 import {GMCChild as GMC} from "./GMCChild.sol";
 import {ERC721EnumerableUDS} from "UDS/tokens/extensions/ERC721EnumerableUDS.sol";
 
-import "solady/utils/LibString.sol";
+import {LibString} from "solady/utils/LibString.sol";
+import {OwnableUDS} from "UDS/auth/OwnableUDS.sol";
+import {UUPSUpgrade} from "UDS/proxy/UUPSUpgrade.sol";
+import {VRFConsumerV2} from "../lib/VRFConsumerV2.sol";
 
 // ------------- storage
 
@@ -52,6 +52,7 @@ error NotAuthorized();
 error AlreadyClaimed();
 error InvalidQuantity();
 error InvalidDistrictId();
+error CannotEquipBarons();
 error NotAuthorizedDuringGangWar();
 
 /// @title Vehicles
@@ -156,10 +157,12 @@ contract Vehicles is UUPSUpgrade, OwnableUDS, ERC721EnumerableUDS, VRFConsumerV2
 
             for (uint256 id = 1; id <= supply; ++id) {
                 uint256 gangsterId = s().vehicleToGangsterId[id];
+
                 if (gangsterId == 0) continue;
 
                 uint256 districtId = s().gangWar.getGangsterLocation(gangsterId);
-                if (districtId == 0) continue;
+
+                if (districtId == type(uint256).max) continue;
 
                 uint256 vehicleLvl = s().vehicleData[id].level;
                 if (vehicleLvl == 0) continue;
@@ -167,7 +170,7 @@ contract Vehicles is UUPSUpgrade, OwnableUDS, ERC721EnumerableUDS, VRFConsumerV2
                 uint256 gangId = gangOf(id);
 
                 // maxCount = 4096;
-                count[vehicleLvl - 1][gangId] += 1 << (12 * (districtId - 1));
+                count[vehicleLvl - 1][gangId] += 1 << 12 * districtId;
             }
         }
     }
@@ -210,24 +213,30 @@ contract Vehicles is UUPSUpgrade, OwnableUDS, ERC721EnumerableUDS, VRFConsumerV2
 
             // make sure vehicle has been assigned a district
             if (vehicleDistrictId == 0) revert InvalidGang();
-            if (msg.sender != ownerOf(vehicleId)) revert NotAuthorized();
+
+            // uint256 equippedGangsterId = s().vehicleToGangsterId[vehicleId];
+            // uint256 districtId = s().gangWar.getGangsterLocation(equippedGangsterId);
+            // if (districtId != 0) revert NotAuthorizedDuringGangWar();
 
             if (gangsterId != 0) {
                 uint256 vehicleGang = districtToGang(vehicleDistrictId);
                 uint256 gangsterGang = uint8(gmc.gangOf(gangsterId));
-                uint256 districtId = s().gangWar.getGangsterLocation(gangsterId);
 
-                if (districtId != 0) revert NotAuthorizedDuringGangWar();
+                if (gmc.isBaron(gangsterId)) revert CannotEquipBarons();
                 if (gangsterGang != vehicleGang) revert InvalidGang();
+                if (msg.sender != ownerOf(vehicleId)) revert NotAuthorized();
                 if (msg.sender != gmc.ownerOf(gangsterId)) revert NotAuthorized();
             }
 
             // cleanup prev link from vehicle to gangster
             uint256 prevGangsterId = s().vehicleToGangsterId[vehicleId];
-            delete s().gangsterToVehicleId[prevGangsterId];
-
             uint256 prevGangsterDistrictId = s().gangWar.getGangsterLocation(prevGangsterId);
-            if (prevGangsterDistrictId != 0) revert NotAuthorizedDuringGangWar();
+
+            if (gangsterId == 0 && msg.sender != ownerOf(vehicleId) && msg.sender != gmc.ownerOf(prevGangsterId)) {
+                revert NotAuthorized();
+            }
+            if (prevGangsterDistrictId != type(uint256).max) revert NotAuthorizedDuringGangWar();
+            delete s().gangsterToVehicleId[prevGangsterId];
 
             // sever old connection of gangster
             uint256 prevVehicleId = s().gangsterToVehicleId[gangsterId];
@@ -291,13 +300,11 @@ contract Vehicles is UUPSUpgrade, OwnableUDS, ERC721EnumerableUDS, VRFConsumerV2
         requestVRF();
     }
 
-    function airdrop(address[] calldata tos, uint256 level) external onlyOwner {
-        uint256 supply = totalSupply();
-
+    function airdrop(address[] calldata tos, uint256[] calldata ids, uint256 level) external onlyOwner {
         for (uint256 i; i < tos.length; ++i) {
-            uint256 id = 1 + supply + i;
+            if (ownerOf(ids[i]) != address(0)) revert AlreadyClaimed();
 
-            _mintInternal(tos[i], id, level);
+            _mintInternal(tos[i], ids[i], level);
         }
     }
 

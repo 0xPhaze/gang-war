@@ -1,0 +1,347 @@
+{
+  "storage": [
+    {
+      "astId": 4796,
+      "contract": "src/tokens/Vehicles.sol:Vehicles",
+      "label": "__storageLayout",
+      "offset": 0,
+      "slot": "0",
+      "type": "t_struct(OwnableDS)4788_storage"
+    },
+    {
+      "astId": 4612,
+      "contract": "src/tokens/Vehicles.sol:Vehicles",
+      "label": "__storageLayout",
+      "offset": 0,
+      "slot": "1",
+      "type": "t_struct(EIP2612DS)4604_storage"
+    },
+    {
+      "astId": 5943,
+      "contract": "src/tokens/Vehicles.sol:Vehicles",
+      "label": "__storageLayout",
+      "offset": 0,
+      "slot": "2",
+      "type": "t_struct(ERC721DS)5917_storage"
+    },
+    {
+      "astId": 60518,
+      "contract": "src/tokens/Vehicles.sol:Vehicles",
+      "label": "__storageLayout",
+      "offset": 0,
+      "slot": "8",
+      "type": "t_struct(VehiclesDS)60471_storage"
+    }
+  ],
+  "types": {
+    "t_address": {
+      "encoding": "inplace",
+      "label": "address",
+      "numberOfBytes": "20"
+    },
+    "t_array(t_uint256)dyn_storage": {
+      "encoding": "dynamic_array",
+      "label": "uint256[]",
+      "numberOfBytes": "32",
+      "base": "t_uint256"
+    },
+    "t_bool": {
+      "encoding": "inplace",
+      "label": "bool",
+      "numberOfBytes": "1"
+    },
+    "t_contract(GangWar)51689": {
+      "encoding": "inplace",
+      "label": "contract GangWar",
+      "numberOfBytes": "20"
+    },
+    "t_mapping(t_address,t_bool)": {
+      "encoding": "mapping",
+      "key": "t_address",
+      "label": "mapping(address => bool)",
+      "numberOfBytes": "32",
+      "value": "t_bool"
+    },
+    "t_mapping(t_address,t_mapping(t_address,t_bool))": {
+      "encoding": "mapping",
+      "key": "t_address",
+      "label": "mapping(address => mapping(address => bool))",
+      "numberOfBytes": "32",
+      "value": "t_mapping(t_address,t_bool)"
+    },
+    "t_mapping(t_address,t_uint256)": {
+      "encoding": "mapping",
+      "key": "t_address",
+      "label": "mapping(address => uint256)",
+      "numberOfBytes": "32",
+      "value": "t_uint256"
+    },
+    "t_mapping(t_uint256,t_address)": {
+      "encoding": "mapping",
+      "key": "t_uint256",
+      "label": "mapping(uint256 => address)",
+      "numberOfBytes": "32",
+      "value": "t_address"
+    },
+    "t_mapping(t_uint256,t_bool)": {
+      "encoding": "mapping",
+      "key": "t_uint256",
+      "label": "mapping(uint256 => bool)",
+      "numberOfBytes": "32",
+      "value": "t_bool"
+    },
+    "t_mapping(t_uint256,t_struct(VehicleData)60433_storage)": {
+      "encoding": "mapping",
+      "key": "t_uint256",
+      "label": "mapping(uint256 => struct VehicleData)",
+      "numberOfBytes": "32",
+      "value": "t_struct(VehicleData)60433_storage"
+    },
+    "t_mapping(t_uint256,t_uint256)": {
+      "encoding": "mapping",
+      "key": "t_uint256",
+      "label": "mapping(uint256 => uint256)",
+      "numberOfBytes": "32",
+      "value": "t_uint256"
+    },
+    "t_string_storage": {
+      "encoding": "bytes",
+      "label": "string",
+      "numberOfBytes": "32"
+    },
+    "t_struct(EIP2612DS)4604_storage": {
+      "encoding": "inplace",
+      "label": "struct EIP2612DS",
+      "numberOfBytes": "32",
+      "members": [
+        {
+          "astId": 4603,
+          "contract": "src/tokens/Vehicles.sol:Vehicles",
+          "label": "nonces",
+          "offset": 0,
+          "slot": "0",
+          "type": "t_mapping(t_address,t_uint256)"
+        }
+      ]
+    },
+    "t_struct(ERC721DS)5917_storage": {
+      "encoding": "inplace",
+      "label": "struct ERC721DS",
+      "numberOfBytes": "192",
+      "members": [
+        {
+          "astId": 5896,
+          "contract": "src/tokens/Vehicles.sol:Vehicles",
+          "label": "name",
+          "offset": 0,
+          "slot": "0",
+          "type": "t_string_storage"
+        },
+        {
+          "astId": 5898,
+          "contract": "src/tokens/Vehicles.sol:Vehicles",
+          "label": "symbol",
+          "offset": 0,
+          "slot": "1",
+          "type": "t_string_storage"
+        },
+        {
+          "astId": 5902,
+          "contract": "src/tokens/Vehicles.sol:Vehicles",
+          "label": "ownerOf",
+          "offset": 0,
+          "slot": "2",
+          "type": "t_mapping(t_uint256,t_address)"
+        },
+        {
+          "astId": 5906,
+          "contract": "src/tokens/Vehicles.sol:Vehicles",
+          "label": "balanceOf",
+          "offset": 0,
+          "slot": "3",
+          "type": "t_mapping(t_address,t_uint256)"
+        },
+        {
+          "astId": 5910,
+          "contract": "src/tokens/Vehicles.sol:Vehicles",
+          "label": "getApproved",
+          "offset": 0,
+          "slot": "4",
+          "type": "t_mapping(t_uint256,t_address)"
+        },
+        {
+          "astId": 5916,
+          "contract": "src/tokens/Vehicles.sol:Vehicles",
+          "label": "isApprovedForAll",
+          "offset": 0,
+          "slot": "5",
+          "type": "t_mapping(t_address,t_mapping(t_address,t_bool))"
+        }
+      ]
+    },
+    "t_struct(OwnableDS)4788_storage": {
+      "encoding": "inplace",
+      "label": "struct OwnableDS",
+      "numberOfBytes": "32",
+      "members": [
+        {
+          "astId": 4787,
+          "contract": "src/tokens/Vehicles.sol:Vehicles",
+          "label": "owner",
+          "offset": 0,
+          "slot": "0",
+          "type": "t_address"
+        }
+      ]
+    },
+    "t_struct(VehicleData)60433_storage": {
+      "encoding": "inplace",
+      "label": "struct VehicleData",
+      "numberOfBytes": "32",
+      "members": [
+        {
+          "astId": 60430,
+          "contract": "src/tokens/Vehicles.sol:Vehicles",
+          "label": "level",
+          "offset": 0,
+          "slot": "0",
+          "type": "t_uint8"
+        },
+        {
+          "astId": 60432,
+          "contract": "src/tokens/Vehicles.sol:Vehicles",
+          "label": "districtId",
+          "offset": 1,
+          "slot": "0",
+          "type": "t_uint8"
+        }
+      ]
+    },
+    "t_struct(VehiclesDS)60471_storage": {
+      "encoding": "inplace",
+      "label": "struct VehiclesDS",
+      "numberOfBytes": "288",
+      "members": [
+        {
+          "astId": 60436,
+          "contract": "src/tokens/Vehicles.sol:Vehicles",
+          "label": "gangWar",
+          "offset": 0,
+          "slot": "0",
+          "type": "t_contract(GangWar)51689"
+        },
+        {
+          "astId": 60438,
+          "contract": "src/tokens/Vehicles.sol:Vehicles",
+          "label": "totalSupply",
+          "offset": 20,
+          "slot": "0",
+          "type": "t_uint16"
+        },
+        {
+          "astId": 60440,
+          "contract": "src/tokens/Vehicles.sol:Vehicles",
+          "label": "totalSupplyBikes",
+          "offset": 22,
+          "slot": "0",
+          "type": "t_uint16"
+        },
+        {
+          "astId": 60442,
+          "contract": "src/tokens/Vehicles.sol:Vehicles",
+          "label": "totalSupplyVans",
+          "offset": 24,
+          "slot": "0",
+          "type": "t_uint16"
+        },
+        {
+          "astId": 60444,
+          "contract": "src/tokens/Vehicles.sol:Vehicles",
+          "label": "totalSupplyHelicopters",
+          "offset": 26,
+          "slot": "0",
+          "type": "t_uint16"
+        },
+        {
+          "astId": 60447,
+          "contract": "src/tokens/Vehicles.sol:Vehicles",
+          "label": "requestQueue",
+          "offset": 0,
+          "slot": "1",
+          "type": "t_array(t_uint256)dyn_storage"
+        },
+        {
+          "astId": 60452,
+          "contract": "src/tokens/Vehicles.sol:Vehicles",
+          "label": "vehicleData",
+          "offset": 0,
+          "slot": "2",
+          "type": "t_mapping(t_uint256,t_struct(VehicleData)60433_storage)"
+        },
+        {
+          "astId": 60456,
+          "contract": "src/tokens/Vehicles.sol:Vehicles",
+          "label": "claimed",
+          "offset": 0,
+          "slot": "3",
+          "type": "t_mapping(t_uint256,t_bool)"
+        },
+        {
+          "astId": 60460,
+          "contract": "src/tokens/Vehicles.sol:Vehicles",
+          "label": "vehicleToGangsterId",
+          "offset": 0,
+          "slot": "4",
+          "type": "t_mapping(t_uint256,t_uint256)"
+        },
+        {
+          "astId": 60464,
+          "contract": "src/tokens/Vehicles.sol:Vehicles",
+          "label": "gangsterToVehicleId",
+          "offset": 0,
+          "slot": "5",
+          "type": "t_mapping(t_uint256,t_uint256)"
+        },
+        {
+          "astId": 60466,
+          "contract": "src/tokens/Vehicles.sol:Vehicles",
+          "label": "baseURI",
+          "offset": 0,
+          "slot": "6",
+          "type": "t_string_storage"
+        },
+        {
+          "astId": 60468,
+          "contract": "src/tokens/Vehicles.sol:Vehicles",
+          "label": "postFixURI",
+          "offset": 0,
+          "slot": "7",
+          "type": "t_string_storage"
+        },
+        {
+          "astId": 60470,
+          "contract": "src/tokens/Vehicles.sol:Vehicles",
+          "label": "unrevealedURI",
+          "offset": 0,
+          "slot": "8",
+          "type": "t_string_storage"
+        }
+      ]
+    },
+    "t_uint16": {
+      "encoding": "inplace",
+      "label": "uint16",
+      "numberOfBytes": "2"
+    },
+    "t_uint256": {
+      "encoding": "inplace",
+      "label": "uint256",
+      "numberOfBytes": "32"
+    },
+    "t_uint8": {
+      "encoding": "inplace",
+      "label": "uint8",
+      "numberOfBytes": "1"
+    }
+  }
+}

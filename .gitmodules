@@ -17,13 +17,13 @@
 [submodule "lib/UDS"]
 	path = lib/UDS
 	url = https://github.com/0xPhaze/UDS
-[submodule "lib/upgrade-scripts"]
-	path = lib/upgrade-scripts
-	url = https://github.com/0xPhaze/upgrade-scripts
 [submodule "lib/ERC721M"]
 	path = lib/ERC721M
 	url = https://github.com/0xPhaze/ERC721M
 [submodule "lib/forge-std"]
 	path = lib/forge-std
 	url = https://github.com/foundry-rs/forge-std
-	branch = v1.2.0
+	branch = v1.3.0
+[submodule "lib/upgrade-scripts"]
+	path = lib/upgrade-scripts
+	url = https://github.com/0xPhaze/upgrade-scripts

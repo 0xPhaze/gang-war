@@ -152,7 +152,7 @@ struct GangWarDS {
 
 string constant SEASON = "season.3";
 
-bytes32 constant DIAMOND_STORAGE_GANG_WAR = keccak256("diamond.storage.gang.war.season.3.2"); // second half of season 3 (2 actually)
+bytes32 constant DIAMOND_STORAGE_GANG_WAR = keccak256("diamond.storage.gang.war.season.3.3");
 
 function s() pure returns (GangWarDS storage diamondStorage) {
     bytes32 slot = DIAMOND_STORAGE_GANG_WAR;
@@ -312,7 +312,7 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
         uint256 location = s().gangsters[tokenId].location;
         uint256 gangsterRoundId = s().gangsters[tokenId].roundId;
 
-        if (s().districts[location].roundId != gangsterRoundId) location = 0;
+        if (s().districts[location].roundId != gangsterRoundId) location = type(uint256).max;
 
         return location;
     }
@@ -1072,11 +1072,11 @@ contract GangWar is UUPSUpgrade, OwnableUDS, VRFConsumerV2 {
 
     /* ------------- owner ------------- */
 
-    function setSeason(uint40 start, uint40 end) external onlyOwner {
+    function setSeason(uint40 start, uint40 end, bool resetBalances) external onlyOwner {
         s().seasonStart = start;
         s().seasonEnd = end;
 
-        // GangVault(vault).setSeason(start, end);
+        GangVault(vault).setSeason(start, end, resetBalances);
     }
 
     function setBaronItemBalances(uint256[] calldata itemIds, uint256[] calldata amounts) external payable onlyOwner {

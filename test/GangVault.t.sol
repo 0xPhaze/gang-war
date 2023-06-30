@@ -30,7 +30,7 @@ contract TestGangVault is TestGangWar {
         vault.setYield(1, [uint256(0), uint256(0), uint256(0)]); //prettier-ignore
         vault.setYield(2, [uint256(0), uint256(0), uint256(0)]); //prettier-ignore
 
-        vault.setSeason(uint40(block.timestamp), type(uint40).max);
+        vault.setSeason(uint40(block.timestamp), type(uint40).max, false);
 
         fee = vault.gangVaultFeePercent();
         baseShares = 100 - fee;
@@ -334,11 +334,11 @@ contract TestGangVault is TestGangWar {
 
     /// future start/end date
     function test_dates() public {
-        uint256 endDate = block.timestamp + 110 days;
         uint256 startDate = block.timestamp + 10 days;
+        uint256 endDate = block.timestamp + 110 days;
 
         vault.setYield(0, [uint256(1), uint256(2), uint256(3)]);
-        vault.setSeason(uint40(startDate), uint40(endDate));
+        vault.setSeason(uint40(startDate), uint40(endDate), false);
 
         assertEq(vault.seasonStart(), startDate);
         assertEq(vault.seasonEnd(), endDate);
@@ -365,6 +365,8 @@ contract TestGangVault is TestGangWar {
 
         skip(200 days);
 
+        // vault.spendGangVaultBalance(0, 0, 0, 0, false);
+
         balances = vault.getGangVaultBalance(0);
         accrued = vault.getAccruedGangVaultBalances(0);
         claimable = vault.getClaimableUserBalance(self);
@@ -378,5 +380,78 @@ contract TestGangVault is TestGangWar {
         assertEq(claimable[0], 1 ether * baseShares);
         assertEq(claimable[1], 2 ether * baseShares);
         assertEq(claimable[2], 3 ether * baseShares);
+
+        startDate = block.timestamp + 10 days;
+        endDate = block.timestamp + 110 days;
+
+        vault.claimUserBalance();
+        vault.setSeason(uint40(startDate), uint40(endDate), true);
+
+        balances = vault.getGangVaultBalance(0);
+        accrued = vault.getAccruedGangVaultBalances(0);
+        claimable = vault.getClaimableUserBalance(self);
+
+        assertEq(accrued[0], 0);
+        assertEq(accrued[1], 0);
+        assertEq(accrued[2], 0);
+        assertEq(balances[0], 0);
+        assertEq(balances[1], 0);
+        assertEq(balances[2], 0);
+        assertEq(claimable[0], 0);
+        assertEq(claimable[1], 0);
+        assertEq(claimable[2], 0);
+
+        skip(20 days);
+
+        balances = vault.getGangVaultBalance(0);
+        accrued = vault.getAccruedGangVaultBalances(0);
+        claimable = vault.getClaimableUserBalance(self);
+
+        assertEq(accrued[0], 0.1 ether * fee);
+        assertEq(accrued[1], 0.2 ether * fee);
+        assertEq(accrued[2], 0.3 ether * fee);
+        assertEq(balances[0], 0.1 ether * fee);
+        assertEq(balances[1], 0.2 ether * fee);
+        assertEq(balances[2], 0.3 ether * fee);
+        assertEq(claimable[0], 0.1 ether * baseShares);
+        assertEq(claimable[1], 0.2 ether * baseShares);
+        assertEq(claimable[2], 0.3 ether * baseShares);
+
+        skip(200 days);
+
+        balances = vault.getGangVaultBalance(0);
+        accrued = vault.getAccruedGangVaultBalances(0);
+        claimable = vault.getClaimableUserBalance(self);
+
+        assertEq(accrued[0], 1 ether * fee);
+        assertEq(accrued[1], 2 ether * fee);
+        assertEq(accrued[2], 3 ether * fee);
+        assertEq(balances[0], 1 ether * fee);
+        assertEq(balances[1], 2 ether * fee);
+        assertEq(balances[2], 3 ether * fee);
+        assertEq(claimable[0], 1 ether * baseShares);
+        assertEq(claimable[1], 2 ether * baseShares);
+        assertEq(claimable[2], 3 ether * baseShares);
+
+        startDate = block.timestamp + 10 days;
+        endDate = block.timestamp + 110 days;
+
+        vault.setSeason(uint40(startDate), uint40(endDate), false);
+
+        skip(200 days);
+
+        balances = vault.getGangVaultBalance(0);
+        accrued = vault.getAccruedGangVaultBalances(0);
+        claimable = vault.getClaimableUserBalance(self);
+
+        assertEq(accrued[0], 2 * 1 ether * fee);
+        assertEq(accrued[1], 2 * 2 ether * fee);
+        assertEq(accrued[2], 2 * 3 ether * fee);
+        assertEq(balances[0], 2 * 1 ether * fee);
+        assertEq(balances[1], 2 * 2 ether * fee);
+        assertEq(balances[2], 2 * 3 ether * fee);
+        assertEq(claimable[0], 2 * 1 ether * baseShares);
+        assertEq(claimable[1], 2 * 2 ether * baseShares);
+        assertEq(claimable[2], 2 * 3 ether * baseShares);
     }
 }

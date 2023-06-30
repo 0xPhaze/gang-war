@@ -13,7 +13,7 @@ import "solmate/test/utils/mocks/MockERC721.sol";
 
 # Polygon Mainnet 
 source .env && US_DRY_RUN=true forge script deploy --rpc-url $RPC_POLYGON --private-key $PRIVATE_KEY_GMC -vvvv --ffi 
-source .env && forge script deploy --rpc-url $RPC_POLYGON --private-key $PRIVATE_KEY_GMC --verify --etherscan-api-key $POLYGONSCAN_KEY -vvvv --ffi --slow --broadcast 
+source .env && forge script deploy --rpc-url $RPC_POLYGON --private-key $PRIVATE_KEY_GMC --verify --etherscan-api-key $POLYGONSCAN_KEY -vvvv --ffi --broadcast 
 
 # Anvil
 source .env && US_DRY_RUN=true forge script deploy --rpc-url $RPC_ANVIL --private-key $PRIVATE_KEY_ANVIL -vvvv --ffi
@@ -53,96 +53,112 @@ contract deploy is SetupChild {
     constructor() {
         // MOCK_TUNNEL_TESTING = block.chainid == CHAINID_MUMBAI;
 
-        mainnetConfirmation = 1671295946;
-        // mainnetConfirmation = block.timestamp;
+        // mainnetConfirmation = 1671295946;
+        mainnetConfirmation = block.timestamp;
     }
 
     function run() external {
+        // try vm.stopBroadcast
         startBroadcastIfNotDryRun();
 
         setUpContracts();
 
-        // vault.softResetGangVaultBalances();
+        setNewSeason(1680710400, 1683302400);
+        // setNewSeason(1676653200, 1680195600);
 
-        // game.reset(occupants, yields);
+        // // vehicles.setBaseURI("ipfs://QmaKbSCsy7emJnVN3N4NJ7sjybQUDC6xUjEdmtusY38emm/");
+        // // vehicles.setPostFixURI(".json");
+        // // vehicles.setGangWar(game);
 
-        // // new Date('December 13, 2022 4:00 PM').getTime() / 1000
-        // // new Date('Jan 1, 2023 4:00 PM').getTime() / 1000
+        // // vault.softResetGangVaultBalances();
 
-        // game.setSeason(1670943600, 1672585200);
-        // vault.grantRole(GANG_VAULT_CONTROLLER, tx.origin);
-        // vault.setSeason(1669215600, 1672585200); // vault stays with old season start, but extends to new end
+        // // // new Date('December 13, 2022 4:00 PM').getTime() / 1000
+        // // // new Date('Jan 1, 2023 4:00 PM').getTime() / 1000
 
-        // gmc.resyncBarons(
-        //     abi.encode(
-        //         [
-        //             0xe2c32116AB0D54C80092D5150c97555AD37E0d63,
-        //             0x805a3B79917055A18aBc171E14e4c7e36119D9B6,
-        //             0x4b8ee1eEf0bD930c2277a60c839834B142B373d2,
-        //             0xcea2c2b93CB242f64C8C3CF36e659cb0EC7d937e,
-        //             0x409e5f34Ae011e9Df40E360eE37387fA8b0980CB,
-        //             0x7Ce5039A2383ba2CDf57DF1a8Bd353E021c37492,
-        //             0x49f2b78458B553229c51a389C811C4A73ae84C73,
-        //             0x78f8C78a212d64CE1148355DEE3F26a6e029EbBa,
-        //             0x983c09D36d78A8FB433a88499A95c73524954Af6,
-        //             0x158e61A181959844D6Ac426a2A50eec065B3a943,
-        //             0xd2bEC77b8BEcdDA350DDaA4Be3b0D91C119b6851,
-        //             0x2d254aB8625f9738200E3D1e359e6b1Bf6e0E912,
-        //             0x6C7AC914D586F7089e5a68375E0df549317c3eE8,
-        //             0xB7fc617Da6546febfC31dfc8283B8588E192B3ec,
-        //             0x6d711bE0693B5ff41678bA3f4507c0BF1Ae1ff17,
-        //             0xD29588f9867CB0bD9D61A2c099A79B4926940351,
-        //             0x5143B2F5e573Be79aA5D96Ae1367bFC6F095C4d9,
-        //             0xDe23301fEd4034651bCF6612A5f89D9ADC5b8a2b,
-        //             0x205C4d9d198a2e9D74eee70151d1Ba02f3C70Daa,
-        //             0x02C1422931439B3e945e2F2F721c80F6c0feaF56,
-        //             0x205FfDa46164C3e6ae60AF559c82F26f9470072E
-        //         ]
-        //     )._toAddressArray()
-        // );
+        // // vault.grantRole(GANG_VAULT_CONTROLLER, tx.origin);
+        // // vault.setSeason(1669215600, 1672585200); // vault stays with old season start, but extends to new end
 
-        // safeHouses.setBaseURI("ipfs://QmRJUciN3rdfUK9TjnsNNB5nbSCy3oRmmh2yaJC9k4QP76/");
-        // safeHouses.setPostFixURI(".json");
+        // // gmc.resyncBarons(
+        // //     abi.encode(
+        // //         [
+        // //             0xe2c32116AB0D54C80092D5150c97555AD37E0d63,
+        // //             0x805a3B79917055A18aBc171E14e4c7e36119D9B6,
+        // //             0x4b8ee1eEf0bD930c2277a60c839834B142B373d2,
+        // //             0xcea2c2b93CB242f64C8C3CF36e659cb0EC7d937e,
+        // //             0x409e5f34Ae011e9Df40E360eE37387fA8b0980CB,
+        // //             0x7Ce5039A2383ba2CDf57DF1a8Bd353E021c37492,
+        // //             0x49f2b78458B553229c51a389C811C4A73ae84C73,
+        // //             0x78f8C78a212d64CE1148355DEE3F26a6e029EbBa,
+        // //             0x983c09D36d78A8FB433a88499A95c73524954Af6,
+        // //             0x158e61A181959844D6Ac426a2A50eec065B3a943,
+        // //             0xd2bEC77b8BEcdDA350DDaA4Be3b0D91C119b6851,
+        // //             0x2d254aB8625f9738200E3D1e359e6b1Bf6e0E912,
+        // //             0x6C7AC914D586F7089e5a68375E0df549317c3eE8,
+        // //             0xB7fc617Da6546febfC31dfc8283B8588E192B3ec,
+        // //             0x6d711bE0693B5ff41678bA3f4507c0BF1Ae1ff17,
+        // //             0xD29588f9867CB0bD9D61A2c099A79B4926940351,
+        // //             0x5143B2F5e573Be79aA5D96Ae1367bFC6F095C4d9,
+        // //             0xDe23301fEd4034651bCF6612A5f89D9ADC5b8a2b,
+        // //             0x205C4d9d198a2e9D74eee70151d1Ba02f3C70Daa,
+        // //             0x02C1422931439B3e945e2F2F721c80F6c0feaF56,
+        // //             0x205FfDa46164C3e6ae60AF559c82F26f9470072E
+        // //         ]
+        // //     )._toAddressArray()
+        // // );
 
-        // badges.grantRole(AUTHORITY, msg.sender);
-        // badges.grantRole(AUTHORITY, 0x2181838c46bEf020b8Beb756340ad385f5BD82a8);
-        // badges.mint(0x2181838c46bEf020b8Beb756340ad385f5BD82a8, 50000000e18);
-        // mice.grantRole(AUTHORITY, msg.sender);
-        // mice.grantRole(AUTHORITY, 0x2181838c46bEf020b8Beb756340ad385f5BD82a8);
-        // mice.mint(0x2181838c46bEf020b8Beb756340ad385f5BD82a8, 50000000e18);
+        // // safeHouses.setBaseURI("ipfs://QmRJUciN3rdfUK9TjnsNNB5nbSCy3oRmmh2yaJC9k4QP76/");
+        // // safeHouses.setPostFixURI(".json");
 
-        // goudaRoot.mint(msg.sender, 100e18);
-        // goudaRoot.approve(address(goudaTunnel), type(uint256).max);
-        // goudaTunnel.lock(msg.sender, 50e18);
+        // // badges.grantRole(AUTHORITY, msg.sender);
+        // // badges.grantRole(AUTHORITY, 0x2181838c46bEf020b8Beb756340ad385f5BD82a8);
+        // // badges.mint(0x2181838c46bEf020b8Beb756340ad385f5BD82a8, 50000000e18);
+        // // mice.grantRole(AUTHORITY, msg.sender);
+        // // mice.grantRole(AUTHORITY, 0x2181838c46bEf020b8Beb756340ad385f5BD82a8);
+        // // mice.mint(0x2181838c46bEf020b8Beb756340ad385f5BD82a8, 50000000e18);
 
-        if (isTestnet()) runTestnet();
+        // // goudaRoot.mint(msg.sender, 100e18);
+        // // goudaRoot.approve(address(goudaTunnel), type(uint256).max);
+        // // goudaTunnel.lock(msg.sender, 50e18);
+
+        // if (isTestnet()) runTestnet();
 
         // vm.stopBroadcast();
 
-        storeDeployments();
+        // storeDeployments();
+    }
+
+    function setNewSeason(uint40 start, uint40 end) internal {
+        game.setSeason(start, end, true);
+
+        game.reset(occupants, yields);
+        game.setBaronItemBalances(0.range(NUM_BARON_ITEMS), 3.repeat(NUM_BARON_ITEMS));
+
+        // sets baron item costs + bribery fees if not done already
+        initContractsChild();
     }
 
     function runTestnet() internal {
-        tokens[0].airdrop([msg.sender, 0x2181838c46bEf020b8Beb756340ad385f5BD82a8].toMemory(), 100_000_000e18);
-        tokens[1].airdrop([msg.sender, 0x2181838c46bEf020b8Beb756340ad385f5BD82a8].toMemory(), 100_000_000e18);
-        tokens[2].airdrop([msg.sender, 0x2181838c46bEf020b8Beb756340ad385f5BD82a8].toMemory(), 100_000_000e18);
-        mice.airdrop([msg.sender, 0x2181838c46bEf020b8Beb756340ad385f5BD82a8].toMemory(), 100_000_000e18);
+        // tokens[0].airdrop([msg.sender, 0x2181838c46bEf020b8Beb756340ad385f5BD82a8].toMemory(), 100_000_000e18);
+        // tokens[1].airdrop([msg.sender, 0x2181838c46bEf020b8Beb756340ad385f5BD82a8].toMemory(), 100_000_000e18);
+        // tokens[2].airdrop([msg.sender, 0x2181838c46bEf020b8Beb756340ad385f5BD82a8].toMemory(), 100_000_000e18);
+        // mice.airdrop([msg.sender, 0x2181838c46bEf020b8Beb756340ad385f5BD82a8].toMemory(), 100_000_000e18);
 
-        safeHouses.airdrop([msg.sender, 0x2181838c46bEf020b8Beb756340ad385f5BD82a8].toMemory(), 20);
+        // safeHouses.airdrop([msg.sender, 0x2181838c46bEf020b8Beb756340ad385f5BD82a8].toMemory(), 20);
 
-        for (uint256 lvl; lvl < 3; lvl++) {
-            vehicles.airdrop(
-                [
-                    msg.sender,
-                    msg.sender,
-                    msg.sender,
-                    0x2181838c46bEf020b8Beb756340ad385f5BD82a8,
-                    0x2181838c46bEf020b8Beb756340ad385f5BD82a8,
-                    0x2181838c46bEf020b8Beb756340ad385f5BD82a8
-                ].toMemory(),
-                lvl + 1
-            );
-        }
+        // for (uint256 lvl; lvl < 3; lvl++) {
+        //     vehicles.airdrop(
+        //         [
+        //             msg.sender,
+        //             msg.sender,
+        //             msg.sender,
+        //             0x2181838c46bEf020b8Beb756340ad385f5BD82a8,
+        //             0x2181838c46bEf020b8Beb756340ad385f5BD82a8,
+        //             0x2181838c46bEf020b8Beb756340ad385f5BD82a8
+        //         ].toMemory(),
+        //         vehicles.totalSupply().range(vehicles.totalSupply() + 1),
+        //         lvl + 1
+        //     );
+        // }
 
         if (isFirstTimeDeployed(address(game))) {
             // troupe.airdrop([msg.sender, 0x2181838c46bEf020b8Beb756340ad385f5BD82a8].toMemory(), 10);
@@ -150,7 +166,7 @@ contract deploy is SetupChild {
 
             game.reset(occupants, yields);
             game.setBaronItemBalances(0.range(NUM_BARON_ITEMS), 3.repeat(NUM_BARON_ITEMS));
-            game.setSeason(1665421200, 1868099600);
+            game.setSeason(1665421200, 1868099600, true);
             gmc.resyncIds(msg.sender, 1.range(21));
             gmc.resyncIds(0x2181838c46bEf020b8Beb756340ad385f5BD82a8, 21.range(41));
             gmc.resyncBarons(
@@ -169,22 +185,22 @@ contract deploy is SetupChild {
             vault.setYield(1, [uint256(7_700_000), 7_700_000, 7_700_000]);
             vault.setYield(2, [uint256(7_700_000), 7_700_000, 7_700_000]);
 
-            try gmc.setGangsInChunks(0, 0) {
-                uint256 chunkData;
-                uint256 id;
-                for (uint256 c; c < 70; ++c) {
-                    for (uint256 i; i < 128; ++i) {
-                        id = (c << 7) + i + 1;
-                        uint256 gang = 1 + ((id + 2) % 3);
-                        chunkData |= gang << (i << 1);
-                    }
+            // try gmc.setGangsInChunks(0, 1) {
+            //     uint256 chunkData;
+            //     uint256 id;
+            //     for (uint256 c; c < 70; ++c) {
+            //         for (uint256 i; i < 128; ++i) {
+            //             id = (c << 7) + i + 1;
+            //             uint256 gang = 1 + ((id + 2) % 3);
+            //             chunkData |= gang << (i << 1);
+            //         }
 
-                    gmc.setGangsInChunks(c, chunkData);
+            //         gmc.setGangsInChunks(c, chunkData);
 
-                    if (c > 5) return;
-                    if (id > 6666) break;
-                }
-            } catch {}
+            //         if (c > 5) return;
+            //         if (id > 6666) break;
+            //     }
+            // } catch {}
         }
     }
 }
